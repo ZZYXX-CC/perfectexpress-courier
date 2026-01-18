@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Navbar from '@/components/layout/Navbar'
 import Link from 'next/link'
-import { ArrowLeft, Box } from 'lucide-react'
+import { ArrowLeft, Box, MapPin } from 'lucide-react'
 
 export default async function TrackingPage({
     params,
