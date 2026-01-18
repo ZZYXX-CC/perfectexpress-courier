@@ -256,9 +256,11 @@ export default function Home() {
           </div>
         </section>
 
-        <div id="support">
-          <Footer />
-        </div>
+      </main>
+
+      <div id="support">
+        <Footer />
+      </div>
     </div>
   );
 }
