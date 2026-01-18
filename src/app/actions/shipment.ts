@@ -17,9 +17,13 @@ export type ShipmentFormData = {
 export async function createShipment(formData: ShipmentFormData) {
     const supabase = await createClient()
 
+    // Check for logged-in user
+    const { data: { user } } = await supabase.auth.getUser()
+
     const { data, error } = await supabase
         .from('shipments')
         .insert({
+            user_id: user?.id || null, // Link to user if authenticated
             sender_info: {
                 name: formData.sender_name,
                 email: formData.sender_email,
