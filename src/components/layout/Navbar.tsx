@@ -1,0 +1,213 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Menu, X, User, LogOut, LayoutDashboard, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const Navbar = () => {
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                supabase.from('profiles').select('*').eq('id', session.user.id).single()
+                    .then(({ data }) => setProfile(data));
+            }
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                supabase.from('profiles').select('*').eq('id', session.user.id).single()
+                    .then(({ data }) => setProfile(data));
+            } else {
+                setProfile(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const handleSignOut = async () => {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        await supabase.auth.signOut();
+        window.location.href = '/';
+    };
+
+    return (
+        <nav
+            className={cn(
+                'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+                isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'
+            )}
+        >
+            <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
+                {/* Logo */}
+                <Link href="/" className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                        <span className="text-white font-bold text-xl">P</span>
+                    </div>
+                    <span className={cn("text-xl font-bold tracking-tight", isScrolled ? "text-secondary" : "text-secondary")}>
+                        PerfectExpress
+                    </span>
+                </Link>
+
+                {/* Desktop Nav */}
+                <div className="hidden md:flex items-center gap-8">
+                    {['Services', 'Tracking', 'Company', 'Support'].map((item) => (
+                        <Link
+                            key={item}
+                            href={`#${item.toLowerCase()}`}
+                            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+                        >
+                            {item}
+                        </Link>
+                    ))}
+                </div>
+
+                {/* CTA / User Menu */}
+                <div className="hidden md:flex items-center gap-4">
+                    {user ? (
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <User className="w-4 h-4 text-primary" />
+                                </div>
+                                <span className="text-sm font-medium text-secondary max-w-[120px] truncate">
+                                    {profile?.full_name || user.email?.split('@')[0]}
+                                </span>
+                            </button>
+
+                            {isMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
+                                    <Link
+                                        href="/dashboard"
+                                        className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-primary"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <LayoutDashboard size={16} />
+                                        Dashboard
+                                    </Link>
+                                    {profile?.role === 'admin' && (
+                                        <Link
+                                            href="/admin"
+                                            className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-primary"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <Shield size={16} />
+                                            Admin Panel
+                                        </Link>
+                                    )}
+                                    <hr className="my-2 border-slate-100" />
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                    >
+                                        <LogOut size={16} />
+                                        Sign Out
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            <Link href="/auth/login">
+                                <Button variant="ghost" className="font-semibold text-secondary hover:text-primary hover:bg-transparent">
+                                    Log In
+                                </Button>
+                            </Link>
+                            <Link href="/ship">
+                                <Button>Get a Quote</Button>
+                            </Link>
+                        </>
+                    )}
+                </div>
+
+                {/* Mobile Toggle */}
+                <button
+                    className="md:hidden text-secondary"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                    {isMobileMenuOpen ? <X /> : <Menu />}
+                </button>
+            </div>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 p-4 flex flex-col gap-4 shadow-lg">
+                    {['Services', 'Tracking', 'Company', 'Support'].map((item) => (
+                        <Link
+                            key={item}
+                            href={`#${item.toLowerCase()}`}
+                            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors py-2"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            {item}
+                        </Link>
+                    ))}
+                    <div className="flex flex-col gap-3 mt-2">
+                        {user ? (
+                            <>
+                                <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Button variant="ghost" className="w-full justify-start text-secondary">
+                                        <LayoutDashboard className="mr-2" size={16} />
+                                        Dashboard
+                                    </Button>
+                                </Link>
+                                {profile?.role === 'admin' && (
+                                    <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                                        <Button variant="ghost" className="w-full justify-start text-secondary">
+                                            <Shield className="mr-2" size={16} />
+                                            Admin Panel
+                                        </Button>
+                                    </Link>
+                                )}
+                                <Button variant="ghost" className="w-full justify-start text-red-600" onClick={handleSignOut}>
+                                    <LogOut className="mr-2" size={16} />
+                                    Sign Out
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Button variant="ghost" className="w-full justify-start text-secondary">Log In</Button>
+                                </Link>
+                                <Link href="/ship" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Button className="w-full">Get a Quote</Button>
+                                </Link>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+        </nav>
+    );
+};
+
+export default Navbar;
