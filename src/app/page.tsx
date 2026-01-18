@@ -4,39 +4,63 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Box, Globe, Ship, Truck, Clock, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion"; // Added framer-motion
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import ShipmentForm from "@/components/ShipmentForm";
+import { TrackingModal } from "@/components/TrackingModal"; // Added TrackingModal
 import { toast } from "sonner";
 
 export default function Home() {
   const router = useRouter();
-  const [trackingId, setTrackingId] = useState("");
+  // const [trackingId, setTrackingId] = useState(""); // Removed as per instruction
 
-  const handleTrack = () => {
-    if (!trackingId.trim()) {
-      toast.error("Please enter a tracking ID");
-      return;
-    }
-    router.push(`/track/${trackingId.trim()}`);
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
   };
 
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  // Removed handleTrack as per instruction
+  // const handleTrack = () => {
+  //   if (!trackingId.trim()) {
+  //     toast.error("Please enter a tracking ID");
+  //     return;
+  //   }
+  //   router.push(`/track/${trackingId.trim()}`);
+  // };
+
   return (
-    <div className="min-h-screen bg-background  font-sans selection:bg-primary/20">
+    <div className="min-h-screen bg-background font-sans selection:bg-primary/20">
       <Navbar />
 
       <main>
         {/* HERO SECTION */}
-        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+        <section id="home" className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
           <div className="container mx-auto px-4 md:px-6 relative z-10">
-            <div className="max-w-4xl mx-auto text-center">
-              <span className="inline-block py-1 px-3 rounded-full bg-orange-100 text-primary font-semibold text-sm mb-6 animate-fade-in-up">
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+              className="max-w-4xl mx-auto text-center"
+            >
+              <motion.span variants={fadeIn} className="inline-block py-1 px-3 rounded-full bg-orange-100 text-primary font-semibold text-sm mb-6">
                 #1 Logistics Partner
-              </span>
-              <h1 className="text-5xl md:text-7xl font-extrabold text-secondary tracking-tight mb-6 leading-[1.1]">
+              </motion.span>
+              <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl font-extrabold text-secondary tracking-tight mb-6 leading-[1.1]">
                 Seamless Logistics, <br />
                 <span className="text-primary relative inline-block">
                   Global Reach
@@ -44,38 +68,34 @@ export default function Home() {
                     <path d="M0 5 Q 50 10 100 5 L 100 10 L 0 10 Z" fill="currentColor" />
                   </svg>
                 </span>
-              </h1>
-              <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+              </motion.h1>
+              <motion.p variants={fadeIn} className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
                 Experience the next generation of courier services. Fast, reliable, and transparent shipping solutions tailored for your business needs.
-              </p>
+              </motion.p>
 
-              {/* Tracking Widget */}
-              <div className="max-w-2xl mx-auto bg-white p-2 rounded-[20px] shadow-2xl shadow-slate-200/50 flex flex-col sm:flex-row gap-2 border border-slate-100 mb-12 transform hover:-translate-y-1 transition-transform duration-300">
-                <div className="flex-1 relative">
-                  <Input
-                    placeholder="Enter Tracking ID (e.g. SWIFT-123456)"
-                    value={trackingId}
-                    onChange={(e) => setTrackingId(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleTrack()}
-                    className="border-0 shadow-none h-14 bg-transparent text-lg focus-visible:ring-0 pl-12"
-                  />
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
+              {/* Tracking Widget -> Modal CTA */}
+              <motion.div variants={fadeIn} className="max-w-2xl mx-auto mb-12">
+                <div className="bg-white p-2 rounded-[20px] shadow-2xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between pl-6 pr-2 py-2">
+                  <div className="flex items-center gap-3 text-slate-400">
                     <Box />
+                    <span className="text-lg hidden sm:inline">Track a shipment</span>
                   </div>
+                  <TrackingModal>
+                    <Button size="lg" className="rounded-[16px] text-lg h-12 px-8">
+                      Track
+                    </Button>
+                  </TrackingModal>
                 </div>
-                <Button size="lg" className="rounded-[16px] sm:w-40 text-lg h-14" onClick={handleTrack}>
-                  Track
-                </Button>
-              </div>
+              </motion.div>
 
-              <div className="flex items-center justify-center gap-8 text-slate-400 grayscale opacity-70">
+              <motion.div variants={fadeIn} className="flex items-center justify-center gap-8 text-slate-400 grayscale opacity-70">
                 {/* Partner Logos Placeholder */}
                 <div className="font-bold text-xl">AMAZON</div>
                 <div className="font-bold text-xl">DHL</div>
                 <div className="font-bold text-xl">FEDEX</div>
                 <div className="font-bold text-xl">SHOPIFY</div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
 
           {/* Background Decorative */}
@@ -88,12 +108,24 @@ export default function Home() {
         {/* SERVICES SECTION */}
         <section id="services" className="py-24 bg-muted/50">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">Our Services</h2>
-              <p className="text-slate-500 text-lg">Comprehensive logistics solutions designed to move your business forward.</p>
-            </div>
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="text-center max-w-2xl mx-auto mb-16"
+            >
+              <motion.h2 variants={fadeIn} className="text-3xl md:text-4xl font-bold text-secondary mb-4">Our Services</motion.h2>
+              <motion.p variants={fadeIn} className="text-slate-500 text-lg">Comprehensive logistics solutions designed to move your business forward.</motion.p>
+            </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
               {[
                 {
                   icon: Truck,
@@ -111,42 +143,49 @@ export default function Home() {
                   desc: 'Express air delivery for time-critical shipments ensuring fastest global connections.'
                 }
               ].map((service, i) => (
-                <Card key={i} className="group hover:bg-white border-0 hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mb-2 group-hover:bg-primary transition-colors duration-300">
-                      <service.icon className="text-primary group-hover:text-white transition-colors duration-300" size={28} />
-                    </div>
-                    <CardTitle className="text-xl font-bold text-secondary">{service.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-500 leading-relaxed mb-6">{service.desc}</p>
-                    <a href="#" className="inline-flex items-center text-primary font-semibold hover:gap-2 transition-all">
-                      Learn More <ArrowRight size={16} className="ml-1" />
-                    </a>
-                  </CardContent>
-                </Card>
+                <motion.div key={i} variants={fadeIn}>
+                  <Card className="group hover:bg-white border-0 hover:shadow-xl transition-all duration-300 h-full">
+                    <CardHeader>
+                      <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mb-2 group-hover:bg-primary transition-colors duration-300">
+                        <service.icon className="text-primary group-hover:text-white transition-colors duration-300" size={28} />
+                      </div>
+                      <CardTitle className="text-xl font-bold text-secondary">{service.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-slate-500 leading-relaxed mb-6">{service.desc}</p>
+                      <a href="#" className="inline-flex items-center text-primary font-semibold hover:gap-2 transition-all">
+                        Learn More <ArrowRight size={16} className="ml-1" />
+                      </a>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* FEATURES / STATS SECTION */}
-        <section className="py-24">
+        <section id="company" className="py-24">
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-              <div>
-                <span className="text-primary font-bold tracking-wider uppercase text-sm">Why Choose Us</span>
-                <h2 className="text-4xl font-bold text-secondary mt-2 mb-6">We ensure your goods arrive safe & on time.</h2>
-                <p className="text-slate-500 text-lg mb-8 leading-relaxed">
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={staggerContainer}
+              >
+                <motion.span variants={fadeIn} className="text-primary font-bold tracking-wider uppercase text-sm">Why Choose Us</motion.span>
+                <motion.h2 variants={fadeIn} className="text-4xl font-bold text-secondary mt-2 mb-6">We ensure your goods arrive safe & on time.</motion.h2>
+                <motion.p variants={fadeIn} className="text-slate-500 text-lg mb-8 leading-relaxed">
                   With over 20 years of experience in the logistics industry, we have built a network that you can trust. Our technology-driven approach ensures transparency at every step.
-                </p>
+                </motion.p>
 
                 <div className="space-y-6">
                   {[
                     { icon: Clock, title: 'On-Time Delivery', desc: '99.8% on-time delivery record across all routes.' },
                     { icon: ShieldCheck, title: 'Secure Handling', desc: 'Advanced tracking and insurance support for high-value goods.' }
                   ].map((item, i) => (
-                    <div key={i} className="flex gap-4">
+                    <motion.div key={i} variants={fadeIn} className="flex gap-4">
                       <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
                         <item.icon className="text-secondary" size={24} />
                       </div>
@@ -154,17 +193,23 @@ export default function Home() {
                         <h4 className="font-bold text-secondary text-lg">{item.title}</h4>
                         <p className="text-slate-500">{item.desc}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
 
-                <div className="mt-10">
+                <motion.div variants={fadeIn} className="mt-10">
                   <Button size="lg">Explore Solutions</Button>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
               {/* Image Placeholder / Visual */}
-              <div className="relative">
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="relative"
+              >
                 <div className="absolute -inset-4 bg-orange-100 rounded-[40px] rotate-3 -z-10" />
                 <div className="bg-slate-200 rounded-[32px] overflow-hidden aspect-square md:aspect-[4/3] relative flex items-center justify-center text-slate-400">
                   <Image
@@ -189,30 +234,31 @@ export default function Home() {
                     <div className="h-full bg-primary w-full" />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </section>
-      </main>
 
-      {/* SHIPMENT FORM SECTION */}
-      <section id="ship-now" className="py-24 bg-muted/30 relative">
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">Ready to Ship?</h2>
-            <p className="text-slate-500 text-lg">Send your parcel securely in minutes. No account required.</p>
+        {/* SHIPMENT FORM SECTION */}
+        <section id="ship-now" className="py-24 bg-muted/30 relative">
+          <div className="container mx-auto px-4 md:px-6 relative z-10">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">Ready to Ship?</h2>
+              <p className="text-slate-500 text-lg">Send your parcel securely in minutes. No account required.</p>
+            </div>
+            <ShipmentForm />
           </div>
-          <ShipmentForm />
-        </div>
 
-        {/* Decorative background */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-7xl -z-10 opacity-30 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-50/50 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-3xl" />
-        </div>
-      </section>
+          {/* Decorative background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-7xl -z-10 opacity-30 pointer-events-none">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-50/50 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-3xl"></div>
+          </div>
+        </section>
 
-      <Footer />
+        <div id="support">
+          <Footer />
+        </div>
     </div>
   );
 }
