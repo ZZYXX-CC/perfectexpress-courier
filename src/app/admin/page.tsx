@@ -43,7 +43,7 @@ type Shipment = {
     price?: number | null
 }
 
-const STATUS_OPTIONS = ['pending', 'processing', 'in-transit', 'out-for-delivery', 'delivered', 'held']
+const STATUS_OPTIONS = ['pending', 'in-transit', 'out-for-delivery', 'delivered', 'held']
 
 export default function AdminPage() {
     const [shipments, setShipments] = useState<Shipment[]>([])
@@ -215,14 +215,13 @@ export default function AdminPage() {
     const handleConfirmPayment = () => {
         if (!selectedShipment) return
         startTransition(async () => {
-            // Update payment to paid AND status to processing
-            const payResult = await togglePaymentStatus(selectedShipment.id, 'unpaid') // Toggles to paid
-            const statusResult = await updateShipment(selectedShipment.id, { status: 'processing' })
+            // Only update payment status to paid (leave shipment status as pending)
+            const result = await togglePaymentStatus(selectedShipment.id, 'unpaid')
 
-            if (payResult.error || statusResult.error) {
-                toast.error(payResult.error || statusResult.error)
+            if (result.error) {
+                toast.error(result.error)
             } else {
-                toast.success('Payment confirmed & processing started')
+                toast.success('Payment confirmed!')
                 setConfirmPaymentDialogOpen(false)
                 fetchShipments()
             }
@@ -292,8 +291,8 @@ export default function AdminPage() {
             )
         }
 
-        // 3. Ready to Dispatch (Paid but still processing/pending)
-        if ((shipment.status === 'processing' || (shipment.status === 'pending' && shipment.payment_status === 'paid'))) {
+        // 3. Ready to Dispatch (Paid and still pending)
+        if (shipment.status === 'pending' && shipment.payment_status === 'paid') {
             return (
                 <Button
                     size="sm"
@@ -352,7 +351,6 @@ export default function AdminPage() {
         switch (status) {
             case 'delivered': return 'border-green-500 text-green-600 bg-green-50'
             case 'in-transit': return 'border-blue-500 text-blue-600 bg-blue-50'
-            case 'processing': return 'border-purple-500 text-purple-600 bg-purple-50'
             case 'out-for-delivery': return 'border-yellow-500 text-yellow-600 bg-yellow-50'
             case 'held': return 'border-red-500 text-red-600 bg-red-50'
             default: return 'border-slate-500 text-slate-600 bg-slate-50'
