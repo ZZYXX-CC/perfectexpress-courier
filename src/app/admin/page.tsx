@@ -417,9 +417,19 @@ export default function AdminPage() {
                                                             Review
                                                         </Button>
                                                     ) : (
-                                                        <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                            {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
-                                                        </Badge>
+                                                        <div
+                                                            className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                            onClick={() => {
+                                                                setSelectedShipment(shipment)
+                                                                setEventStatus(shipment.status || 'in-transit')
+                                                                setEventLocation(shipment.current_location || '')
+                                                                setLogEventDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                                {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
+                                                            </Badge>
+                                                        </div>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
@@ -435,15 +445,15 @@ export default function AdminPage() {
                                                     </Button>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm text-slate-500 truncate max-w-[150px]">
+                                                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
+                                                        setSelectedShipment(shipment)
+                                                        setNewLocation(shipment.current_location || '')
+                                                        setLocationDialogOpen(true)
+                                                    }}>
+                                                        <span className="text-sm text-slate-500 truncate max-w-[150px] group-hover:text-primary transition-colors">
                                                             {shipment.current_location || '—'}
                                                         </span>
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary" onClick={() => {
-                                                            setSelectedShipment(shipment)
-                                                            setNewLocation(shipment.current_location || '')
-                                                            setLocationDialogOpen(true)
-                                                        }}>
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 group-hover:text-primary">
                                                             <MapPin size={14} />
                                                         </Button>
                                                     </div>
@@ -459,7 +469,7 @@ export default function AdminPage() {
                                                         setLogEventDialogOpen(true)
                                                     }}>
                                                         <FileText size={14} className="mr-1" />
-                                                        Log Event
+                                                        Update Status
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
