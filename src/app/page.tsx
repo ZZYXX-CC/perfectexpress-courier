@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 export default function Home() {
   const router = useRouter();
-  // const [trackingId, setTrackingId] = useState(""); // Removed as per instruction
+  const [trackingId, setTrackingId] = useState("");
 
   // Animation variants
   const fadeIn = {
@@ -34,14 +34,13 @@ export default function Home() {
     }
   };
 
-  // Removed handleTrack as per instruction
-  // const handleTrack = () => {
-  //   if (!trackingId.trim()) {
-  //     toast.error("Please enter a tracking ID");
-  //     return;
-  //   }
-  //   router.push(`/track/${trackingId.trim()}`);
-  // };
+  const handleTrack = () => {
+    if (!trackingId.trim()) {
+      toast.error("Please enter a tracking ID");
+      return;
+    }
+    router.push(`/track/${trackingId.trim()}`);
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary/20">
@@ -73,18 +72,27 @@ export default function Home() {
                 Experience the next generation of courier services. Fast, reliable, and transparent shipping solutions tailored for your business needs.
               </motion.p>
 
-              {/* Tracking Widget -> Modal CTA */}
+              {/* Tracking Widget */}
               <motion.div variants={fadeIn} className="max-w-2xl mx-auto mb-12">
-                <div className="bg-white p-2 rounded-[20px] shadow-2xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between pl-6 pr-2 py-2">
-                  <div className="flex items-center gap-3 text-slate-400">
+                <div className="bg-white p-2 rounded-[20px] shadow-2xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between pl-6 pr-2 py-2 relative z-50">
+                  <div className="flex items-center gap-3 text-slate-400 flex-1">
                     <Box />
-                    <span className="text-lg hidden sm:inline">Track a shipment</span>
+                    {/* Input Field */}
+                    <Input
+                      className="border-0 shadow-none focus-visible:ring-0 text-lg px-0 h-auto placeholder:text-slate-400"
+                      placeholder="Enter tracking number..."
+                      value={trackingId}
+                      onChange={(e) => setTrackingId(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleTrack()}
+                    />
                   </div>
-                  <TrackingModal>
-                    <Button size="lg" className="rounded-[16px] text-lg h-12 px-8">
-                      Track
-                    </Button>
-                  </TrackingModal>
+                  <Button
+                    size="lg"
+                    className="rounded-[16px] text-lg h-12 px-8"
+                    onClick={handleTrack}
+                  >
+                    Track
+                  </Button>
                 </div>
               </motion.div>
 

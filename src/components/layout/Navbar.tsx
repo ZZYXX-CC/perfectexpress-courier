@@ -5,10 +5,7 @@ import Link from 'next/link';
 import { Menu, X, User, LogOut, LayoutDashboard, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { createClient } from '@/utils/supabase/client';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -16,6 +13,7 @@ const Navbar = () => {
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const supabase = createClient();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -26,8 +24,6 @@ const Navbar = () => {
     }, []);
 
     useEffect(() => {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);
@@ -49,10 +45,9 @@ const Navbar = () => {
         });
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [supabase]);
 
     const handleSignOut = async () => {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
         await supabase.auth.signOut();
         window.location.href = '/';
     };
