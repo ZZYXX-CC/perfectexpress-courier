@@ -43,7 +43,7 @@ type Shipment = {
     price?: number | null
 }
 
-const STATUS_OPTIONS = ['pending', 'in-transit', 'out-for-delivery', 'delivered', 'held']
+const STATUS_OPTIONS = ['pending', 'processing', 'in-transit', 'out-for-delivery', 'delivered', 'held']
 
 export default function AdminPage() {
     const [shipments, setShipments] = useState<Shipment[]>([])
@@ -81,6 +81,13 @@ export default function AdminPage() {
     const [pricingDialogOpen, setPricingDialogOpen] = useState(false)
     const [price, setPrice] = useState('')
     const [reviewShipmentId, setReviewShipmentId] = useState<string | null>(null)
+
+    // Dispatch Dialog State
+    const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false)
+    const [originLocation, setOriginLocation] = useState('Lagos Logistics Center')
+
+    // Payment Confirmation State
+    const [confirmPaymentDialogOpen, setConfirmPaymentDialogOpen] = useState(false)
 
     const fetchShipments = async () => {
         setIsLoading(true)
@@ -198,10 +205,145 @@ export default function AdminPage() {
         })
     }
 
+    const handleConfirmPayment = () => {
+        if (!selectedShipment) return
+        startTransition(async () => {
+            // Update payment to paid AND status to processing
+            const payResult = await togglePaymentStatus(selectedShipment.id, 'unpaid') // Toggles to paid
+            const statusResult = await updateShipment(selectedShipment.id, { status: 'processing' })
+
+            if (payResult.error || statusResult.error) {
+                toast.error(payResult.error || statusResult.error)
+            } else {
+                toast.success('Payment confirmed & processing started')
+                setConfirmPaymentDialogOpen(false)
+                fetchShipments()
+            }
+        })
+    }
+
+    const handleDispatch = () => {
+        if (!selectedShipment || !originLocation) return
+        startTransition(async () => {
+            // 1. Update status to in-transit
+            // 2. Set current location to origin
+            // 3. Log the initial scan event
+            const updateResult = await updateShipment(selectedShipment.id, {
+                status: 'in-transit',
+                current_location: originLocation
+            })
+
+            if (updateResult.error) {
+                toast.error(updateResult.error)
+                return
+            }
+
+            await logShipmentEvent(selectedShipment.id, {
+                status: 'in-transit',
+                location: originLocation,
+                note: 'Shipment dispatched from origin facility'
+            }, true)
+
+            toast.success('Shipment dispatched successfully')
+            setDispatchDialogOpen(false)
+            fetchShipments()
+        })
+    }
+
+    const renderSmartAction = (shipment: Shipment) => {
+        // 1. Review Needed
+        if (shipment.status === 'pending' && !shipment.price) {
+            return (
+                <Button
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+                    onClick={() => {
+                        setReviewShipmentId(shipment.id)
+                        setPricingDialogOpen(true)
+                    }}
+                >
+                    Review & Quote
+                </Button>
+            )
+        }
+
+        // 2. Payment Confirmation Needed
+        if (shipment.status === 'pending' && shipment.price && shipment.payment_status !== 'paid') {
+            return (
+                <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-green-600 text-green-700 hover:bg-green-50 w-full"
+                    onClick={() => {
+                        setSelectedShipment(shipment)
+                        setConfirmPaymentDialogOpen(true)
+                    }}
+                >
+                    <DollarSign size={14} className="mr-1" />
+                    Confirm Payment
+                </Button>
+            )
+        }
+
+        // 3. Ready to Dispatch (Paid but still processing/pending)
+        if ((shipment.status === 'processing' || (shipment.status === 'pending' && shipment.payment_status === 'paid'))) {
+            return (
+                <Button
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+                    onClick={() => {
+                        setSelectedShipment(shipment)
+                        setDispatchDialogOpen(true)
+                    }}
+                >
+                    <Truck size={14} className="mr-1" />
+                    Dispatch
+                </Button>
+            )
+        }
+
+        // 4. In Transit -> Update Location
+        if (shipment.status === 'in-transit' || shipment.status === 'out-for-delivery') {
+            return (
+                <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                        setSelectedShipment(shipment)
+                        setNewLocation(shipment.current_location || '')
+                        setLocationDialogOpen(true)
+                    }}
+                >
+                    <MapPin size={14} className="mr-1" />
+                    Update Location
+                </Button>
+            )
+        }
+
+        // Default / Fallback
+        return (
+            <Button
+                size="sm"
+                variant="ghost"
+                className="w-full text-slate-500"
+                onClick={() => {
+                    setSelectedShipment(shipment)
+                    setEventStatus(shipment.status || 'in-transit')
+                    setEventLocation(shipment.current_location || '')
+                    setLogEventDialogOpen(true)
+                }}
+            >
+                View / Edit
+            </Button>
+        )
+    }
+
     const getStatusColor = (status: string | null) => {
         switch (status) {
             case 'delivered': return 'border-green-500 text-green-600 bg-green-50'
             case 'in-transit': return 'border-blue-500 text-blue-600 bg-blue-50'
+            case 'processing': return 'border-purple-500 text-purple-600 bg-purple-50'
             case 'out-for-delivery': return 'border-yellow-500 text-yellow-600 bg-yellow-50'
             case 'held': return 'border-red-500 text-red-600 bg-red-50'
             default: return 'border-slate-500 text-slate-600 bg-slate-50'
@@ -405,32 +547,19 @@ export default function AdminPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {shipment.status === 'pending' && !shipment.price ? (
-                                                        <Button
-                                                            size="sm"
-                                                            className="bg-orange-500 hover:bg-orange-600 text-white border-0"
-                                                            onClick={() => {
-                                                                setReviewShipmentId(shipment.id)
-                                                                setPricingDialogOpen(true)
-                                                            }}
-                                                        >
-                                                            Review
-                                                        </Button>
-                                                    ) : (
-                                                        <div
-                                                            className="cursor-pointer hover:opacity-80 transition-opacity"
-                                                            onClick={() => {
-                                                                setSelectedShipment(shipment)
-                                                                setEventStatus(shipment.status || 'in-transit')
-                                                                setEventLocation(shipment.current_location || '')
-                                                                setLogEventDialogOpen(true)
-                                                            }}
-                                                        >
-                                                            <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                                {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
-                                                            </Badge>
-                                                        </div>
-                                                    )}
+                                                    <div
+                                                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                        onClick={() => {
+                                                            setSelectedShipment(shipment)
+                                                            setEventStatus(shipment.status || 'in-transit')
+                                                            setEventLocation(shipment.current_location || '')
+                                                            setLogEventDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                            {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
+                                                        </Badge>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Button
@@ -462,15 +591,7 @@ export default function AdminPage() {
                                                     {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button variant="outline" size="sm" className="border-slate-200" onClick={() => {
-                                                        setSelectedShipment(shipment)
-                                                        setEventStatus(shipment.status || 'in-transit')
-                                                        setEventLocation(shipment.current_location || '')
-                                                        setLogEventDialogOpen(true)
-                                                    }}>
-                                                        <FileText size={14} className="mr-1" />
-                                                        Update Status
-                                                    </Button>
+                                                    {renderSmartAction(shipment)}
                                                 </TableCell>
                                             </TableRow>
                                         ))
@@ -540,6 +661,82 @@ export default function AdminPage() {
                             <Button onClick={handleLogEvent} disabled={isPending || !eventLocation} className="bg-primary hover:bg-primary/90 text-white rounded-full">
                                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                 Log Event
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Dispatch Dialog */}
+                <Dialog open={dispatchDialogOpen} onOpenChange={setDispatchDialogOpen}>
+                    <DialogContent className="glass border-0 shadow-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-secondary flex items-center gap-2">
+                                <Truck className="text-primary" />
+                                Dispatch Shipment
+                            </DialogTitle>
+                            <DialogDescription className="text-slate-500">
+                                Start the journey for shipment {selectedShipment?.tracking_number}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                                <p className="text-sm text-primary font-medium">This action will:</p>
+                                <ul className="list-disc list-inside text-sm text-slate-600 mt-2 space-y-1">
+                                    <li>Set status to <strong>In-Transit</strong></li>
+                                    <li>Mark current location as Origin</li>
+                                    <li>Notify the customer (Mock)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <Label className="text-slate-500">Origin Location</Label>
+                                <Input
+                                    className="mt-2 bg-white/50"
+                                    placeholder="e.g. Lagos Logistics Center"
+                                    value={originLocation}
+                                    onChange={(e) => setOriginLocation(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="border-slate-200">Cancel</Button>
+                            </DialogClose>
+                            <Button onClick={handleDispatch} disabled={isPending || !originLocation} className="bg-primary hover:bg-primary/90 text-white rounded-full">
+                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Dispatch Now
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Confirm Payment Dialog */}
+                <Dialog open={confirmPaymentDialogOpen} onOpenChange={setConfirmPaymentDialogOpen}>
+                    <DialogContent className="glass border-0 shadow-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-secondary flex items-center gap-2">
+                                <DollarSign className="text-green-600" />
+                                Confirm Payment
+                            </DialogTitle>
+                            <DialogDescription className="text-slate-500">
+                                Verify payment for shipment {selectedShipment?.tracking_number}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-6 space-y-4">
+                            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
+                                <span className="text-slate-500">Amount Due</span>
+                                <span className="text-2xl font-bold text-secondary">${selectedShipment?.price?.toFixed(2)}</span>
+                            </div>
+                            <p className="text-slate-500 text-sm">
+                                By confirming, the shipment status will move to <strong>Processing</strong> and become ready for dispatch.
+                            </p>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="border-slate-200">Cancel</Button>
+                            </DialogClose>
+                            <Button onClick={handleConfirmPayment} disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white rounded-full">
+                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Confirm Received
                             </Button>
                         </DialogFooter>
                     </DialogContent>
