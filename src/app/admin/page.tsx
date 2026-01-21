@@ -57,6 +57,7 @@ export default function AdminPage() {
     const [eventStatus, setEventStatus] = useState('in-transit')
     const [eventLocation, setEventLocation] = useState('')
     const [eventNote, setEventNote] = useState('')
+    const [eventMapLink, setEventMapLink] = useState('')
     const [notifyUser, setNotifyUser] = useState(false)
 
     // Create Shipment Dialog State
@@ -129,18 +130,24 @@ export default function AdminPage() {
     const handleLogEvent = () => {
         if (!selectedShipment) return
         startTransition(async () => {
+            // Combine note and map link if provided
+            let fullNote = eventNote
+            if (eventMapLink) {
+                fullNote = fullNote ? `${fullNote} | Map: ${eventMapLink}` : `Map: ${eventMapLink}`
+            }
             const result = await logShipmentEvent(
                 selectedShipment.id,
-                { status: eventStatus, location: eventLocation, note: eventNote },
+                { status: eventStatus, location: eventLocation, note: fullNote },
                 notifyUser
             )
             if (result.error) {
                 toast.error(result.error)
             } else {
-                toast.success(`Event logged${notifyUser ? ' & user notified (mock)' : ''}`)
+                toast.success(`Status updated${notifyUser ? ' & user notified' : ''}`)
                 setLogEventDialogOpen(false)
                 setEventLocation('')
                 setEventNote('')
+                setEventMapLink('')
                 setNotifyUser(false)
                 fetchShipments()
             }
@@ -302,7 +309,7 @@ export default function AdminPage() {
             )
         }
 
-        // 4. In Transit -> Update Location
+        // 4. In Transit -> Update Status
         if (shipment.status === 'in-transit' || shipment.status === 'out-for-delivery') {
             return (
                 <Button
@@ -311,12 +318,14 @@ export default function AdminPage() {
                     className="w-full"
                     onClick={() => {
                         setSelectedShipment(shipment)
-                        setNewLocation(shipment.current_location || '')
-                        setLocationDialogOpen(true)
+                        setEventStatus(shipment.status || 'in-transit')
+                        setEventLocation(shipment.current_location || '')
+                        setEventMapLink('')
+                        setLogEventDialogOpen(true)
                     }}
                 >
-                    <MapPin size={14} className="mr-1" />
-                    Update Location
+                    <FileText size={14} className="mr-1" />
+                    Update Status
                 </Button>
             )
         }
@@ -562,16 +571,10 @@ export default function AdminPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleTogglePayment(shipment)}
-                                                        className={shipment.payment_status === 'paid' ? 'text-green-600 hover:text-green-700' : 'text-yellow-600 hover:text-yellow-700'}
-                                                        disabled={isPending}
-                                                    >
-                                                        <DollarSign size={16} className="mr-1" />
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${shipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                        <DollarSign size={12} className="mr-1" />
                                                         {shipment.payment_status}
-                                                    </Button>
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
@@ -637,6 +640,15 @@ export default function AdminPage() {
                                     placeholder="Add any relevant notes..."
                                     value={eventNote}
                                     onChange={(e) => setEventNote(e.target.value)}
+                                    className="bg-white/50"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-500">Map Link (Optional)</Label>
+                                <Input
+                                    placeholder="Paste Google Maps or location URL..."
+                                    value={eventMapLink}
+                                    onChange={(e) => setEventMapLink(e.target.value)}
                                     className="bg-white/50"
                                 />
                             </div>
