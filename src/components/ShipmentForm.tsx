@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { toast } from 'sonner'
 import { Loader2, Package } from 'lucide-react'
 
-export default function ShipmentForm() {
+export default function ShipmentForm({ onSuccess }: { onSuccess?: () => void }) {
     const [isPending, startTransition] = useTransition()
 
     // Basic form state - could use react-hook-form for more complex validation
@@ -45,6 +45,9 @@ export default function ShipmentForm() {
                 toast.error(result.error)
             } else {
                 toast.success(`Shipment created! Tracking ID: ${result.tracking_number}`)
+                if (onSuccess) {
+                    onSuccess()
+                }
                 // Reset form
                 setFormData({
                     sender_name: '',

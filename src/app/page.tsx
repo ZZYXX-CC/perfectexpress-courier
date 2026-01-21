@@ -10,7 +10,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import ShipmentForm from "@/components/ShipmentForm";
+import ShipmentDialog from "@/components/ShipmentDialog"; // Replaced ShipmentForm
 import { TrackingModal } from "@/components/TrackingModal"; // Added TrackingModal
 import { toast } from "sonner";
 
@@ -244,9 +244,9 @@ export default function Home() {
           <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">Ready to Ship?</h2>
-              <p className="text-slate-500 text-lg">Send your parcel securely in minutes. No account required.</p>
+              <p className="text-slate-500 text-lg mb-8">Send your parcel securely in minutes. No account required.</p>
+              <ShipmentDialog />
             </div>
-            <ShipmentForm />
           </div>
 
           {/* Decorative background */}

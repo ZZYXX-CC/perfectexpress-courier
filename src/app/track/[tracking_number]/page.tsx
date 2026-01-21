@@ -1,5 +1,6 @@
 import { getShipment } from '@/app/actions/get-shipment'
 import TrackingTimeline from '@/components/TrackingTimeline'
+import TrackingMap from '@/components/TrackingMap' // Added TrackingMap
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -34,7 +35,13 @@ export default async function TrackingPage({
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+            {/* Background Decorative */}
+            <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl opacity-30" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl opacity-30" />
+            </div>
+
             <Navbar />
 
             <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
@@ -69,9 +76,12 @@ export default async function TrackingPage({
 
                     {/* Sidebar Details */}
                     <div className="space-y-6">
-                        <Card>
+                        {/* Map Integration */}
+                        <TrackingMap className="w-full h-48 md:h-64" location={{ lat: 51.505, lng: -0.09 }} /> {/* Mock location for now */}
+
+                        <Card className="glass border-0 shadow-lg">
                             <CardHeader>
-                                <CardTitle className="text-lg">Parcel Details</CardTitle>
+                                <CardTitle className="text-lg text-secondary">Parcel Details</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex items-start gap-3">
@@ -91,9 +101,9 @@ export default async function TrackingPage({
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="glass border-0 shadow-lg">
                             <CardHeader>
-                                <CardTitle className="text-lg">Address Information</CardTitle>
+                                <CardTitle className="text-lg text-secondary">Address Information</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6 relative">
                                 <div className="absolute left-3 top-6 bottom-6 w-0.5 bg-slate-100" />

@@ -58,7 +58,7 @@ export default function TrackingTimeline({ history, currentStatus }: TrackingTim
 
                             {/* Content Card */}
                             <Card className={cn(
-                                "w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 border-slate-100 dark:border-slate-800 ml-4 md:ml-0 shadow-md",
+                                "w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 ml-4 md:ml-0 shadow-md glass border-0",
                                 isLatest && "border-primary/50 ring-1 ring-primary/20 bg-primary/5"
                             )}>
                                 <CardHeader className="p-0 mb-2">

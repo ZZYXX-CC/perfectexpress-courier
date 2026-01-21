@@ -27,6 +27,7 @@ export async function updateShipment(
         status?: string
         payment_status?: string
         current_location?: string
+        price?: number // Added price
     }
 ) {
     const supabase = await createClient()

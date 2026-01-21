@@ -40,6 +40,7 @@ type Shipment = {
     current_location: string | null
     history: any[] | null
     created_at: string | null
+    price?: number | null
 }
 
 const STATUS_OPTIONS = ['pending', 'in-transit', 'out-for-delivery', 'delivered', 'held']
@@ -72,8 +73,14 @@ export default function AdminPage() {
     })
 
     // Location Update Dialog State
+    // Location Update Dialog State
     const [locationDialogOpen, setLocationDialogOpen] = useState(false)
     const [newLocation, setNewLocation] = useState('')
+
+    // Review/Pricing Dialog State
+    const [pricingDialogOpen, setPricingDialogOpen] = useState(false)
+    const [price, setPrice] = useState('')
+    const [reviewShipmentId, setReviewShipmentId] = useState<string | null>(null)
 
     const fetchShipments = async () => {
         setIsLoading(true)
@@ -143,6 +150,26 @@ export default function AdminPage() {
                 toast.success('Location updated')
                 setLocationDialogOpen(false)
                 setNewLocation('')
+                fetchShipments()
+            }
+        })
+    }
+
+    const handleApproveShipment = () => {
+        if (!reviewShipmentId || !price) return
+        startTransition(async () => {
+            const result = await updateShipment(reviewShipmentId, {
+                status: 'pending', // Keep as pending until paid, or move to another valid status like 'processing'
+                payment_status: 'unpaid', // Ensure payment status is set
+                price: parseFloat(price)
+            })
+            if (result.error) {
+                toast.error(result.error)
+            } else {
+                toast.success('Shipment approved and price set')
+                setPricingDialogOpen(false)
+                setPrice('')
+                setReviewShipmentId(null)
                 fetchShipments()
             }
         })
@@ -378,9 +405,22 @@ export default function AdminPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                        {shipment.status}
-                                                    </Badge>
+                                                    {shipment.status === 'pending' && !shipment.price ? (
+                                                        <Button
+                                                            size="sm"
+                                                            className="bg-orange-500 hover:bg-orange-600 text-white border-0"
+                                                            onClick={() => {
+                                                                setReviewShipmentId(shipment.id)
+                                                                setPricingDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            Review
+                                                        </Button>
+                                                    ) : (
+                                                        <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                            {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
+                                                        </Badge>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Button
@@ -524,7 +564,38 @@ export default function AdminPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                {/* Pricing / Review Dialog */}
+                <Dialog open={pricingDialogOpen} onOpenChange={setPricingDialogOpen}>
+                    <DialogContent className="glass border-0 shadow-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-secondary">Review Shipment</DialogTitle>
+                            <DialogDescription className="text-slate-500">
+                                Set the price and approve this shipment request.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Label className="text-slate-500">Shipping Cost ($)</Label>
+                            <Input
+                                type="number"
+                                className="mt-2 bg-white/50"
+                                placeholder="e.g. 50.00"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                            />
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="border-slate-200">Cancel</Button>
+                            </DialogClose>
+                            <Button onClick={handleApproveShipment} disabled={isPending || !price} className="bg-primary hover:bg-primary/90 text-white rounded-full">
+                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Approve & Set Price
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </main>
-        </div>
+        </div >
     )
 }
