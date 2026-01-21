@@ -27,24 +27,13 @@ export async function updateShipment(
         status?: string
         payment_status?: string
         current_location?: string
-        price?: number // Added price
+        price?: number
     }
 ) {
     const supabase = await createClient()
 
-    // Fetch current state to detect transitions
-    const { data: shipment, error: fetchError } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-    if (fetchError || !shipment) {
-        console.error('Error fetching shipment for update:', fetchError)
-        return { error: 'Failed to find shipment' }
-    }
-
-    const { error } = await supabase
+    // First: Perform the update (this should work with RLS if user is authenticated)
+    const { error: updateError } = await supabase
         .from('shipments')
         .update({
             ...updates,
@@ -52,46 +41,54 @@ export async function updateShipment(
         })
         .eq('id', id)
 
-    if (error) {
-        console.error('Error updating shipment:', error)
-        return { error: 'Failed to update shipment' }
+    if (updateError) {
+        console.error('Error updating shipment:', updateError.message, updateError.code)
+        return { error: `Failed to update shipment: ${updateError.message}` }
     }
 
-    // --- Lifecycle Emails (to BOTH sender and receiver as requested) ---
+    // Second: Try to fetch shipment for lifecycle emails (non-blocking)
     try {
-        const {
-            sendShipmentApprovedEmail,
-            sendShipmentDispatchedEmail,
-            sendShipmentDeliveredEmail
-        } = await import('@/lib/email')
+        const { data: shipment } = await supabase
+            .from('shipments')
+            .select('*')
+            .eq('id', id)
+            .single()
 
-        const senderEmail = (shipment.sender_info as any)?.email
-        const receiverEmail = (shipment.receiver_info as any)?.email
-        const shipmentAny = shipment as any
-        const recipients = [senderEmail, receiverEmail].filter(Boolean) as string[]
+        if (shipment) {
+            const {
+                sendShipmentApprovedEmail,
+                sendShipmentDispatchedEmail,
+                sendShipmentDeliveredEmail
+            } = await import('@/lib/email')
 
-        // 1. Approval (Price set for the first time) - Notify BOTH
-        if (updates.price && !shipmentAny.price) {
-            for (const email of recipients) {
-                await sendShipmentApprovedEmail(email, shipment.tracking_number as string, updates.price)
+            const senderEmail = (shipment.sender_info as any)?.email
+            const receiverEmail = (shipment.receiver_info as any)?.email
+            const shipmentAny = shipment as any
+            const recipients = [senderEmail, receiverEmail].filter(Boolean) as string[]
+
+            // 1. Approval (Price set for the first time) - Notify BOTH
+            if (updates.price && !shipmentAny.price) {
+                for (const email of recipients) {
+                    await sendShipmentApprovedEmail(email, shipment.tracking_number as string, updates.price)
+                }
             }
-        }
 
-        // 2. Dispatched - Notify BOTH
-        if (updates.status === 'in-transit' && shipment.status !== 'in-transit') {
-            for (const email of recipients) {
-                await sendShipmentDispatchedEmail(email, shipment.tracking_number as string, updates.current_location || shipment.current_location || 'Origin')
+            // 2. Dispatched - Notify BOTH
+            if (updates.status === 'in-transit' && shipment.status !== 'in-transit') {
+                for (const email of recipients) {
+                    await sendShipmentDispatchedEmail(email, shipment.tracking_number as string, updates.current_location || shipment.current_location || 'Origin')
+                }
             }
-        }
 
-        // 3. Delivered - Notify BOTH
-        if (updates.status === 'delivered' && shipment.status !== 'delivered') {
-            for (const email of recipients) {
-                await sendShipmentDeliveredEmail(email, shipment.tracking_number as string)
+            // 3. Delivered - Notify BOTH
+            if (updates.status === 'delivered' && shipment.status !== 'delivered') {
+                for (const email of recipients) {
+                    await sendShipmentDeliveredEmail(email, shipment.tracking_number as string)
+                }
             }
         }
     } catch (emailError) {
-        console.error('Failed to send lifecycle email:', emailError)
+        console.error('Failed to send lifecycle email (non-critical):', emailError)
     }
 
     revalidatePath('/admin')
