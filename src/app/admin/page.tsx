@@ -25,7 +25,11 @@ import {
     Package,
     Truck,
     CheckCircle,
-    Clock
+    Clock,
+    User,
+    Mail,
+    Eye,
+    Trash2
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -43,7 +47,7 @@ type Shipment = {
     price?: number | null
 }
 
-const STATUS_OPTIONS = ['pending', 'in-transit', 'out-for-delivery', 'delivered', 'held']
+const STATUS_OPTIONS = ['pending', 'accepted', 'in-transit', 'out-for-delivery', 'delivered', 'held']
 
 export default function AdminPage() {
     const [shipments, setShipments] = useState<Shipment[]>([])
@@ -89,6 +93,10 @@ export default function AdminPage() {
 
     // Payment Confirmation State
     const [confirmPaymentDialogOpen, setConfirmPaymentDialogOpen] = useState(false)
+
+    // Shipment Details Modal State
+    const [detailsModalOpen, setDetailsModalOpen] = useState(false)
+    const [detailsShipment, setDetailsShipment] = useState<Shipment | null>(null)
 
     const fetchShipments = async () => {
         setIsLoading(true)
@@ -215,13 +223,16 @@ export default function AdminPage() {
     const handleConfirmPayment = () => {
         if (!selectedShipment) return
         startTransition(async () => {
-            // Only update payment status to paid (leave shipment status as pending)
-            const result = await togglePaymentStatus(selectedShipment.id, 'unpaid')
+            // Update payment status to paid AND status to accepted
+            const result = await updateShipment(selectedShipment.id, {
+                payment_status: 'paid',
+                status: 'accepted'
+            })
 
             if (result.error) {
                 toast.error(result.error)
             } else {
-                toast.success('Payment confirmed!')
+                toast.success('Payment confirmed! Status: Accepted')
                 setConfirmPaymentDialogOpen(false)
                 fetchShipments()
             }
@@ -291,8 +302,8 @@ export default function AdminPage() {
             )
         }
 
-        // 3. Ready to Dispatch (Paid and still pending)
-        if (shipment.status === 'pending' && shipment.payment_status === 'paid') {
+        // 3. Ready to Dispatch (Accepted status)
+        if (shipment.status === 'accepted') {
             return (
                 <Button
                     size="sm"
@@ -351,6 +362,7 @@ export default function AdminPage() {
         switch (status) {
             case 'delivered': return 'border-green-500 text-green-600 bg-green-50'
             case 'in-transit': return 'border-blue-500 text-blue-600 bg-blue-50'
+            case 'accepted': return 'border-purple-500 text-purple-600 bg-purple-50'
             case 'out-for-delivery': return 'border-yellow-500 text-yellow-600 bg-yellow-50'
             case 'held': return 'border-red-500 text-red-600 bg-red-50'
             default: return 'border-slate-500 text-slate-600 bg-slate-50'
@@ -543,9 +555,15 @@ export default function AdminPage() {
                                         filteredShipments.map((shipment) => (
                                             <TableRow key={shipment.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
                                                 <TableCell>
-                                                    <Link href={`/track/${shipment.tracking_number}`} className="font-mono font-bold text-primary hover:underline">
+                                                    <button
+                                                        onClick={() => {
+                                                            setDetailsShipment(shipment)
+                                                            setDetailsModalOpen(true)
+                                                        }}
+                                                        className="font-mono font-bold text-primary hover:underline cursor-pointer"
+                                                    >
                                                         {shipment.tracking_number}
-                                                    </Link>
+                                                    </button>
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="text-sm">
@@ -810,6 +828,174 @@ export default function AdminPage() {
                                 Approve & Set Price
                             </Button>
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Shipment Details Modal */}
+                <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
+                    <DialogContent className="glass border-0 shadow-2xl max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle className="text-secondary flex items-center gap-2">
+                                <Package className="h-5 w-5" />
+                                Shipment Details
+                            </DialogTitle>
+                            <DialogDescription className="text-slate-500">
+                                Tracking ID: <span className="font-mono font-bold text-primary">{detailsShipment?.tracking_number}</span>
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {detailsShipment && (
+                            <div className="space-y-6 py-4">
+                                {/* Status & Payment */}
+                                <div className="flex gap-4">
+                                    <div className="flex-1 p-4 bg-slate-50 rounded-lg">
+                                        <p className="text-xs text-slate-400 uppercase font-medium">Status</p>
+                                        <Badge variant="outline" className={`mt-1 uppercase font-medium ${getStatusColor(detailsShipment.status)}`}>
+                                            {detailsShipment.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex-1 p-4 bg-slate-50 rounded-lg">
+                                        <p className="text-xs text-slate-400 uppercase font-medium">Payment</p>
+                                        <Badge className={`mt-1 ${detailsShipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                            {detailsShipment.payment_status}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex-1 p-4 bg-slate-50 rounded-lg">
+                                        <p className="text-xs text-slate-400 uppercase font-medium">Price</p>
+                                        <p className="mt-1 font-bold text-lg">${detailsShipment.price?.toFixed(2) || '—'}</p>
+                                    </div>
+                                </div>
+
+                                {/* Sender Info */}
+                                <div className="p-4 border border-slate-200 rounded-lg">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="font-semibold text-secondary flex items-center gap-2">
+                                            <User size={16} /> Sender Information
+                                        </h4>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-primary"
+                                            onClick={() => {
+                                                const email = (detailsShipment.sender_info as any)?.email
+                                                if (email) window.location.href = `mailto:${email}`
+                                            }}
+                                        >
+                                            <Mail size={14} className="mr-1" /> Email
+                                        </Button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <p className="text-slate-400">Name</p>
+                                            <p className="font-medium">{(detailsShipment.sender_info as any)?.name || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Email</p>
+                                            <p className="font-medium">{(detailsShipment.sender_info as any)?.email || 'N/A'}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <p className="text-slate-400">Address</p>
+                                            <p className="font-medium">{(detailsShipment.sender_info as any)?.address || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Receiver Info */}
+                                <div className="p-4 border border-slate-200 rounded-lg">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="font-semibold text-secondary flex items-center gap-2">
+                                            <User size={16} /> Receiver Information
+                                        </h4>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-primary"
+                                            onClick={() => {
+                                                const email = (detailsShipment.receiver_info as any)?.email
+                                                if (email) window.location.href = `mailto:${email}`
+                                            }}
+                                        >
+                                            <Mail size={14} className="mr-1" /> Email
+                                        </Button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <p className="text-slate-400">Name</p>
+                                            <p className="font-medium">{(detailsShipment.receiver_info as any)?.name || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Email</p>
+                                            <p className="font-medium">{(detailsShipment.receiver_info as any)?.email || 'N/A'}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <p className="text-slate-400">Address</p>
+                                            <p className="font-medium">{(detailsShipment.receiver_info as any)?.address || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Parcel Details */}
+                                <div className="p-4 border border-slate-200 rounded-lg">
+                                    <h4 className="font-semibold text-secondary flex items-center gap-2 mb-3">
+                                        <Package size={16} /> Parcel Details
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <p className="text-slate-400">Description</p>
+                                            <p className="font-medium">{(detailsShipment.parcel_details as any)?.description || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Weight</p>
+                                            <p className="font-medium">{(detailsShipment.parcel_details as any)?.weight || 'N/A'} kg</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Current Location</p>
+                                            <p className="font-medium">{detailsShipment.current_location || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Created</p>
+                                            <p className="font-medium">{detailsShipment.created_at ? new Date(detailsShipment.created_at).toLocaleString() : 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap gap-2 pt-4 border-t">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => window.open(`/track/${detailsShipment.tracking_number}`, '_blank')}
+                                    >
+                                        <Eye size={14} className="mr-1" /> View Tracking
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setDetailsModalOpen(false)
+                                            setSelectedShipment(detailsShipment)
+                                            setEventStatus(detailsShipment.status || 'pending')
+                                            setEventLocation(detailsShipment.current_location || '')
+                                            setLogEventDialogOpen(true)
+                                        }}
+                                    >
+                                        <FileText size={14} className="mr-1" /> Update Status
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={async () => {
+                                            if (confirm('Are you sure you want to delete this shipment? This action cannot be undone.')) {
+                                                toast.info('Delete functionality coming soon')
+                                                // TODO: Implement delete action
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 size={14} className="mr-1" /> Delete
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     </DialogContent>
                 </Dialog>
             </main>
