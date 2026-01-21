@@ -32,6 +32,18 @@ export async function updateShipment(
 ) {
     const supabase = await createClient()
 
+    // Fetch current state to detect transitions
+    const { data: shipment, error: fetchError } = await supabase
+        .from('shipments')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+    if (fetchError || !shipment) {
+        console.error('Error fetching shipment for update:', fetchError)
+        return { error: 'Failed to find shipment' }
+    }
+
     const { error } = await supabase
         .from('shipments')
         .update({
@@ -43,6 +55,35 @@ export async function updateShipment(
     if (error) {
         console.error('Error updating shipment:', error)
         return { error: 'Failed to update shipment' }
+    }
+
+    // --- Lifecycle Emails ---
+    try {
+        const {
+            sendShipmentApprovedEmail,
+            sendShipmentDispatchedEmail,
+            sendShipmentDeliveredEmail
+        } = await import('@/lib/email')
+
+        const senderEmail = (shipment.sender_info as any)?.email
+        const shipmentAny = shipment as any
+
+        // 1. Approval (Price set for the first time)
+        if (updates.price && !shipmentAny.price && senderEmail) {
+            await sendShipmentApprovedEmail(senderEmail, shipment.tracking_number as string, updates.price)
+        }
+
+        // 2. Dispatched
+        if (updates.status === 'in-transit' && shipment.status !== 'in-transit' && senderEmail) {
+            await sendShipmentDispatchedEmail(senderEmail, shipment.tracking_number as string, updates.current_location || shipment.current_location || 'Origin')
+        }
+
+        // 3. Delivered
+        if (updates.status === 'delivered' && shipment.status !== 'delivered' && senderEmail) {
+            await sendShipmentDeliveredEmail(senderEmail, shipment.tracking_number as string)
+        }
+    } catch (emailError) {
+        console.error('Failed to send lifecycle email:', emailError)
     }
 
     revalidatePath('/admin')
@@ -96,24 +137,23 @@ export async function logShipmentEvent(
         return { error: 'Failed to log event' }
     }
 
-    // Mock email notification
+    // Real email notification
     if (notifyUser) {
-        const receiverEmail = (shipment.receiver_info as any)?.email || 'unknown'
-        console.log(`
-    ========================================
-    📧 MOCK EMAIL NOTIFICATION
-    ----------------------------------------
-    To: ${receiverEmail}
-    Subject: Shipment Update - ${shipment.tracking_number}
-    
-    Your shipment status has been updated:
-    Status: ${event.status}
-    Location: ${event.location}
-    ${event.note ? `Note: ${event.note}` : ''}
-    
-    Track your shipment: /track/${shipment.tracking_number}
-    ========================================
-    `)
+        try {
+            const { sendShipmentStatusUpdateEmail } = await import('@/lib/email')
+            const senderEmail = (shipment.sender_info as any)?.email
+            if (senderEmail) {
+                await sendShipmentStatusUpdateEmail(
+                    senderEmail,
+                    shipment.tracking_number as string,
+                    event.status,
+                    event.location,
+                    event.note
+                )
+            }
+        } catch (emailError) {
+            console.error('Failed to send status update email:', emailError)
+        }
     }
 
     revalidatePath('/admin')
