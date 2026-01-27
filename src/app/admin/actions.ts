@@ -29,12 +29,18 @@ export async function updateShipment(
         payment_status?: string
         current_location?: string
         price?: number
+        created_at?: string
         sender_info?: any
         receiver_info?: any
         parcel_details?: any
     }
 ) {
     const supabase = await createClient()
+
+    // Auto-update payment status if status becomes accepted
+    if (updates.status === 'accepted') {
+        updates.payment_status = 'paid'
+    }
 
     // First: Perform the update (this should work with RLS if user is authenticated)
     const { error: updateError } = await supabase
@@ -130,15 +136,22 @@ export async function logShipmentEvent(
     }
     const updatedHistory = [...currentHistory, newEvent]
 
+    // Auto-update payment status if status becomes accepted
+    const updatesWithAutoPayment: any = {
+        status: event.status,
+        current_location: event.location,
+        history: updatedHistory,
+        updated_at: new Date().toISOString()
+    }
+
+    if (event.status === 'accepted') {
+        updatesWithAutoPayment.payment_status = 'paid'
+    }
+
     // Update the shipment
     const { error: updateError } = await supabase
         .from('shipments')
-        .update({
-            status: event.status,
-            current_location: event.location,
-            history: updatedHistory,
-            updated_at: new Date().toISOString()
-        })
+        .update(updatesWithAutoPayment)
         .eq('id', id)
 
     if (updateError) {
@@ -190,6 +203,86 @@ export async function deleteShipment(id: string) {
     if (error) {
         console.error('Error deleting shipment:', error)
         return { error: 'Failed to delete shipment' }
+    }
+
+    revalidatePath('/admin')
+    return { success: true }
+}
+
+// --- User Management Actions ---
+
+export async function getAllUsers() {
+    const supabase = await createClient()
+
+    const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching users:', error)
+        return []
+    }
+
+    return profiles
+}
+
+export async function updateUserRole(userId: string, newRole: 'user' | 'admin') {
+    const { createServiceClient } = await import('@/utils/supabase/service')
+    const supabaseAdmin = createServiceClient()
+
+    // 1. Update public.profiles role
+    const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId)
+
+    if (error) {
+        console.error('Error updating role:', error)
+        return { error: 'Failed to update user role' }
+    }
+
+    revalidatePath('/admin')
+    return { success: true }
+}
+
+export async function createUser(userData: { email: string; password: string; fullName: string; role: 'user' | 'admin' }) {
+    // Use SERVICE ROLE client to create user without logging out current admin
+    const { createServiceClient } = await import('@/utils/supabase/service')
+    const supabaseAdmin = createServiceClient()
+
+    // 1. Create Auth User
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: userData.email,
+        password: userData.password,
+        email_confirm: true,
+        user_metadata: { full_name: userData.fullName }
+    })
+
+    if (authError || !authData.user) {
+        console.error('Error creating auth user:', authError)
+        return { error: authError?.message || 'Failed to create user' }
+    }
+
+    // 2. Insert/Update Profile (If trigger handles it, this might fail on duplicate key or update existing. Let's try upsert to be safe or rely on trigger)
+    // We update the role immediately after creation.
+
+    // Give trigger a moment or retry profile update?
+    // Let's force update the role on the profile via upsert which creates if not exists
+    const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .upsert({
+            id: authData.user.id,
+            email: userData.email,
+            full_name: userData.fullName,
+            role: userData.role,
+            updated_at: new Date().toISOString()
+        })
+
+    if (profileError) {
+        console.error('Error updating profile:', profileError)
+        // If upsert fails, it might be due to RLS if not using service client, but we ARE using service client.
+        return { warning: 'User created, but profile sync failed. Check role manually.', success: true }
     }
 
     revalidatePath('/admin')

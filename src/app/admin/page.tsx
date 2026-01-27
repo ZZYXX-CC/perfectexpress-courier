@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { getAllShipments, togglePaymentStatus, logShipmentEvent, updateShipment, deleteShipment } from './actions'
+import { getAllShipments, togglePaymentStatus, logShipmentEvent, updateShipment, deleteShipment, getAllUsers, updateUserRole, createUser } from './actions'
 import { createShipment, ShipmentFormData } from '@/app/actions/shipment'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,6 +45,14 @@ type Shipment = {
     history: any[] | null
     created_at: string | null
     price?: number | null
+}
+
+type UserProfile = {
+    id: string
+    email: string
+    full_name: string
+    role: 'user' | 'admin'
+    created_at: string
 }
 
 const STATUS_OPTIONS = ['pending', 'accepted', 'in-transit', 'out-for-delivery', 'delivered', 'held']
@@ -100,6 +108,17 @@ export default function AdminPage() {
     const [isEditing, setIsEditing] = useState(false)
     const [editFormData, setEditFormData] = useState<any>({})
 
+    // User Management State
+    const [activeTab, setActiveTab] = useState<'shipments' | 'users'>('shipments')
+    const [users, setUsers] = useState<UserProfile[]>([])
+    const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false)
+    const [newUser, setNewUser] = useState({
+        email: '',
+        password: '',
+        fullName: '',
+        role: 'user' as 'user' | 'admin'
+    })
+
     const fetchShipments = async () => {
         setIsLoading(true)
         const data = await getAllShipments()
@@ -107,9 +126,44 @@ export default function AdminPage() {
         setIsLoading(false)
     }
 
+    const fetchUsers = async () => {
+        setIsLoading(true)
+        const data = await getAllUsers()
+        setUsers(data as UserProfile[])
+        setIsLoading(false)
+    }
+
     useEffect(() => {
         fetchShipments()
+        fetchUsers() // Fetch both initially or lazily
     }, [])
+
+    const handleCreateUser = () => {
+        startTransition(async () => {
+            const result = await createUser(newUser)
+            if (result.error) {
+                toast.error(result.error)
+            } else {
+                toast.success('User created successfully')
+                setCreateUserDialogOpen(false)
+                setNewUser({ email: '', password: '', fullName: '', role: 'user' })
+                if (result.warning) toast.warning(result.warning)
+                fetchUsers()
+            }
+        })
+    }
+
+    const handleUpdateRole = (userId: string, newRole: 'user' | 'admin') => {
+        startTransition(async () => {
+            const result = await updateUserRole(userId, newRole)
+            if (result.error) {
+                toast.error(result.error)
+            } else {
+                toast.success('User role updated')
+                fetchUsers()
+            }
+        })
+    }
 
     const filteredShipments = shipments.filter(s =>
         s.tracking_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -384,244 +438,336 @@ export default function AdminPage() {
                         <h1 className="text-3xl font-bold text-secondary">Admin Dashboard</h1>
                         <p className="text-slate-500">Manage deliveries, update statuses, and track shipments.</p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={fetchShipments} disabled={isLoading}>
-                            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                            Refresh
-                        </Button>
-                        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg shadow-primary/20">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    New Shipment
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2">
-                                        <Package className="text-primary" />
-                                        Create New Shipment
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                        Fill in the details below to create a new shipment.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                                    <div className="space-y-3">
-                                        <h3 className="font-semibold border-b pb-2">Sender</h3>
-                                        <div className="space-y-2">
-                                            <Label>Name</Label>
-                                            <Input value={newShipment.sender_name} onChange={(e) => setNewShipment(p => ({ ...p, sender_name: e.target.value }))} placeholder="Sender Name" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Email</Label>
-                                            <Input value={newShipment.sender_email} onChange={(e) => setNewShipment(p => ({ ...p, sender_email: e.target.value }))} placeholder="Sender Email" type="email" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Address</Label>
-                                            <Input value={newShipment.sender_address} onChange={(e) => setNewShipment(p => ({ ...p, sender_address: e.target.value }))} placeholder="Sender Address" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <h3 className="font-semibold border-b pb-2">Receiver</h3>
-                                        <div className="space-y-2">
-                                            <Label>Name</Label>
-                                            <Input value={newShipment.receiver_name} onChange={(e) => setNewShipment(p => ({ ...p, receiver_name: e.target.value }))} placeholder="Receiver Name" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Email</Label>
-                                            <Input value={newShipment.receiver_email} onChange={(e) => setNewShipment(p => ({ ...p, receiver_email: e.target.value }))} placeholder="Receiver Email" type="email" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Address</Label>
-                                            <Input value={newShipment.receiver_address} onChange={(e) => setNewShipment(p => ({ ...p, receiver_address: e.target.value }))} placeholder="Receiver Address" />
-                                        </div>
-                                    </div>
-                                    <div className="md:col-span-2 space-y-3">
-                                        <h3 className="font-semibold border-b pb-2">Parcel</h3>
-                                        <div className="grid grid-cols-2 gap-4">
+                </div>
+
+                {/* Tabs */}
+                <div className="flex gap-4 mb-8 border-b border-slate-200 pb-1">
+                    <button
+                        className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'shipments' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setActiveTab('shipments')}
+                    >
+                        Shipments
+                        {activeTab === 'shipments' && <div className="absolute bottom-[-5px] left-0 w-full h-[2px] bg-primary rounded-full" />}
+                    </button>
+                    <button
+                        className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'users' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setActiveTab('users')}
+                    >
+                        User Management
+                        {activeTab === 'users' && <div className="absolute bottom-[-5px] left-0 w-full h-[2px] bg-primary rounded-full" />}
+                    </button>
+                </div>
+
+                {activeTab === 'shipments' ? (
+                    <>
+                        <div className="flex justify-end gap-2 mb-6">
+                            <Button variant="outline" onClick={fetchShipments} disabled={isLoading}>
+                                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </Button>
+                            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg shadow-primary/20">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        New Shipment
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                    <DialogHeader>
+                                        <DialogTitle className="flex items-center gap-2">
+                                            <Package className="text-primary" />
+                                            Create New Shipment
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                            Fill in the details below to create a new shipment.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                                        <div className="space-y-3">
+                                            <h3 className="font-semibold border-b pb-2">Sender</h3>
                                             <div className="space-y-2">
-                                                <Label>Weight (kg)</Label>
-                                                <Input value={newShipment.parcel_weight} onChange={(e) => setNewShipment(p => ({ ...p, parcel_weight: e.target.value }))} placeholder="e.g. 2.5" />
+                                                <Label>Name</Label>
+                                                <Input value={newShipment.sender_name} onChange={(e) => setNewShipment(p => ({ ...p, sender_name: e.target.value }))} placeholder="Sender Name" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Description</Label>
-                                                <Input value={newShipment.parcel_description} onChange={(e) => setNewShipment(p => ({ ...p, parcel_description: e.target.value }))} placeholder="e.g. Electronics" />
+                                                <Label>Email</Label>
+                                                <Input value={newShipment.sender_email} onChange={(e) => setNewShipment(p => ({ ...p, sender_email: e.target.value }))} placeholder="Sender Email" type="email" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Address</Label>
+                                                <Input value={newShipment.sender_address} onChange={(e) => setNewShipment(p => ({ ...p, sender_address: e.target.value }))} placeholder="Sender Address" />
                                             </div>
                                         </div>
+                                        <div className="space-y-3">
+                                            <h3 className="font-semibold border-b pb-2">Receiver</h3>
+                                            <div className="space-y-2">
+                                                <Label>Name</Label>
+                                                <Input value={newShipment.receiver_name} onChange={(e) => setNewShipment(p => ({ ...p, receiver_name: e.target.value }))} placeholder="Receiver Name" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Email</Label>
+                                                <Input value={newShipment.receiver_email} onChange={(e) => setNewShipment(p => ({ ...p, receiver_email: e.target.value }))} placeholder="Receiver Email" type="email" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Address</Label>
+                                                <Input value={newShipment.receiver_address} onChange={(e) => setNewShipment(p => ({ ...p, receiver_address: e.target.value }))} placeholder="Receiver Address" />
+                                            </div>
+                                        </div>
+                                        <div className="md:col-span-2 space-y-3">
+                                            <h3 className="font-semibold border-b pb-2">Parcel</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>Weight (kg)</Label>
+                                                    <Input value={newShipment.parcel_weight} onChange={(e) => setNewShipment(p => ({ ...p, parcel_weight: e.target.value }))} placeholder="e.g. 2.5" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Description</Label>
+                                                    <Input value={newShipment.parcel_description} onChange={(e) => setNewShipment(p => ({ ...p, parcel_description: e.target.value }))} placeholder="e.g. Electronics" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button variant="outline">Cancel</Button>
+                                        </DialogClose>
+                                        <Button onClick={handleCreateShipment} disabled={isPending}>
+                                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                                            Create
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+
+                        {/* Stats Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                            <Card className="glass border-0 shadow-lg">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-slate-500">Total Shipments</CardTitle>
+                                    <Package className="h-4 w-4 text-slate-400" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-secondary">{stats.total}</div>
+                                </CardContent>
+                            </Card>
+                            <Card className="glass border-0 shadow-lg">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-slate-500">Active Deliveries</CardTitle>
+                                    <Truck className="h-4 w-4 text-primary" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-primary">{stats.active}</div>
+                                </CardContent>
+                            </Card>
+                            <Card className="glass border-0 shadow-lg">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-slate-500">Delivered</CardTitle>
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-green-500">{stats.delivered}</div>
+                                </CardContent>
+                            </Card>
+                            <Card className="glass border-0 shadow-lg">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-slate-500">Paid Orders</CardTitle>
+                                    <DollarSign className="h-4 w-4 text-slate-400" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-secondary">{stats.paid}</div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Controls & Data Table */}
+                        <Card className="glass border-0 shadow-lg overflow-hidden">
+                            <CardHeader className="border-b border-slate-100 bg-slate-50/30">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div>
+                                        <CardTitle className="text-secondary">All Shipments</CardTitle>
+                                        <CardDescription className="text-slate-500">
+                                            {filteredShipments.length} shipments found
+                                        </CardDescription>
+                                    </div>
+                                    <div className="relative w-full sm:w-auto">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            placeholder="Search by ID, sender, or receiver..."
+                                            className="pl-9 w-full sm:w-[300px] bg-white border-slate-200"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
                                     </div>
                                 </div>
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button variant="outline">Cancel</Button>
-                                    </DialogClose>
-                                    <Button onClick={handleCreateShipment} disabled={isPending}>
-                                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-                                        Create
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                </div>
-
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <Card className="glass border-0 shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-500">Total Shipments</CardTitle>
-                            <Package className="h-4 w-4 text-slate-400" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-secondary">{stats.total}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="glass border-0 shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-500">Active Deliveries</CardTitle>
-                            <Truck className="h-4 w-4 text-primary" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-primary">{stats.active}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="glass border-0 shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-500">Delivered</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-500">{stats.delivered}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="glass border-0 shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-500">Paid Orders</CardTitle>
-                            <DollarSign className="h-4 w-4 text-slate-400" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-secondary">{stats.paid}</div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Controls & Data Table */}
-                <Card className="glass border-0 shadow-lg overflow-hidden">
-                    <CardHeader className="border-b border-slate-100 bg-slate-50/30">
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <ScrollArea className="h-[500px]">
+                                    <Table>
+                                        <TableHeader className="bg-slate-50">
+                                            <TableRow className="border-slate-100 hover:bg-slate-50">
+                                                <TableHead className="text-slate-500 font-semibold min-w-[120px]">Tracking ID</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[180px]">Sender / Receiver</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[120px]">Status</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[100px]">Payment</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[150px]">Location</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[120px]">Created</TableHead>
+                                                <TableHead className="text-right text-slate-500 font-semibold min-w-[100px]">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {isLoading ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="text-center py-20">
+                                                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : filteredShipments.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
+                                                        No shipments found.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                filteredShipments.map((shipment) => (
+                                                    <TableRow key={shipment.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                                        <TableCell>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setDetailsShipment(shipment)
+                                                                    setDetailsModalOpen(true)
+                                                                }}
+                                                                className="font-mono font-bold text-primary hover:underline cursor-pointer"
+                                                            >
+                                                                {shipment.tracking_number}
+                                                            </button>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="text-sm">
+                                                                <p className="font-medium text-secondary">{(shipment.sender_info as any)?.name || 'N/A'}</p>
+                                                                <p className="text-slate-500">→ {(shipment.receiver_info as any)?.name || 'N/A'}</p>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div
+                                                                className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                                onClick={() => {
+                                                                    setSelectedShipment(shipment)
+                                                                    setEventStatus(shipment.status || 'in-transit')
+                                                                    setEventLocation(shipment.current_location || '')
+                                                                    setLogEventDialogOpen(true)
+                                                                }}
+                                                            >
+                                                                <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                                    {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
+                                                                </Badge>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${shipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                                <DollarSign size={12} className="mr-1" />
+                                                                {shipment.payment_status}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
+                                                                setSelectedShipment(shipment)
+                                                                setNewLocation(shipment.current_location || '')
+                                                                setLocationDialogOpen(true)
+                                                            }}>
+                                                                <span className="text-sm text-slate-500 truncate max-w-[150px] group-hover:text-primary transition-colors">
+                                                                    {shipment.current_location || '—'}
+                                                                </span>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 group-hover:text-primary">
+                                                                    <MapPin size={14} />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-slate-500">
+                                                            {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            {renderSmartAction(shipment)}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
+                    </>
+                ) : (
+                    /* User Management Tab Content */
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-slate-100">
                             <div>
-                                <CardTitle className="text-secondary">All Shipments</CardTitle>
-                                <CardDescription className="text-slate-500">
-                                    {filteredShipments.length} shipments found
-                                </CardDescription>
+                                <h2 className="text-lg font-bold text-secondary">User Accounts</h2>
+                                <p className="text-sm text-slate-500">Manage admins and standard users</p>
                             </div>
-                            <div className="relative w-full sm:w-auto">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <Input
-                                    placeholder="Search by ID, sender, or receiver..."
-                                    className="pl-9 w-full sm:w-[300px] bg-white border-slate-200"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
+                            <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => setCreateUserDialogOpen(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create Account
+                            </Button>
                         </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <ScrollArea className="h-[500px]">
-                            <Table>
-                                <TableHeader className="bg-slate-50">
-                                    <TableRow className="border-slate-100 hover:bg-slate-50">
-                                        <TableHead className="text-slate-500 font-semibold min-w-[120px]">Tracking ID</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold min-w-[180px]">Sender / Receiver</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold min-w-[120px]">Status</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold min-w-[100px]">Payment</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold min-w-[150px]">Location</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold min-w-[120px]">Created</TableHead>
-                                        <TableHead className="text-right text-slate-500 font-semibold min-w-[100px]">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {isLoading ? (
-                                        <TableRow>
-                                            <TableCell colSpan={7} className="text-center py-20">
-                                                <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-                                            </TableCell>
+
+                        <Card className="glass border-0 shadow-lg overflow-hidden">
+                            <CardContent className="p-0">
+                                <Table>
+                                    <TableHeader className="bg-slate-50">
+                                        <TableRow className="border-slate-100">
+                                            <TableHead className="text-slate-500 font-semibold">User</TableHead>
+                                            <TableHead className="text-slate-500 font-semibold">Email</TableHead>
+                                            <TableHead className="text-slate-500 font-semibold">Role</TableHead>
+                                            <TableHead className="text-slate-500 font-semibold">Joined</TableHead>
+                                            <TableHead className="text-right text-slate-500 font-semibold">Actions</TableHead>
                                         </TableRow>
-                                    ) : filteredShipments.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
-                                                No shipments found.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        filteredShipments.map((shipment) => (
-                                            <TableRow key={shipment.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                    </TableHeader>
+                                    <TableBody>
+                                        {users.map(user => (
+                                            <TableRow key={user.id} className="border-slate-100">
                                                 <TableCell>
-                                                    <button
-                                                        onClick={() => {
-                                                            setDetailsShipment(shipment)
-                                                            setDetailsModalOpen(true)
-                                                        }}
-                                                        className="font-mono font-bold text-primary hover:underline cursor-pointer"
-                                                    >
-                                                        {shipment.tracking_number}
-                                                    </button>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="text-sm">
-                                                        <p className="font-medium text-secondary">{(shipment.sender_info as any)?.name || 'N/A'}</p>
-                                                        <p className="text-slate-500">→ {(shipment.receiver_info as any)?.name || 'N/A'}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold">
+                                                            {user.full_name?.charAt(0) || 'U'}
+                                                        </div>
+                                                        <span className="font-medium text-secondary">{user.full_name || 'N/A'}</span>
                                                     </div>
                                                 </TableCell>
+                                                <TableCell className="text-slate-500">{user.email}</TableCell>
                                                 <TableCell>
-                                                    <div
-                                                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                                                        onClick={() => {
-                                                            setSelectedShipment(shipment)
-                                                            setEventStatus(shipment.status || 'in-transit')
-                                                            setEventLocation(shipment.current_location || '')
-                                                            setLogEventDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                            {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
-                                                        </Badge>
-                                                    </div>
+                                                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className={user.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'bg-slate-100 text-slate-600'}>
+                                                        {user.role}
+                                                    </Badge>
                                                 </TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${shipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                                        <DollarSign size={12} className="mr-1" />
-                                                        {shipment.payment_status}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
-                                                        setSelectedShipment(shipment)
-                                                        setNewLocation(shipment.current_location || '')
-                                                        setLocationDialogOpen(true)
-                                                    }}>
-                                                        <span className="text-sm text-slate-500 truncate max-w-[150px] group-hover:text-primary transition-colors">
-                                                            {shipment.current_location || '—'}
-                                                        </span>
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 group-hover:text-primary">
-                                                            <MapPin size={14} />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-sm text-slate-500">
-                                                    {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
+                                                <TableCell className="text-slate-500 text-sm">
+                                                    {new Date(user.created_at).toLocaleDateString()}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    {renderSmartAction(shipment)}
+                                                    {user.role === 'admin' ? (
+                                                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleUpdateRole(user.id, 'user')}>
+                                                            Revoke Admin
+                                                        </Button>
+                                                    ) : (
+                                                        <Button variant="ghost" size="sm" className="text-purple-600 hover:text-purple-700 hover:bg-purple-50" onClick={() => handleUpdateRole(user.id, 'admin')}>
+                                                            Make Admin
+                                                        </Button>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </ScrollArea>
-                    </CardContent>
-                </Card>
+                                        ))}
+                                        {users.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center py-10 text-slate-400">No users found</TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
 
                 {/* Log Event Dialog */}
                 <Dialog open={logEventDialogOpen} onOpenChange={setLogEventDialogOpen}>
@@ -1011,6 +1157,17 @@ export default function AdminPage() {
                                                     <Input placeholder="H" className="h-9 px-1 text-center" value={editFormData.parcel_details?.dimensions?.height || ''} onChange={(e) => setEditFormData({ ...editFormData, parcel_details: { ...editFormData.parcel_details, dimensions: { ...editFormData.parcel_details?.dimensions, height: e.target.value } } })} />
                                                 </div>
                                             </div>
+                                            <div>
+                                                <p className="text-xs text-slate-400 mb-1">Created Date</p>
+                                                <Input
+                                                    type="datetime-local"
+                                                    value={editFormData.created_at ? new Date(editFormData.created_at).toISOString().slice(0, 16) : ''}
+                                                    onChange={(e) => {
+                                                        const date = new Date(e.target.value)
+                                                        setEditFormData({ ...editFormData, created_at: date.toISOString() })
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-2 gap-3 text-sm">
@@ -1102,7 +1259,8 @@ export default function AdminPage() {
                                                     setEditFormData({
                                                         sender_info: detailsShipment.sender_info,
                                                         receiver_info: detailsShipment.receiver_info,
-                                                        parcel_details: detailsShipment.parcel_details
+                                                        parcel_details: detailsShipment.parcel_details,
+                                                        created_at: detailsShipment.created_at
                                                     })
                                                 }}
                                             >
@@ -1127,6 +1285,69 @@ export default function AdminPage() {
                                 </div>
                             </div>
                         )}
+                    </DialogContent>
+                </Dialog>
+
+                {/* Create User Dialog */}
+                <Dialog open={createUserDialogOpen} onOpenChange={setCreateUserDialogOpen}>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <User className="text-primary" />
+                                Create New User
+                            </DialogTitle>
+                            <DialogDescription>
+                                Create a new account. They will receive a confirmation email.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label>Full Name</Label>
+                                <Input
+                                    value={newUser.fullName}
+                                    onChange={(e) => setNewUser(p => ({ ...p, fullName: e.target.value }))}
+                                    placeholder="John Doe"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Email</Label>
+                                <Input
+                                    type="email"
+                                    value={newUser.email}
+                                    onChange={(e) => setNewUser(p => ({ ...p, email: e.target.value }))}
+                                    placeholder="john@example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Password</Label>
+                                <Input
+                                    type="password"
+                                    value={newUser.password}
+                                    onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))}
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Role</Label>
+                                <select
+                                    className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                    value={newUser.role}
+                                    onChange={(e) => setNewUser(p => ({ ...p, role: e.target.value as 'user' | 'admin' }))}
+                                >
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <Button onClick={handleCreateUser} disabled={isPending || !newUser.email || !newUser.password}>
+                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                                Create User
+                            </Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </main>

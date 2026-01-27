@@ -193,20 +193,20 @@ export default function DashboardClient({ user, profile, shipments }: { user: an
                                                                 setDetailsShipment(shipment)
                                                                 setDetailsModalOpen(true)
                                                             }}
-                                                            className="font-mono font-bold text-primary hover:underline"
+                                                            className="font-mono font-bold text-primary hover:underline whitespace-nowrap"
                                                         >
                                                             {shipment.tracking_number}
                                                         </button>
                                                     </TableCell>
-                                                    <TableCell className="text-secondary">
+                                                    <TableCell className="text-secondary whitespace-nowrap">
                                                         {shipment.receiver_info?.name || 'N/A'}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                        <Badge variant="outline" className={`uppercase font-medium whitespace-nowrap ${getStatusColor(shipment.status)}`}>
                                                             {shipment.status}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell className="text-slate-500">
+                                                    <TableCell className="text-slate-500 whitespace-nowrap">
                                                         {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
                                                     </TableCell>
                                                     <TableCell className="text-right">
