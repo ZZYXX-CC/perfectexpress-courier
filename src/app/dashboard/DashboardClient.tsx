@@ -117,8 +117,8 @@ export default function DashboardClient({ user, profile, shipments }: { user: an
                             </div>
                         ) : (
                             <ScrollArea className="h-[400px]">
-                                {/* Mobile View: Cards */}
-                                <div className="md:hidden space-y-4 p-4">
+                                {/* Mobile/Tablet View: Cards */}
+                                <div className="lg:hidden space-y-4 p-4">
                                     {shipments.map((shipment) => (
                                         <div key={shipment.id} className="bg-white rounded-lg border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow">
                                             <div className="flex justify-between items-start mb-3">
@@ -173,7 +173,7 @@ export default function DashboardClient({ user, profile, shipments }: { user: an
                                 </div>
 
                                 {/* Desktop View: Table */}
-                                <div className="hidden md:block">
+                                <div className="hidden lg:block overflow-x-auto">
                                     <Table>
                                         <TableHeader className="bg-slate-50">
                                             <TableRow className="border-slate-100">
