@@ -21,6 +21,7 @@ export async function getAllShipments() {
 }
 
 // Update shipment status/payment/location
+// Update shipment status/payment/location
 export async function updateShipment(
     id: string,
     updates: {
@@ -28,6 +29,9 @@ export async function updateShipment(
         payment_status?: string
         current_location?: string
         price?: number
+        sender_info?: any
+        receiver_info?: any
+        parcel_details?: any
     }
 ) {
     const supabase = await createClient()
@@ -172,4 +176,22 @@ export async function logShipmentEvent(
 export async function togglePaymentStatus(id: string, currentStatus: string) {
     const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid'
     return updateShipment(id, { payment_status: newStatus })
+}
+
+// Delete a shipment
+export async function deleteShipment(id: string) {
+    const supabase = await createClient()
+
+    const { error } = await supabase
+        .from('shipments')
+        .delete()
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error deleting shipment:', error)
+        return { error: 'Failed to delete shipment' }
+    }
+
+    revalidatePath('/admin')
+    return { success: true }
 }

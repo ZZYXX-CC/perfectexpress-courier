@@ -101,14 +101,16 @@ const Navbar = () => {
 
                             {isMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                                    <Link
-                                        href="/dashboard"
-                                        className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-primary"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        <LayoutDashboard size={16} />
-                                        Dashboard
-                                    </Link>
+                                    {profile?.role !== 'admin' && (
+                                        <Link
+                                            href="/dashboard"
+                                            className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-primary"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <LayoutDashboard size={16} />
+                                            Dashboard
+                                        </Link>
+                                    )}
                                     {profile?.role === 'admin' && (
                                         <Link
                                             href="/admin"
@@ -169,12 +171,14 @@ const Navbar = () => {
                     <div className="flex flex-col gap-3 mt-2">
                         {user ? (
                             <>
-                                <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start text-secondary">
-                                        <LayoutDashboard className="mr-2" size={16} />
-                                        Dashboard
-                                    </Button>
-                                </Link>
+                                {profile?.role !== 'admin' && (
+                                    <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                                        <Button variant="ghost" className="w-full justify-start text-secondary">
+                                            <LayoutDashboard className="mr-2" size={16} />
+                                            Dashboard
+                                        </Button>
+                                    </Link>
+                                )}
                                 {profile?.role === 'admin' && (
                                     <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
                                         <Button variant="ghost" className="w-full justify-start text-secondary">

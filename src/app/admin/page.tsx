@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { getAllShipments, togglePaymentStatus, logShipmentEvent, updateShipment } from './actions'
+import { getAllShipments, togglePaymentStatus, logShipmentEvent, updateShipment, deleteShipment } from './actions'
 import { createShipment, ShipmentFormData } from '@/app/actions/shipment'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -97,6 +97,8 @@ export default function AdminPage() {
     // Shipment Details Modal State
     const [detailsModalOpen, setDetailsModalOpen] = useState(false)
     const [detailsShipment, setDetailsShipment] = useState<Shipment | null>(null)
+    const [isEditing, setIsEditing] = useState(false)
+    const [editFormData, setEditFormData] = useState<any>({})
 
     const fetchShipments = async () => {
         setIsLoading(true)
@@ -529,13 +531,13 @@ export default function AdminPage() {
                             <Table>
                                 <TableHeader className="bg-slate-50">
                                     <TableRow className="border-slate-100 hover:bg-slate-50">
-                                        <TableHead className="text-slate-500 font-semibold">Tracking ID</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold">Sender / Receiver</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold">Status</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold">Payment</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold">Location</TableHead>
-                                        <TableHead className="text-slate-500 font-semibold">Created</TableHead>
-                                        <TableHead className="text-right text-slate-500 font-semibold">Actions</TableHead>
+                                        <TableHead className="text-slate-500 font-semibold min-w-[120px]">Tracking ID</TableHead>
+                                        <TableHead className="text-slate-500 font-semibold min-w-[180px]">Sender / Receiver</TableHead>
+                                        <TableHead className="text-slate-500 font-semibold min-w-[120px]">Status</TableHead>
+                                        <TableHead className="text-slate-500 font-semibold min-w-[100px]">Payment</TableHead>
+                                        <TableHead className="text-slate-500 font-semibold min-w-[150px]">Location</TableHead>
+                                        <TableHead className="text-slate-500 font-semibold min-w-[120px]">Created</TableHead>
+                                        <TableHead className="text-right text-slate-500 font-semibold min-w-[100px]">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -872,32 +874,55 @@ export default function AdminPage() {
                                         <h4 className="font-semibold text-secondary flex items-center gap-2">
                                             <User size={16} /> Sender Information
                                         </h4>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-primary"
-                                            onClick={() => {
-                                                const email = (detailsShipment.sender_info as any)?.email
-                                                if (email) window.location.href = `mailto:${email}`
-                                            }}
-                                        >
-                                            <Mail size={14} className="mr-1" /> Email
-                                        </Button>
+                                        {!isEditing && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-primary"
+                                                onClick={() => {
+                                                    const email = (detailsShipment.sender_info as any)?.email
+                                                    if (email) window.location.href = `mailto:${email}`
+                                                }}
+                                            >
+                                                <Mail size={14} className="mr-1" /> Email
+                                            </Button>
+                                        )}
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                        <div>
-                                            <p className="text-slate-400">Name</p>
-                                            <p className="font-medium">{(detailsShipment.sender_info as any)?.name || 'N/A'}</p>
+                                    {isEditing ? (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Input
+                                                placeholder="Name"
+                                                value={editFormData.sender_info?.name || ''}
+                                                onChange={(e) => setEditFormData({ ...editFormData, sender_info: { ...editFormData.sender_info, name: e.target.value } })}
+                                            />
+                                            <Input
+                                                placeholder="Email"
+                                                value={editFormData.sender_info?.email || ''}
+                                                onChange={(e) => setEditFormData({ ...editFormData, sender_info: { ...editFormData.sender_info, email: e.target.value } })}
+                                            />
+                                            <Input
+                                                className="col-span-2"
+                                                placeholder="Address"
+                                                value={editFormData.sender_info?.address || ''}
+                                                onChange={(e) => setEditFormData({ ...editFormData, sender_info: { ...editFormData.sender_info, address: e.target.value } })}
+                                            />
                                         </div>
-                                        <div>
-                                            <p className="text-slate-400">Email</p>
-                                            <p className="font-medium">{(detailsShipment.sender_info as any)?.email || 'N/A'}</p>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-slate-400">Name</p>
+                                                <p className="font-medium">{(detailsShipment.sender_info as any)?.name || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-400">Email</p>
+                                                <p className="font-medium">{(detailsShipment.sender_info as any)?.email || 'N/A'}</p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <p className="text-slate-400">Address</p>
+                                                <p className="font-medium">{(detailsShipment.sender_info as any)?.address || 'N/A'}</p>
+                                            </div>
                                         </div>
-                                        <div className="col-span-2">
-                                            <p className="text-slate-400">Address</p>
-                                            <p className="font-medium">{(detailsShipment.sender_info as any)?.address || 'N/A'}</p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Receiver Info */}
@@ -906,32 +931,55 @@ export default function AdminPage() {
                                         <h4 className="font-semibold text-secondary flex items-center gap-2">
                                             <User size={16} /> Receiver Information
                                         </h4>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-primary"
-                                            onClick={() => {
-                                                const email = (detailsShipment.receiver_info as any)?.email
-                                                if (email) window.location.href = `mailto:${email}`
-                                            }}
-                                        >
-                                            <Mail size={14} className="mr-1" /> Email
-                                        </Button>
+                                        {!isEditing && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-primary"
+                                                onClick={() => {
+                                                    const email = (detailsShipment.receiver_info as any)?.email
+                                                    if (email) window.location.href = `mailto:${email}`
+                                                }}
+                                            >
+                                                <Mail size={14} className="mr-1" /> Email
+                                            </Button>
+                                        )}
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                        <div>
-                                            <p className="text-slate-400">Name</p>
-                                            <p className="font-medium">{(detailsShipment.receiver_info as any)?.name || 'N/A'}</p>
+                                    {isEditing ? (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Input
+                                                placeholder="Name"
+                                                value={editFormData.receiver_info?.name || ''}
+                                                onChange={(e) => setEditFormData({ ...editFormData, receiver_info: { ...editFormData.receiver_info, name: e.target.value } })}
+                                            />
+                                            <Input
+                                                placeholder="Email"
+                                                value={editFormData.receiver_info?.email || ''}
+                                                onChange={(e) => setEditFormData({ ...editFormData, receiver_info: { ...editFormData.receiver_info, email: e.target.value } })}
+                                            />
+                                            <Input
+                                                className="col-span-2"
+                                                placeholder="Address"
+                                                value={editFormData.receiver_info?.address || ''}
+                                                onChange={(e) => setEditFormData({ ...editFormData, receiver_info: { ...editFormData.receiver_info, address: e.target.value } })}
+                                            />
                                         </div>
-                                        <div>
-                                            <p className="text-slate-400">Email</p>
-                                            <p className="font-medium">{(detailsShipment.receiver_info as any)?.email || 'N/A'}</p>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-slate-400">Name</p>
+                                                <p className="font-medium">{(detailsShipment.receiver_info as any)?.name || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-400">Email</p>
+                                                <p className="font-medium">{(detailsShipment.receiver_info as any)?.email || 'N/A'}</p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <p className="text-slate-400">Address</p>
+                                                <p className="font-medium">{(detailsShipment.receiver_info as any)?.address || 'N/A'}</p>
+                                            </div>
                                         </div>
-                                        <div className="col-span-2">
-                                            <p className="text-slate-400">Address</p>
-                                            <p className="font-medium">{(detailsShipment.receiver_info as any)?.address || 'N/A'}</p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Parcel Details */}
@@ -939,60 +987,143 @@ export default function AdminPage() {
                                     <h4 className="font-semibold text-secondary flex items-center gap-2 mb-3">
                                         <Package size={16} /> Parcel Details
                                     </h4>
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                        <div>
-                                            <p className="text-slate-400">Description</p>
-                                            <p className="font-medium">{(detailsShipment.parcel_details as any)?.description || 'N/A'}</p>
+                                    {isEditing ? (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Input
+                                                placeholder="Description"
+                                                value={editFormData.parcel_details?.description || ''}
+                                                onChange={(e) => setEditFormData({ ...editFormData, parcel_details: { ...editFormData.parcel_details, description: e.target.value } })}
+                                                className="col-span-2"
+                                            />
+                                            <div>
+                                                <p className="text-xs text-slate-400 mb-1">Weight (kg)</p>
+                                                <Input
+                                                    type="number"
+                                                    value={editFormData.parcel_details?.weight || ''}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, parcel_details: { ...editFormData.parcel_details, weight: e.target.value } })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-slate-400 mb-1">Dimensions (L/W/H)</p>
+                                                <div className="flex gap-1">
+                                                    <Input placeholder="L" className="h-9 px-1 text-center" value={editFormData.parcel_details?.dimensions?.length || ''} onChange={(e) => setEditFormData({ ...editFormData, parcel_details: { ...editFormData.parcel_details, dimensions: { ...editFormData.parcel_details?.dimensions, length: e.target.value } } })} />
+                                                    <Input placeholder="W" className="h-9 px-1 text-center" value={editFormData.parcel_details?.dimensions?.width || ''} onChange={(e) => setEditFormData({ ...editFormData, parcel_details: { ...editFormData.parcel_details, dimensions: { ...editFormData.parcel_details?.dimensions, width: e.target.value } } })} />
+                                                    <Input placeholder="H" className="h-9 px-1 text-center" value={editFormData.parcel_details?.dimensions?.height || ''} onChange={(e) => setEditFormData({ ...editFormData, parcel_details: { ...editFormData.parcel_details, dimensions: { ...editFormData.parcel_details?.dimensions, height: e.target.value } } })} />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-slate-400">Weight</p>
-                                            <p className="font-medium">{(detailsShipment.parcel_details as any)?.weight || 'N/A'} kg</p>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-slate-400">Description</p>
+                                                <p className="font-medium">{(detailsShipment.parcel_details as any)?.description || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-400">Weight</p>
+                                                <p className="font-medium">{(detailsShipment.parcel_details as any)?.weight || 'N/A'} kg</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-400">Current Location</p>
+                                                <p className="font-medium">{detailsShipment.current_location || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-400">Created</p>
+                                                <p className="font-medium">{detailsShipment.created_at ? new Date(detailsShipment.created_at).toLocaleString() : 'N/A'}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-slate-400">Current Location</p>
-                                            <p className="font-medium">{detailsShipment.current_location || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-slate-400">Created</p>
-                                            <p className="font-medium">{detailsShipment.created_at ? new Date(detailsShipment.created_at).toLocaleString() : 'N/A'}</p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Action Buttons */}
                                 <div className="flex flex-wrap gap-2 pt-4 border-t">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => window.open(`/track/${detailsShipment.tracking_number}`, '_blank')}
-                                    >
-                                        <Eye size={14} className="mr-1" /> View Tracking
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            setDetailsModalOpen(false)
-                                            setSelectedShipment(detailsShipment)
-                                            setEventStatus(detailsShipment.status || 'pending')
-                                            setEventLocation(detailsShipment.current_location || '')
-                                            setLogEventDialogOpen(true)
-                                        }}
-                                    >
-                                        <FileText size={14} className="mr-1" /> Update Status
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={async () => {
-                                            if (confirm('Are you sure you want to delete this shipment? This action cannot be undone.')) {
-                                                toast.info('Delete functionality coming soon')
-                                                // TODO: Implement delete action
-                                            }
-                                        }}
-                                    >
-                                        <Trash2 size={14} className="mr-1" /> Delete
-                                    </Button>
+                                    {isEditing ? (
+                                        <>
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                className="bg-green-600 hover:bg-green-700 text-white"
+                                                disabled={isPending}
+                                                onClick={() => {
+                                                    startTransition(async () => {
+                                                        try {
+                                                            const result = await updateShipment(detailsShipment.id, editFormData)
+                                                            if (result.success) {
+                                                                toast.success('Shipment updated')
+                                                                setDetailsShipment({ ...detailsShipment, ...editFormData })
+                                                                setIsEditing(false)
+                                                                await fetchShipments()
+                                                            } else {
+                                                                toast.error('Update failed')
+                                                            }
+                                                        } catch (e) {
+                                                            toast.error('An error occurred')
+                                                        }
+                                                    })
+                                                }}
+                                            >
+                                                Save Changes
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setIsEditing(false)}
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => window.open(`/track/${detailsShipment.tracking_number}`, '_blank')}
+                                            >
+                                                <Eye size={14} className="mr-1" /> View Tracking
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setDetailsModalOpen(false)
+                                                    setSelectedShipment(detailsShipment)
+                                                    setEventStatus(detailsShipment.status || 'pending')
+                                                    setEventLocation(detailsShipment.current_location || '')
+                                                    setLogEventDialogOpen(true)
+                                                }}
+                                            >
+                                                <FileText size={14} className="mr-1" /> Update Status
+                                            </Button>
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                onClick={() => {
+                                                    setIsEditing(true)
+                                                    setEditFormData({
+                                                        sender_info: detailsShipment.sender_info,
+                                                        receiver_info: detailsShipment.receiver_info,
+                                                        parcel_details: detailsShipment.parcel_details
+                                                    })
+                                                }}
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={async () => {
+                                                    if (confirm('Are you sure you want to delete this shipment? This action cannot be undone.')) {
+                                                        await deleteShipment(detailsShipment.id)
+                                                        setDetailsModalOpen(false)
+                                                        fetchShipments()
+                                                        toast.success('Shipment deleted')
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 size={14} className="mr-1" /> Delete
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         )}
