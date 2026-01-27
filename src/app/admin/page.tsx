@@ -602,100 +602,98 @@ export default function AdminPage() {
                                 </div>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <ScrollArea className="h-[500px]">
-                                        <Table className="min-w-[900px]">
-                                            <TableHeader className="bg-slate-50">
-                                                <TableRow className="border-slate-100 hover:bg-slate-50">
-                                                    <TableHead className="text-slate-500 font-semibold min-w-[120px]">Tracking ID</TableHead>
-                                                    <TableHead className="text-slate-500 font-semibold min-w-[180px]">Sender / Receiver</TableHead>
-                                                    <TableHead className="text-slate-500 font-semibold min-w-[120px]">Status</TableHead>
-                                                    <TableHead className="text-slate-500 font-semibold min-w-[100px]">Payment</TableHead>
-                                                    <TableHead className="text-slate-500 font-semibold min-w-[150px]">Location</TableHead>
-                                                    <TableHead className="text-slate-500 font-semibold min-w-[120px]">Created</TableHead>
-                                                    <TableHead className="text-right text-slate-500 font-semibold min-w-[100px]">Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {isLoading ? (
-                                                    <TableRow>
-                                                        <TableCell colSpan={7} className="text-center py-20">
-                                                            <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ) : filteredShipments.length === 0 ? (
-                                                    <TableRow>
-                                                        <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
-                                                            No shipments found.
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ) : (
-                                                    filteredShipments.map((shipment) => (
-                                                        <TableRow key={shipment.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
-                                                            <TableCell>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setDetailsShipment(shipment)
-                                                                        setDetailsModalOpen(true)
-                                                                    }}
-                                                                    className="font-mono font-bold text-primary hover:underline cursor-pointer"
-                                                                >
-                                                                    {shipment.tracking_number}
-                                                                </button>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div className="text-sm">
-                                                                    <p className="font-medium text-secondary">{(shipment.sender_info as any)?.name || 'N/A'}</p>
-                                                                    <p className="text-slate-500">→ {(shipment.receiver_info as any)?.name || 'N/A'}</p>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div
-                                                                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                                                                    onClick={() => {
-                                                                        setSelectedShipment(shipment)
-                                                                        setEventStatus(shipment.status || 'in-transit')
-                                                                        setEventLocation(shipment.current_location || '')
-                                                                        setLogEventDialogOpen(true)
-                                                                    }}
-                                                                >
-                                                                    <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                                        {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
-                                                                    </Badge>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${shipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                                                    <DollarSign size={12} className="mr-1" />
-                                                                    {shipment.payment_status}
-                                                                </span>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
+                                <div className="overflow-auto max-h-[500px]">
+                                    <table className="w-full min-w-[1000px] border-collapse">
+                                        <thead className="bg-slate-50 sticky top-0 z-10">
+                                            <tr className="border-b border-slate-100">
+                                                <th className="text-left text-slate-500 font-semibold px-4 py-3 min-w-[130px]">Tracking ID</th>
+                                                <th className="text-left text-slate-500 font-semibold px-4 py-3 min-w-[180px]">Sender / Receiver</th>
+                                                <th className="text-left text-slate-500 font-semibold px-4 py-3 min-w-[130px]">Status</th>
+                                                <th className="text-left text-slate-500 font-semibold px-4 py-3 min-w-[100px]">Payment</th>
+                                                <th className="text-left text-slate-500 font-semibold px-4 py-3 min-w-[160px]">Location</th>
+                                                <th className="text-left text-slate-500 font-semibold px-4 py-3 min-w-[110px]">Created</th>
+                                                <th className="text-right text-slate-500 font-semibold px-4 py-3 min-w-[130px]">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {isLoading ? (
+                                                <tr>
+                                                    <td colSpan={7} className="text-center py-20">
+                                                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                                                    </td>
+                                                </tr>
+                                            ) : filteredShipments.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={7} className="text-center py-20 text-muted-foreground">
+                                                        No shipments found.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                filteredShipments.map((shipment) => (
+                                                    <tr key={shipment.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-4 py-3">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setDetailsShipment(shipment)
+                                                                    setDetailsModalOpen(true)
+                                                                }}
+                                                                className="font-mono font-bold text-primary hover:underline cursor-pointer"
+                                                            >
+                                                                {shipment.tracking_number}
+                                                            </button>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="text-sm">
+                                                                <p className="font-medium text-secondary">{(shipment.sender_info as any)?.name || 'N/A'}</p>
+                                                                <p className="text-slate-500">→ {(shipment.receiver_info as any)?.name || 'N/A'}</p>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div
+                                                                className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                                onClick={() => {
                                                                     setSelectedShipment(shipment)
-                                                                    setNewLocation(shipment.current_location || '')
-                                                                    setLocationDialogOpen(true)
-                                                                }}>
-                                                                    <span className="text-sm text-slate-500 truncate max-w-[150px] group-hover:text-primary transition-colors">
-                                                                        {shipment.current_location || '—'}
-                                                                    </span>
-                                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 group-hover:text-primary">
-                                                                        <MapPin size={14} />
-                                                                    </Button>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell className="text-sm text-slate-500">
-                                                                {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                {renderSmartAction(shipment)}
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))
-                                                )}
-                                            </TableBody>
-                                        </Table>
-                                    </ScrollArea>
+                                                                    setEventStatus(shipment.status || 'in-transit')
+                                                                    setEventLocation(shipment.current_location || '')
+                                                                    setLogEventDialogOpen(true)
+                                                                }}
+                                                            >
+                                                                <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                                    {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
+                                                                </Badge>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${shipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                                <DollarSign size={12} className="mr-1" />
+                                                                {shipment.payment_status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
+                                                                setSelectedShipment(shipment)
+                                                                setNewLocation(shipment.current_location || '')
+                                                                setLocationDialogOpen(true)
+                                                            }}>
+                                                                <span className="text-sm text-slate-500 truncate max-w-[140px] group-hover:text-primary transition-colors">
+                                                                    {shipment.current_location || '—'}
+                                                                </span>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 group-hover:text-primary">
+                                                                    <MapPin size={14} />
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-slate-500">
+                                                            {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            {renderSmartAction(shipment)}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </CardContent>
                         </Card>
