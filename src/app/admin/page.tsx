@@ -776,13 +776,13 @@ export default function AdminPage() {
                     <DialogContent className="glass border-0 shadow-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-secondary">Log Shipment Event</DialogTitle>
-                            <DialogDescription className="text-slate-500">
+                            <DialogDescription className="text-slate-300">
                                 Record a new status update for shipment {selectedShipment?.tracking_number}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label className="text-slate-700 font-medium">Status</Label>
+                                <Label className="text-white font-medium">Status</Label>
                                 <select
                                     className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                     value={eventStatus}
@@ -792,7 +792,7 @@ export default function AdminPage() {
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-700 font-medium">Location</Label>
+                                <Label className="text-white font-medium">Location</Label>
                                 <Input
                                     placeholder="e.g. Lagos Distribution Center"
                                     value={eventLocation}
@@ -801,7 +801,7 @@ export default function AdminPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-700 font-medium">Note (Optional)</Label>
+                                <Label className="text-white font-medium">Note (Optional)</Label>
                                 <Input
                                     placeholder="Add any relevant notes..."
                                     value={eventNote}
@@ -810,7 +810,7 @@ export default function AdminPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-700 font-medium">Map Link (Optional)</Label>
+                                <Label className="text-white font-medium">Map Link (Optional)</Label>
                                 <Input
                                     placeholder="Paste Google Maps or location URL..."
                                     value={eventMapLink}
@@ -999,20 +999,20 @@ export default function AdminPage() {
                                 {/* Status & Payment */}
                                 <div className="flex gap-4">
                                     <div className="flex-1 p-4 bg-slate-50 rounded-lg">
-                                        <p className="text-xs text-slate-600 uppercase font-semibold">Status</p>
+                                        <p className="text-xs text-slate-700 uppercase font-semibold">Status</p>
                                         <Badge variant="outline" className={`mt-1 uppercase font-medium ${getStatusColor(detailsShipment.status)}`}>
                                             {detailsShipment.status}
                                         </Badge>
                                     </div>
                                     <div className="flex-1 p-4 bg-slate-50 rounded-lg">
-                                        <p className="text-xs text-slate-600 uppercase font-semibold">Payment</p>
+                                        <p className="text-xs text-slate-700 uppercase font-semibold">Payment</p>
                                         <Badge className={`mt-1 ${detailsShipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                                             {detailsShipment.payment_status}
                                         </Badge>
                                     </div>
                                     <div className="flex-1 p-4 bg-slate-50 rounded-lg">
-                                        <p className="text-xs text-slate-600 uppercase font-semibold">Price</p>
-                                        <p className="mt-1 font-bold text-lg">${detailsShipment.price?.toFixed(2) || '—'}</p>
+                                        <p className="text-xs text-slate-700 uppercase font-semibold">Price</p>
+                                        <p className="mt-1 font-bold text-lg text-slate-900">${detailsShipment.price?.toFixed(2) || '—'}</p>
                                     </div>
                                 </div>
 
