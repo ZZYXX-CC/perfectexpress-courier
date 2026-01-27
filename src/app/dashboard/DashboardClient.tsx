@@ -117,59 +117,117 @@ export default function DashboardClient({ user, profile, shipments }: { user: an
                             </div>
                         ) : (
                             <ScrollArea className="h-[400px]">
-                                <Table>
-                                    <TableHeader className="bg-slate-50">
-                                        <TableRow className="border-slate-100">
-                                            <TableHead className="text-slate-500 font-semibold min-w-[120px]">Tracking ID</TableHead>
-                                            <TableHead className="text-slate-500 font-semibold min-w-[150px]">Recipient</TableHead>
-                                            <TableHead className="text-slate-500 font-semibold min-w-[120px]">Status</TableHead>
-                                            <TableHead className="text-slate-500 font-semibold min-w-[120px]">Date</TableHead>
-                                            <TableHead className="text-right text-slate-500 font-semibold min-w-[100px]">Action</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {shipments.map((shipment) => (
-                                            <TableRow key={shipment.id} className="border-slate-100 hover:bg-slate-50/50">
-                                                <TableCell>
+                                {/* Mobile View: Cards */}
+                                <div className="md:hidden space-y-4 p-4">
+                                    {shipments.map((shipment) => (
+                                        <div key={shipment.id} className="bg-white rounded-lg border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <p className="text-xs text-slate-500 mb-1">Tracking Number</p>
                                                     <button
                                                         onClick={() => {
                                                             setDetailsShipment(shipment)
                                                             setDetailsModalOpen(true)
                                                         }}
-                                                        className="font-mono font-bold text-primary hover:underline"
+                                                        className="font-mono font-bold text-primary hover:underline text-sm"
                                                     >
                                                         {shipment.tracking_number}
                                                     </button>
-                                                </TableCell>
-                                                <TableCell className="text-secondary">
-                                                    {shipment.receiver_info?.name || 'N/A'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                        {shipment.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-slate-500">
-                                                    {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="border-slate-200"
-                                                        onClick={() => {
-                                                            setDetailsShipment(shipment)
-                                                            setDetailsModalOpen(true)
-                                                        }}
-                                                    >
-                                                        <Eye size={14} className="mr-1" />
-                                                        Details
-                                                    </Button>
-                                                </TableCell>
+                                                </div>
+                                                <Badge variant="outline" className={`uppercase font-medium text-xs ${getStatusColor(shipment.status)}`}>
+                                                    {shipment.status}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                                <div>
+                                                    <p className="text-xs text-slate-500 mb-1">Recipient</p>
+                                                    <p className="text-sm font-medium text-secondary truncate">
+                                                        {shipment.receiver_info?.name || 'N/A'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-slate-500 mb-1">Date</p>
+                                                    <p className="text-sm font-medium text-secondary">
+                                                        {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-3 border-t border-slate-50 flex justify-end">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full sm:w-auto"
+                                                    onClick={() => {
+                                                        setDetailsShipment(shipment)
+                                                        setDetailsModalOpen(true)
+                                                    }}
+                                                >
+                                                    <Eye size={14} className="mr-2" />
+                                                    View Details
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop View: Table */}
+                                <div className="hidden md:block">
+                                    <Table>
+                                        <TableHeader className="bg-slate-50">
+                                            <TableRow className="border-slate-100">
+                                                <TableHead className="text-slate-500 font-semibold min-w-[120px]">Tracking ID</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[150px]">Recipient</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[120px]">Status</TableHead>
+                                                <TableHead className="text-slate-500 font-semibold min-w-[120px]">Date</TableHead>
+                                                <TableHead className="text-right text-slate-500 font-semibold min-w-[100px]">Action</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {shipments.map((shipment) => (
+                                                <TableRow key={shipment.id} className="border-slate-100 hover:bg-slate-50/50">
+                                                    <TableCell>
+                                                        <button
+                                                            onClick={() => {
+                                                                setDetailsShipment(shipment)
+                                                                setDetailsModalOpen(true)
+                                                            }}
+                                                            className="font-mono font-bold text-primary hover:underline"
+                                                        >
+                                                            {shipment.tracking_number}
+                                                        </button>
+                                                    </TableCell>
+                                                    <TableCell className="text-secondary">
+                                                        {shipment.receiver_info?.name || 'N/A'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                            {shipment.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-slate-500">
+                                                        {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="border-slate-200"
+                                                            onClick={() => {
+                                                                setDetailsShipment(shipment)
+                                                                setDetailsModalOpen(true)
+                                                            }}
+                                                        >
+                                                            <Eye size={14} className="mr-1" />
+                                                            Details
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </ScrollArea>
                         )}
                     </CardContent>
