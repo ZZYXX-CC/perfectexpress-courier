@@ -72,16 +72,16 @@ export function useRealtimeShipments<T extends RealtimeShipment = RealtimeShipme
 
     useEffect(() => {
         // Build the channel configuration
-        let channelConfig: any = {
-            event: '*',
-            schema: 'public',
-            table: 'shipments',
+        const baseConfig = {
+            event: '*' as const,
+            schema: 'public' as const,
+            table: 'shipments' as const,
         }
 
         // Add filter if provided (e.g., for user-specific shipments)
-        if (filter) {
-            channelConfig.filter = `${filter.column}=eq.${filter.value}`
-        }
+        const channelConfig = filter 
+            ? { ...baseConfig, filter: `${filter.column}=eq.${filter.value}` }
+            : baseConfig
 
         const channel = supabase
             .channel('shipments-realtime')

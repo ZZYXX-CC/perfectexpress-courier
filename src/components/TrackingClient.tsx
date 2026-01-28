@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRealtimeShipment } from '@/hooks/useRealtimeShipments'
 import TrackingTimeline from '@/components/TrackingTimeline'
 import TrackingMap from '@/components/TrackingMap'

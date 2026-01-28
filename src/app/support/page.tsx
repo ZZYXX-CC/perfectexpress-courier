@@ -5,12 +5,12 @@ import { createTicket, getUserTickets, type SupportTicket } from '@/app/actions/
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import Navbar from '@/components/layout/Navbar'
 import Link from 'next/link'
-import { Ticket, Plus, Clock, CheckCircle, AlertCircle, Loader2, ArrowRight, HelpCircle, MessageSquare } from 'lucide-react'
+import { Ticket, Plus, Clock, CheckCircle, Loader2, ArrowRight, HelpCircle, MessageSquare } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog'
 
 export default function SupportPage() {
@@ -26,16 +26,16 @@ export default function SupportPage() {
     const [message, setMessage] = useState('')
     const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal')
 
-    useEffect(() => {
-        loadTickets()
-    }, [])
-
     const loadTickets = async () => {
         setIsLoading(true)
         const data = await getUserTickets()
         setTickets(data)
         setIsLoading(false)
     }
+
+    useEffect(() => {
+        loadTickets()
+    }, [])
 
     const handleCreateTicket = () => {
         if (!name || !email || !subject || !message) {

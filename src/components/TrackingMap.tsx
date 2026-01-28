@@ -1,6 +1,6 @@
 'use client'
 
-import { APIProvider, Map, Marker, AdvancedMarker, Pin } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps'
 import { MapPin, Navigation, Package } from 'lucide-react'
 
 interface TrackingMapProps {

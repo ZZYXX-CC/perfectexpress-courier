@@ -4,13 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Package, Users, MessageCircle, Ticket } from 'lucide-react'
 
-const tabs = [
-    { href: '/admin', label: 'Shipments', icon: Package, exact: true },
-    { href: '/admin', label: 'Users', icon: Users, tab: 'users' },
-    { href: '/admin/chat', label: 'Live Chat', icon: MessageCircle },
-    { href: '/admin/tickets', label: 'Support Tickets', icon: Ticket },
-]
-
 interface AdminTabsProps {
     activeTab?: 'shipments' | 'users'
     onTabChange?: (tab: 'shipments' | 'users') => void
@@ -18,19 +11,6 @@ interface AdminTabsProps {
 
 export default function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
     const pathname = usePathname()
-
-    const isActive = (tab: typeof tabs[0]) => {
-        if (tab.exact && pathname === '/admin') {
-            return activeTab === 'shipments' || !activeTab
-        }
-        if (tab.tab === 'users' && pathname === '/admin') {
-            return activeTab === 'users'
-        }
-        if (!tab.exact && !tab.tab) {
-            return pathname === tab.href
-        }
-        return false
-    }
 
     return (
         <div className="flex gap-2 mb-8 border-b border-slate-200 pb-1 overflow-x-auto">

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { CheckCircle2, Circle, MapPin, Truck, Clock, Package } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 type HistoryEvent = {
@@ -17,7 +17,7 @@ interface TrackingTimelineProps {
     currentStatus: string
 }
 
-export default function TrackingTimeline({ history, currentStatus }: TrackingTimelineProps) {
+export default function TrackingTimeline({ history }: TrackingTimelineProps) {
     // Sort history by timestamp descending (newest first)
     const sortedHistory = [...history].sort((a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()

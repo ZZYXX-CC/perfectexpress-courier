@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -35,7 +34,7 @@ export function Hero() {
         visible: {
             y: 0,
             opacity: 1,
-            transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+            transition: { duration: 0.6, ease: "easeOut" as const },
         },
     };
 

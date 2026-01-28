@@ -10,8 +10,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import ShipmentDialog from "@/components/ShipmentDialog"; // Replaced ShipmentForm
-import { TrackingModal } from "@/components/TrackingModal"; // Added TrackingModal
+import ShipmentDialog from "@/components/ShipmentDialog";
 import { toast } from "sonner";
 
 export default function Home() {

@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { createChatSession, sendChatMessage, getChatMessages, getChatSession } from '@/app/actions/chat'
+import { createChatSession, sendChatMessage, getChatMessages } from '@/app/actions/chat'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { MessageCircle, X, Send, Loader2, User, Minimize2 } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Minimize2 } from 'lucide-react'
 
 type ChatMessage = {
     id: string
@@ -40,6 +40,13 @@ export default function LiveChat() {
     // Scroll to bottom when new messages arrive
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+
+    const loadMessages = async (sid: string) => {
+        setIsLoading(true)
+        const msgs = await getChatMessages(sid)
+        setMessages(msgs)
+        setIsLoading(false)
     }
 
     useEffect(() => {
@@ -103,13 +110,6 @@ export default function LiveChat() {
             supabase.removeChannel(channel)
         }
     }, [sessionId, supabase, isOpen])
-
-    const loadMessages = async (sid: string) => {
-        setIsLoading(true)
-        const msgs = await getChatMessages(sid)
-        setMessages(msgs)
-        setIsLoading(false)
-    }
 
     const handleStartChat = async (e: React.FormEvent) => {
         e.preventDefault()

@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 export async function signUp(formData: { email: string; password: string; fullName: string }) {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -28,7 +28,7 @@ export async function signUp(formData: { email: string; password: string; fullNa
 export async function signIn(formData: { email: string; password: string }) {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
     })

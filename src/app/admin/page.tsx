@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useCallback } from 'react'
-import { getAllShipments, togglePaymentStatus, logShipmentEvent, updateShipment, deleteShipment, getAllUsers, updateUserRole, createUser } from './actions'
+import { getAllShipments, logShipmentEvent, updateShipment, deleteShipment, getAllUsers, updateUserRole, createUser } from './actions'
 import { createShipment, ShipmentFormData } from '@/app/actions/shipment'
 import { useRealtimeShipments } from '@/hooks/useRealtimeShipments'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import Navbar from '@/components/layout/Navbar'
 import {
@@ -26,7 +25,6 @@ import {
     Package,
     Truck,
     CheckCircle,
-    Clock,
     User,
     Mail,
     Eye,
@@ -202,18 +200,6 @@ export default function AdminPage() {
         delivered: shipments.filter(s => s.status === 'delivered').length,
         active: shipments.filter(s => ['pending', 'quoted', 'confirmed', 'in-transit', 'out-for-delivery'].includes(s.status || '')).length,
         paid: shipments.filter(s => s.payment_status === 'paid').length
-    }
-
-    const handleTogglePayment = (shipment: Shipment) => {
-        startTransition(async () => {
-            const result = await togglePaymentStatus(shipment.id, shipment.payment_status || 'unpaid')
-            if (result.error) {
-                toast.error(result.error)
-            } else {
-                toast.success('Payment status updated')
-                fetchShipments()
-            }
-        })
     }
 
     const handleLogEvent = () => {
