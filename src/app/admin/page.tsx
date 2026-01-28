@@ -33,7 +33,7 @@ import {
     Trash2,
     Wifi
 } from 'lucide-react'
-import Link from 'next/link'
+import AdminTabs from '@/components/AdminTabs'
 
 type Shipment = {
     id: string
@@ -472,34 +472,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-4 mb-8 border-b border-slate-200 pb-1 overflow-x-auto">
-                    <button
-                        className={`px-4 py-2 font-medium text-sm transition-colors relative whitespace-nowrap ${activeTab === 'shipments' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
-                        onClick={() => setActiveTab('shipments')}
-                    >
-                        Shipments
-                        {activeTab === 'shipments' && <div className="absolute bottom-[-5px] left-0 w-full h-[2px] bg-primary rounded-full" />}
-                    </button>
-                    <button
-                        className={`px-4 py-2 font-medium text-sm transition-colors relative whitespace-nowrap ${activeTab === 'users' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
-                        onClick={() => setActiveTab('users')}
-                    >
-                        User Management
-                        {activeTab === 'users' && <div className="absolute bottom-[-5px] left-0 w-full h-[2px] bg-primary rounded-full" />}
-                    </button>
-                    <Link
-                        href="/admin/chat"
-                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md whitespace-nowrap cursor-pointer z-10"
-                    >
-                        Live Chat
-                    </Link>
-                    <Link
-                        href="/admin/tickets"
-                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md whitespace-nowrap cursor-pointer z-10"
-                    >
-                        Support Tickets
-                    </Link>
-                </div>
+                <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
                 {activeTab === 'shipments' ? (
                     <>
@@ -673,17 +646,18 @@ export default function AdminPage() {
                                                 </tr>
                                             ) : (
                                                 filteredShipments.map((shipment) => (
-                                                    <tr key={shipment.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                                    <tr 
+                                                        key={shipment.id} 
+                                                        className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                                                        onClick={() => {
+                                                            setDetailsShipment(shipment)
+                                                            setDetailsModalOpen(true)
+                                                        }}
+                                                    >
                                                         <td className="px-4 py-3">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setDetailsShipment(shipment)
-                                                                    setDetailsModalOpen(true)
-                                                                }}
-                                                                className="font-mono font-bold text-primary hover:underline cursor-pointer"
-                                                            >
+                                                            <span className="font-mono font-bold text-primary hover:underline">
                                                                 {shipment.tracking_number}
-                                                            </button>
+                                                            </span>
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <div className="text-sm">
@@ -692,19 +666,9 @@ export default function AdminPage() {
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <div
-                                                                className="cursor-pointer hover:opacity-80 transition-opacity"
-                                                                onClick={() => {
-                                                                    setSelectedShipment(shipment)
-                                                                    setEventStatus(shipment.status || 'in-transit')
-                                                                    setEventLocation(shipment.current_location || '')
-                                                                    setLogEventDialogOpen(true)
-                                                                }}
-                                                            >
-                                                                <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                                    {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
-                                                                </Badge>
-                                                            </div>
+                                                            <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
+                                                                {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
+                                                            </Badge>
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${shipment.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
@@ -713,23 +677,17 @@ export default function AdminPage() {
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
-                                                                setSelectedShipment(shipment)
-                                                                setNewLocation(shipment.current_location || '')
-                                                                setLocationDialogOpen(true)
-                                                            }}>
-                                                                <span className="text-sm text-slate-500 truncate max-w-[140px] group-hover:text-primary transition-colors">
+                                                            <div className="flex items-center gap-2">
+                                                                <MapPin size={14} className="text-slate-400" />
+                                                                <span className="text-sm text-slate-500 truncate max-w-[140px]">
                                                                     {shipment.current_location || '—'}
                                                                 </span>
-                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 group-hover:text-primary">
-                                                                    <MapPin size={14} />
-                                                                </Button>
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-sm text-slate-500">
                                                             {shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A'}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right">
+                                                        <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                                             {renderSmartAction(shipment)}
                                                         </td>
                                                     </tr>

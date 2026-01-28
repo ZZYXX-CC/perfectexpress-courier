@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import Navbar from '@/components/layout/Navbar'
+import AdminTabs from '@/components/AdminTabs'
 import { MessageCircle, Send, Loader2, User, X, Clock, Mail, RefreshCw, Wifi } from 'lucide-react'
 
 type ChatSession = {
@@ -168,10 +169,10 @@ export default function AdminChatPage() {
             <Navbar />
 
             <main className="container mx-auto px-4 pt-32 pb-20">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-6">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold text-secondary">Live Chat</h1>
+                            <h1 className="text-3xl font-bold text-secondary">Admin Dashboard</h1>
                             <span className="flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                                 <Wifi size={12} className="animate-pulse" />
                                 Live
@@ -184,6 +185,9 @@ export default function AdminChatPage() {
                         Refresh
                     </Button>
                 </div>
+
+                {/* Navigation Tabs */}
+                <AdminTabs />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-280px)]">
                     {/* Sessions List */}

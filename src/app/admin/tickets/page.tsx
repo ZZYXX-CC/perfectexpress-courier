@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import Navbar from '@/components/layout/Navbar'
+import AdminTabs from '@/components/AdminTabs'
 import { Ticket, Send, Loader2, Clock, User, Mail, RefreshCw, Search, Wifi, AlertCircle, CheckCircle, MessageSquare } from 'lucide-react'
 
 export default function AdminTicketsPage() {
@@ -193,10 +194,10 @@ export default function AdminTicketsPage() {
             <Navbar />
 
             <main className="container mx-auto px-4 pt-32 pb-20">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-6">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold text-secondary">Support Tickets</h1>
+                            <h1 className="text-3xl font-bold text-secondary">Admin Dashboard</h1>
                             <span className="flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                                 <Wifi size={12} className="animate-pulse" />
                                 Live
@@ -209,6 +210,9 @@ export default function AdminTicketsPage() {
                         Refresh
                     </Button>
                 </div>
+
+                {/* Navigation Tabs */}
+                <AdminTabs />
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
