@@ -65,7 +65,7 @@ const Navbar = () => {
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                         <span className="text-white font-bold text-xl">P</span>
                     </div>
-                    <span className={cn("text-xl font-bold tracking-tight", isScrolled ? "text-secondary" : "text-secondary")}>
+                    <span className={cn("text-xl font-bold tracking-tight", isScrolled ? "text-slate-800" : "text-white")}>
                         PerfectExpress
                     </span>
                 </Link>
@@ -76,7 +76,12 @@ const Navbar = () => {
                         <Link
                             key={item}
                             href={`#${item.toLowerCase()}`}
-                            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+                            className={cn(
+                                "text-sm font-medium transition-colors",
+                                isScrolled 
+                                    ? "text-slate-600 hover:text-primary" 
+                                    : "text-slate-300 hover:text-white"
+                            )}
                         >
                             {item}
                         </Link>
@@ -89,12 +94,12 @@ const Navbar = () => {
                         <div className="relative">
                             <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+                                className="flex items-center gap-2 px-3 py-2 rounded-full bg-primary hover:bg-primary/90 transition-colors"
                             >
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <User className="w-4 h-4 text-primary" />
+                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                    <User className="w-4 h-4 text-white" />
                                 </div>
-                                <span className="text-sm font-medium text-secondary max-w-[120px] truncate">
+                                <span className="text-sm font-medium text-white max-w-[120px] truncate">
                                     {profile?.full_name || user.email?.split('@')[0]}
                                 </span>
                             </button>
@@ -143,7 +148,10 @@ const Navbar = () => {
                     ) : (
                         <>
                             <Link href="/auth/login">
-                                <Button variant="ghost" className="font-semibold text-secondary hover:text-primary hover:bg-transparent">
+                                <Button variant="ghost" className={cn(
+                                    "font-semibold hover:bg-transparent",
+                                    isScrolled ? "text-slate-700 hover:text-primary" : "text-white hover:text-primary"
+                                )}>
                                     Log In
                                 </Button>
                             </Link>
@@ -156,7 +164,7 @@ const Navbar = () => {
 
                 {/* Mobile Toggle */}
                 <button
-                    className="md:hidden text-secondary"
+                    className={cn("md:hidden", isScrolled ? "text-slate-800" : "text-white")}
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
                     {isMobileMenuOpen ? <X /> : <Menu />}
@@ -181,7 +189,7 @@ const Navbar = () => {
                             <>
                                 {profile?.role !== 'admin' && (
                                     <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                                        <Button variant="ghost" className="w-full justify-start text-secondary">
+                                        <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-primary">
                                             <LayoutDashboard className="mr-2" size={16} />
                                             Dashboard
                                         </Button>
@@ -189,19 +197,19 @@ const Navbar = () => {
                                 )}
                                 {profile?.role === 'admin' && (
                                     <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
-                                        <Button variant="ghost" className="w-full justify-start text-secondary">
+                                        <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-primary">
                                             <Shield className="mr-2" size={16} />
                                             Admin Panel
                                         </Button>
                                     </Link>
                                 )}
                                 <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start text-secondary">
+                                    <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-primary">
                                         <Settings className="mr-2" size={16} />
                                         Profile Settings
                                     </Button>
                                 </Link>
-                                <Button variant="ghost" className="w-full justify-start text-red-600" onClick={handleSignOut}>
+                                <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleSignOut}>
                                     <LogOut className="mr-2" size={16} />
                                     Sign Out
                                 </Button>
@@ -209,7 +217,7 @@ const Navbar = () => {
                         ) : (
                             <>
                                 <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start text-secondary">Log In</Button>
+                                    <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-primary">Log In</Button>
                                 </Link>
                                 <Link href="/ship" onClick={() => setIsMobileMenuOpen(false)}>
                                     <Button className="w-full">Get a Quote</Button>
