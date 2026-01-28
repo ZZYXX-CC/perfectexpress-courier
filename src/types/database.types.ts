@@ -144,6 +144,7 @@ export type Database = {
                     id: string
                     parcel_details: Json
                     payment_status: string | null
+                    price: number | null
                     receiver_info: Json
                     sender_info: Json
                     status: string | null
@@ -158,6 +159,7 @@ export type Database = {
                     id?: string
                     parcel_details?: Json
                     payment_status?: string | null
+                    price?: number | null
                     receiver_info?: Json
                     sender_info?: Json
                     status?: string | null
@@ -172,6 +174,7 @@ export type Database = {
                     id?: string
                     parcel_details?: Json
                     payment_status?: string | null
+                    price?: number | null
                     receiver_info?: Json
                     sender_info?: Json
                     status?: string | null

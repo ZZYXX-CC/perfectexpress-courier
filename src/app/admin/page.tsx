@@ -489,13 +489,13 @@ export default function AdminPage() {
                     </button>
                     <Link
                         href="/admin/chat"
-                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 whitespace-nowrap"
+                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md whitespace-nowrap cursor-pointer z-10"
                     >
                         Live Chat
                     </Link>
                     <Link
                         href="/admin/tickets"
-                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 whitespace-nowrap"
+                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md whitespace-nowrap cursor-pointer z-10"
                     >
                         Support Tickets
                     </Link>

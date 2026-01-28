@@ -3,14 +3,15 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-// Get all shipments for admin
-export async function getAllShipments() {
+// Get all shipments for admin (optimized with specific columns)
+export async function getAllShipments(limit: number = 100) {
     const supabase = await createClient()
 
     const { data, error } = await supabase
         .from('shipments')
-        .select('*')
+        .select('id, tracking_number, sender_info, receiver_info, parcel_details, status, payment_status, current_location, history, created_at, price')
         .order('created_at', { ascending: false })
+        .limit(limit)
 
     if (error) {
         console.error('Error fetching shipments:', error)
@@ -224,13 +225,14 @@ export async function deleteShipment(id: string) {
 
 // --- User Management Actions ---
 
-export async function getAllUsers() {
+export async function getAllUsers(limit: number = 100) {
     const supabase = await createClient()
 
     const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, email, full_name, role, created_at')
         .order('created_at', { ascending: false })
+        .limit(limit)
 
     if (error) {
         console.error('Error fetching users:', error)

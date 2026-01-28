@@ -1,9 +1,6 @@
-
-import { getUserShipments, getUserProfile } from '@/app/actions/auth'
-import { getUser } from '@/app/actions/auth'
+import { getUserShipments, getUserProfile, getUser } from '@/app/actions/auth'
 import { redirect } from 'next/navigation'
 import DashboardClient from './DashboardClient'
-import { isAdmin } from '@/app/actions/auth'
 
 export default async function DashboardPage() {
     const user = await getUser()
@@ -12,13 +9,15 @@ export default async function DashboardPage() {
         redirect('/auth/login')
     }
 
-    const profile = await getUserProfile()
+    // Run queries in parallel for faster loading
+    const [profile, shipments] = await Promise.all([
+        getUserProfile(),
+        getUserShipments()
+    ])
 
     if (profile?.role === 'admin') {
         redirect('/admin')
     }
-
-    const shipments = await getUserShipments()
 
     return <DashboardClient user={user} profile={profile} shipments={shipments} />
 }

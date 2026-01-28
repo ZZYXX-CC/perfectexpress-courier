@@ -62,7 +62,7 @@ export async function getUserProfile() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, email, full_name, role, created_at')
         .eq('id', user.id)
         .single()
 
@@ -74,7 +74,7 @@ export async function isAdmin() {
     return profile?.role === 'admin'
 }
 
-export async function getUserShipments() {
+export async function getUserShipments(limit: number = 50) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -82,9 +82,10 @@ export async function getUserShipments() {
 
     const { data, error } = await supabase
         .from('shipments')
-        .select('*')
+        .select('id, tracking_number, sender_info, receiver_info, parcel_details, status, payment_status, current_location, history, created_at, price')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
+        .limit(limit)
 
     if (error) {
         console.error('Error fetching user shipments:', error)
