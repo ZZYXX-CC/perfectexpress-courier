@@ -811,7 +811,7 @@ export default function AdminPage() {
                             <div className="space-y-2">
                                 <Label className="text-white font-medium">Status</Label>
                                 <select
-                                    className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                    className="w-full h-10 rounded-md border border-slate-200 bg-white text-slate-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                     value={eventStatus}
                                     onChange={(e) => setEventStatus(e.target.value)}
                                 >
@@ -824,7 +824,7 @@ export default function AdminPage() {
                                     placeholder="e.g. Lagos Distribution Center"
                                     value={eventLocation}
                                     onChange={(e) => setEventLocation(e.target.value)}
-                                    className="bg-white/50"
+                                    className="bg-white text-slate-800 placeholder:text-slate-400"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -833,7 +833,7 @@ export default function AdminPage() {
                                     placeholder="Add any relevant notes..."
                                     value={eventNote}
                                     onChange={(e) => setEventNote(e.target.value)}
-                                    className="bg-white/50"
+                                    className="bg-white text-slate-800 placeholder:text-slate-400"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -842,7 +842,7 @@ export default function AdminPage() {
                                     placeholder="Paste Google Maps or location URL..."
                                     value={eventMapLink}
                                     onChange={(e) => setEventMapLink(e.target.value)}
-                                    className="bg-white/50"
+                                    className="bg-white text-slate-800 placeholder:text-slate-400"
                                 />
                             </div>
                             <div className="flex items-center gap-2 pt-2">
@@ -853,9 +853,9 @@ export default function AdminPage() {
                                     onChange={(e) => setNotifyUser(e.target.checked)}
                                     className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
                                 />
-                                <Label htmlFor="notifyUser" className="flex items-center gap-2 cursor-pointer text-slate-600">
+                                <Label htmlFor="notifyUser" className="flex items-center gap-2 cursor-pointer text-slate-300">
                                     <Bell size={16} className="text-primary" />
-                                    Notify User (mock email)
+                                    Notify User via Email
                                 </Label>
                             </div>
                         </div>
@@ -879,7 +879,7 @@ export default function AdminPage() {
                                 <Truck className="text-primary" />
                                 Dispatch Shipment
                             </DialogTitle>
-                            <DialogDescription className="text-slate-500">
+                            <DialogDescription className="text-slate-300">
                                 Start the journey for shipment {selectedShipment?.tracking_number}
                             </DialogDescription>
                         </DialogHeader>
@@ -893,9 +893,9 @@ export default function AdminPage() {
                                 </ul>
                             </div>
                             <div>
-                                <Label className="text-slate-500">Origin Location</Label>
+                                <Label className="text-white font-medium">Origin Location</Label>
                                 <Input
-                                    className="mt-2 bg-white/50"
+                                    className="mt-2 bg-white text-slate-800 placeholder:text-slate-400"
                                     placeholder="e.g. Lagos Logistics Center"
                                     value={originLocation}
                                     onChange={(e) => setOriginLocation(e.target.value)}
@@ -922,7 +922,7 @@ export default function AdminPage() {
                                 <DollarSign className="text-green-600" />
                                 Confirm Payment
                             </DialogTitle>
-                            <DialogDescription className="text-slate-500">
+                            <DialogDescription className="text-slate-300">
                                 Verify payment for shipment {selectedShipment?.tracking_number}
                             </DialogDescription>
                         </DialogHeader>
@@ -952,14 +952,14 @@ export default function AdminPage() {
                     <DialogContent className="glass border-0 shadow-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-secondary">Update Location</DialogTitle>
-                            <DialogDescription className="text-slate-500">
+                            <DialogDescription className="text-slate-300">
                                 Update the current location for {selectedShipment?.tracking_number}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
-                            <Label className="text-slate-500">Current Location</Label>
+                            <Label className="text-white font-medium">Current Location</Label>
                             <Input
-                                className="mt-2 bg-white/50"
+                                className="mt-2 bg-white text-slate-800 placeholder:text-slate-400"
                                 placeholder="e.g. Abuja Sorting Facility"
                                 value={newLocation}
                                 onChange={(e) => setNewLocation(e.target.value)}
@@ -982,15 +982,15 @@ export default function AdminPage() {
                     <DialogContent className="glass border-0 shadow-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-secondary">Review Shipment</DialogTitle>
-                            <DialogDescription className="text-slate-500">
+                            <DialogDescription className="text-slate-300">
                                 Set the price and approve this shipment request.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
-                            <Label className="text-slate-500">Shipping Cost ($)</Label>
+                            <Label className="text-white font-medium">Shipping Cost ($)</Label>
                             <Input
                                 type="number"
-                                className="mt-2 bg-white/50"
+                                className="mt-2 bg-white text-slate-800 placeholder:text-slate-400"
                                 placeholder="e.g. 50.00"
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
@@ -1016,7 +1016,7 @@ export default function AdminPage() {
                                 <Package className="h-5 w-5" />
                                 Shipment Details
                             </DialogTitle>
-                            <DialogDescription className="text-slate-500">
+                            <DialogDescription className="text-slate-300">
                                 Tracking ID: <span className="font-mono font-bold text-primary">{detailsShipment?.tracking_number}</span>
                             </DialogDescription>
                         </DialogHeader>
