@@ -38,8 +38,8 @@ export async function updateShipment(
 ) {
     const supabase = await createClient()
 
-    // Auto-update payment status if status becomes accepted
-    if (updates.status === 'accepted') {
+    // Auto-update payment status if status becomes confirmed
+    if (updates.status === 'confirmed') {
         updates.payment_status = 'paid'
     }
 
@@ -87,8 +87,8 @@ export async function updateShipment(
                 }
             }
 
-            // 2. Payment Confirmed (status becomes 'accepted') - Notify BOTH
-            if (updates.status === 'accepted' && shipment.status !== 'accepted') {
+            // 2. Payment Confirmed (status becomes 'confirmed') - Notify BOTH
+            if (updates.status === 'confirmed' && shipment.status !== 'confirmed') {
                 if (senderEmail) {
                     await sendPaymentConfirmedEmail(senderEmail, shipment.tracking_number as string, senderName)
                 }
@@ -150,7 +150,7 @@ export async function logShipmentEvent(
     }
     const updatedHistory = [...currentHistory, newEvent]
 
-    // Auto-update payment status if status becomes accepted
+    // Auto-update payment status if status becomes confirmed
     const updatesWithAutoPayment: any = {
         status: event.status,
         current_location: event.location,
@@ -158,7 +158,7 @@ export async function logShipmentEvent(
         updated_at: new Date().toISOString()
     }
 
-    if (event.status === 'accepted') {
+    if (event.status === 'confirmed') {
         updatesWithAutoPayment.payment_status = 'paid'
     }
 

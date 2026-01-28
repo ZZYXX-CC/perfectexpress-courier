@@ -57,7 +57,7 @@ type UserProfile = {
     created_at: string
 }
 
-const STATUS_OPTIONS = ['pending', 'accepted', 'in-transit', 'out-for-delivery', 'delivered', 'held']
+const STATUS_OPTIONS = ['pending', 'quoted', 'confirmed', 'in-transit', 'out-for-delivery', 'delivered', 'held', 'cancelled']
 
 export default function AdminPage() {
     const [shipments, setShipments] = useState<Shipment[]>([])
@@ -200,7 +200,7 @@ export default function AdminPage() {
     const stats = {
         total: shipments.length,
         delivered: shipments.filter(s => s.status === 'delivered').length,
-        active: shipments.filter(s => ['in-transit', 'out-for-delivery', 'pending'].includes(s.status || '')).length,
+        active: shipments.filter(s => ['pending', 'quoted', 'confirmed', 'in-transit', 'out-for-delivery'].includes(s.status || '')).length,
         paid: shipments.filter(s => s.payment_status === 'paid').length
     }
 
@@ -262,14 +262,14 @@ export default function AdminPage() {
         if (!reviewShipmentId || !price) return
         startTransition(async () => {
             const result = await updateShipment(reviewShipmentId, {
-                status: 'pending', // Keep as pending until paid, or move to another valid status like 'processing'
-                payment_status: 'unpaid', // Ensure payment status is set
+                status: 'quoted', // Price set, awaiting customer payment
+                payment_status: 'unpaid',
                 price: parseFloat(price)
             })
             if (result.error) {
                 toast.error(result.error)
             } else {
-                toast.success('Shipment approved and price set')
+                toast.success('Quote sent! Awaiting customer payment.')
                 setPricingDialogOpen(false)
                 setPrice('')
                 setReviewShipmentId(null)
@@ -304,16 +304,16 @@ export default function AdminPage() {
     const handleConfirmPayment = () => {
         if (!selectedShipment) return
         startTransition(async () => {
-            // Update payment status to paid AND status to accepted
+            // Update payment status to paid AND status to confirmed
             const result = await updateShipment(selectedShipment.id, {
                 payment_status: 'paid',
-                status: 'accepted'
+                status: 'confirmed'
             })
 
             if (result.error) {
                 toast.error(result.error)
             } else {
-                toast.success('Payment confirmed! Status: Accepted')
+                toast.success('Payment confirmed! Ready for dispatch.')
                 setConfirmPaymentDialogOpen(false)
                 fetchShipments()
             }
@@ -349,7 +349,7 @@ export default function AdminPage() {
     }
 
     const renderSmartAction = (shipment: Shipment) => {
-        // 1. Review Needed
+        // 1. Review Needed (pending, no price set)
         if (shipment.status === 'pending' && !shipment.price) {
             return (
                 <Button
@@ -365,8 +365,8 @@ export default function AdminPage() {
             )
         }
 
-        // 2. Payment Confirmation Needed
-        if (shipment.status === 'pending' && shipment.price && shipment.payment_status !== 'paid') {
+        // 2. Payment Confirmation Needed (quoted status - price set, awaiting payment)
+        if (shipment.status === 'quoted') {
             return (
                 <Button
                     size="sm"
@@ -383,8 +383,8 @@ export default function AdminPage() {
             )
         }
 
-        // 3. Ready to Dispatch (Accepted status)
-        if (shipment.status === 'accepted') {
+        // 3. Ready to Dispatch (confirmed status - payment received)
+        if (shipment.status === 'confirmed') {
             return (
                 <Button
                     size="sm"
@@ -400,7 +400,7 @@ export default function AdminPage() {
             )
         }
 
-        // 4. In Transit -> Update Status
+        // 4. In Transit / Out for Delivery -> Update Status
         if (shipment.status === 'in-transit' || shipment.status === 'out-for-delivery') {
             return (
                 <Button
@@ -421,7 +421,46 @@ export default function AdminPage() {
             )
         }
 
-        // Default / Fallback
+        // 5. On Hold -> Release / Update
+        if (shipment.status === 'held') {
+            return (
+                <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-500 text-red-600 hover:bg-red-50 w-full"
+                    onClick={() => {
+                        setSelectedShipment(shipment)
+                        setEventStatus('in-transit')
+                        setEventLocation(shipment.current_location || '')
+                        setLogEventDialogOpen(true)
+                    }}
+                >
+                    <FileText size={14} className="mr-1" />
+                    Release / Update
+                </Button>
+            )
+        }
+
+        // 6. Delivered - No action needed (completed)
+        if (shipment.status === 'delivered') {
+            return (
+                <Badge className="bg-green-100 text-green-700 border-0">
+                    <CheckCircle size={14} className="mr-1" />
+                    Completed
+                </Badge>
+            )
+        }
+
+        // 7. Cancelled - No action
+        if (shipment.status === 'cancelled') {
+            return (
+                <Badge className="bg-gray-100 text-gray-600 border-0">
+                    Cancelled
+                </Badge>
+            )
+        }
+
+        // Default / Fallback (for any edge cases)
         return (
             <Button
                 size="sm"
@@ -429,7 +468,7 @@ export default function AdminPage() {
                 className="w-full text-slate-500"
                 onClick={() => {
                     setSelectedShipment(shipment)
-                    setEventStatus(shipment.status || 'in-transit')
+                    setEventStatus(shipment.status || 'pending')
                     setEventLocation(shipment.current_location || '')
                     setLogEventDialogOpen(true)
                 }}
@@ -441,11 +480,14 @@ export default function AdminPage() {
 
     const getStatusColor = (status: string | null) => {
         switch (status) {
-            case 'delivered': return 'border-green-500 text-green-600 bg-green-50'
+            case 'pending': return 'border-slate-500 text-slate-600 bg-slate-50'
+            case 'quoted': return 'border-orange-500 text-orange-600 bg-orange-50'
+            case 'confirmed': return 'border-purple-500 text-purple-600 bg-purple-50'
             case 'in-transit': return 'border-blue-500 text-blue-600 bg-blue-50'
-            case 'accepted': return 'border-purple-500 text-purple-600 bg-purple-50'
             case 'out-for-delivery': return 'border-yellow-500 text-yellow-600 bg-yellow-50'
+            case 'delivered': return 'border-green-500 text-green-600 bg-green-50'
             case 'held': return 'border-red-500 text-red-600 bg-red-50'
+            case 'cancelled': return 'border-gray-500 text-gray-600 bg-gray-50'
             default: return 'border-slate-500 text-slate-600 bg-slate-50'
         }
     }
@@ -667,7 +709,7 @@ export default function AdminPage() {
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <Badge variant="outline" className={`uppercase font-medium ${getStatusColor(shipment.status)}`}>
-                                                                {shipment.status === 'pending' && shipment.price ? 'AWAITING PAYMENT' : shipment.status}
+                                                                {shipment.status}
                                                             </Badge>
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -904,7 +946,7 @@ export default function AdminPage() {
                                 <span className="text-2xl font-bold text-secondary">${selectedShipment?.price?.toFixed(2)}</span>
                             </div>
                             <p className="text-slate-500 text-sm">
-                                By confirming, the shipment status will move to <strong>Processing</strong> and become ready for dispatch.
+                                By confirming, the shipment status will move to <strong>Confirmed</strong> and become ready for dispatch.
                             </p>
                         </div>
                         <DialogFooter>

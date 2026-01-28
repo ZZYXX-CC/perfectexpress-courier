@@ -30,7 +30,7 @@ create table if not exists public.shipments (
   sender_info jsonb not null default '{}'::jsonb, -- sender_details -> sender_info (checking App Code usage)
   receiver_info jsonb not null default '{}'::jsonb, -- receiver_details -> receiver_info
   parcel_details jsonb not null default '{}'::jsonb,
-  status text check (status in ('pending', 'in-transit', 'out-for-delivery', 'delivered', 'held', 'cancelled')) default 'pending',
+  status text check (status in ('pending', 'quoted', 'confirmed', 'in-transit', 'out-for-delivery', 'delivered', 'held', 'cancelled')) default 'pending',
   payment_status text check (payment_status in ('unpaid', 'paid')) default 'unpaid',
   current_location text,
   history jsonb default '[]'::jsonb,
