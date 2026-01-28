@@ -1,12 +1,9 @@
 import { getShipment } from '@/app/actions/get-shipment'
-import TrackingTimeline from '@/components/TrackingTimeline'
-import TrackingMap from '@/components/TrackingMap' // Added TrackingMap
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import TrackingClient from '@/components/TrackingClient'
 import { Button } from '@/components/ui/button'
 import Navbar from '@/components/layout/Navbar'
 import Link from 'next/link'
-import { ArrowLeft, Box, MapPin } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 export default async function TrackingPage({
     params,
@@ -45,90 +42,12 @@ export default async function TrackingPage({
             <Navbar />
 
             <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
-                <div className="mb-8">
-                    <Link href="/" className="inline-flex items-center text-slate-500 hover:text-primary transition-colors mb-6">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Search
-                    </Link>
+                <Link href="/" className="inline-flex items-center text-slate-500 hover:text-primary transition-colors mb-6">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Search
+                </Link>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-secondary mb-2">
-                                Tracking <span className="text-primary">{shipment.tracking_number}</span>
-                            </h1>
-                            <p className="text-slate-500">
-                                Global Express Shipment
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="text-lg py-1 px-4 border-primary text-primary bg-primary/5 uppercase">
-                                {shipment.status}
-                            </Badge>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Timeline */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <TrackingTimeline history={shipment.history as any[]} currentStatus={shipment.status || ''} />
-                    </div>
-
-                    {/* Sidebar Details */}
-                    <div className="space-y-6">
-                        {/* Map Integration */}
-                        <TrackingMap className="w-full h-48 md:h-64" location={{ lat: 51.505, lng: -0.09 }} /> {/* Mock location for now */}
-
-                        <Card className="glass border-0 shadow-lg">
-                            <CardHeader>
-                                <CardTitle className="text-lg text-secondary">Parcel Details</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <Box className="text-primary mt-1" size={20} />
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-700">Description</p>
-                                        <p className="text-slate-500">{(shipment.parcel_details as any)?.description || 'N/A'}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="font-bold text-primary w-5 text-center text-sm mt-1">KG</div>
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-700">Weight</p>
-                                        <p className="text-slate-500">{(shipment.parcel_details as any)?.weight || 'N/A'} kg</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="glass border-0 shadow-lg">
-                            <CardHeader>
-                                <CardTitle className="text-lg text-secondary">Address Information</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6 relative">
-                                <div className="absolute left-3 top-6 bottom-6 w-0.5 bg-slate-100" />
-
-                                <div className="relative pl-8">
-                                    <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center">
-                                        <span className="w-2 h-2 rounded-full bg-blue-500" />
-                                    </div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">From</p>
-                                    <p className="font-medium text-secondary">{(shipment.sender_info as any)?.name}</p>
-                                    <p className="text-sm text-slate-500">{(shipment.sender_info as any)?.address}</p>
-                                </div>
-
-                                <div className="relative pl-8">
-                                    <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-orange-50 border-2 border-orange-200 flex items-center justify-center">
-                                        <MapPin className="w-3 h-3 text-primary" />
-                                    </div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">To</p>
-                                    <p className="font-medium text-secondary">{(shipment.receiver_info as any)?.name}</p>
-                                    <p className="text-sm text-slate-500">{(shipment.receiver_info as any)?.address}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
+                <TrackingClient initialShipment={shipment} />
             </main>
         </div>
     )

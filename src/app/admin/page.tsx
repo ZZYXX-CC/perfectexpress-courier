@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useCallback } from 'react'
 import { getAllShipments, togglePaymentStatus, logShipmentEvent, updateShipment, deleteShipment, getAllUsers, updateUserRole, createUser } from './actions'
 import { createShipment, ShipmentFormData } from '@/app/actions/shipment'
+import { useRealtimeShipments } from '@/hooks/useRealtimeShipments'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,7 +30,8 @@ import {
     User,
     Mail,
     Eye,
-    Trash2
+    Trash2,
+    Wifi
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -137,6 +139,29 @@ export default function AdminPage() {
         fetchShipments()
         fetchUsers() // Fetch both initially or lazily
     }, [])
+
+    // Real-time updates for shipments
+    const handleRealtimeInsert = useCallback((newShipment: Shipment) => {
+        setShipments(prev => [newShipment, ...prev])
+    }, [])
+
+    const handleRealtimeUpdate = useCallback((updatedShipment: Shipment) => {
+        setShipments(prev => prev.map(s => 
+            s.id === updatedShipment.id ? updatedShipment : s
+        ))
+    }, [])
+
+    const handleRealtimeDelete = useCallback((deletedShipment: Shipment) => {
+        setShipments(prev => prev.filter(s => s.id !== deletedShipment.id))
+    }, [])
+
+    // Subscribe to real-time shipment updates
+    useRealtimeShipments({
+        onInsert: handleRealtimeInsert,
+        onUpdate: handleRealtimeUpdate,
+        onDelete: handleRealtimeDelete,
+        showToasts: true,
+    })
 
     const handleCreateUser = () => {
         startTransition(async () => {
@@ -435,27 +460,45 @@ export default function AdminPage() {
             <main className="container mx-auto px-4 pt-32 pb-20">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-secondary">Admin Dashboard</h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-bold text-secondary">Admin Dashboard</h1>
+                            <span className="flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                <Wifi size={12} className="animate-pulse" />
+                                Live
+                            </span>
+                        </div>
                         <p className="text-slate-500">Manage deliveries, update statuses, and track shipments.</p>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-4 mb-8 border-b border-slate-200 pb-1">
+                <div className="flex gap-4 mb-8 border-b border-slate-200 pb-1 overflow-x-auto">
                     <button
-                        className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'shipments' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-4 py-2 font-medium text-sm transition-colors relative whitespace-nowrap ${activeTab === 'shipments' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
                         onClick={() => setActiveTab('shipments')}
                     >
                         Shipments
                         {activeTab === 'shipments' && <div className="absolute bottom-[-5px] left-0 w-full h-[2px] bg-primary rounded-full" />}
                     </button>
                     <button
-                        className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'users' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-4 py-2 font-medium text-sm transition-colors relative whitespace-nowrap ${activeTab === 'users' ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
                         onClick={() => setActiveTab('users')}
                     >
                         User Management
                         {activeTab === 'users' && <div className="absolute bottom-[-5px] left-0 w-full h-[2px] bg-primary rounded-full" />}
                     </button>
+                    <Link
+                        href="/admin/chat"
+                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 whitespace-nowrap"
+                    >
+                        Live Chat
+                    </Link>
+                    <Link
+                        href="/admin/tickets"
+                        className="px-4 py-2 font-medium text-sm transition-colors relative text-slate-500 hover:text-slate-700 whitespace-nowrap"
+                    >
+                        Support Tickets
+                    </Link>
                 </div>
 
                 {activeTab === 'shipments' ? (

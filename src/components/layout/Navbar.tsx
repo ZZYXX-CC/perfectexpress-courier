@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, User, LogOut, LayoutDashboard, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, Shield, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -121,6 +121,14 @@ const Navbar = () => {
                                             Admin Panel
                                         </Link>
                                     )}
+                                    <Link
+                                        href="/profile"
+                                        className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-primary"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <Settings size={16} />
+                                        Profile Settings
+                                    </Link>
                                     <hr className="my-2 border-slate-100" />
                                     <button
                                         onClick={handleSignOut}
@@ -187,6 +195,12 @@ const Navbar = () => {
                                         </Button>
                                     </Link>
                                 )}
+                                <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Button variant="ghost" className="w-full justify-start text-secondary">
+                                        <Settings className="mr-2" size={16} />
+                                        Profile Settings
+                                    </Button>
+                                </Link>
                                 <Button variant="ghost" className="w-full justify-start text-red-600" onClick={handleSignOut}>
                                     <LogOut className="mr-2" size={16} />
                                     Sign Out

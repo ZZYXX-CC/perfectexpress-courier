@@ -93,3 +93,119 @@ export async function getUserShipments() {
 
     return data
 }
+
+// Profile Management Actions
+
+export async function updateProfile(formData: { fullName: string }) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Not authenticated' }
+    }
+
+    // Update the profile table
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+            full_name: formData.fullName,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+    if (profileError) {
+        return { error: profileError.message }
+    }
+
+    // Also update user metadata
+    const { error: authError } = await supabase.auth.updateUser({
+        data: { full_name: formData.fullName }
+    })
+
+    if (authError) {
+        console.error('Failed to update auth metadata:', authError)
+    }
+
+    revalidatePath('/profile')
+    revalidatePath('/dashboard')
+    return { success: true }
+}
+
+export async function updateEmail(newEmail: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Not authenticated' }
+    }
+
+    const { error } = await supabase.auth.updateUser({
+        email: newEmail
+    })
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    return { success: true, message: 'Confirmation email sent to your new address. Please verify to complete the change.' }
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user || !user.email) {
+        return { error: 'Not authenticated' }
+    }
+
+    // First verify current password by re-authenticating
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+    })
+
+    if (signInError) {
+        return { error: 'Current password is incorrect' }
+    }
+
+    // Update to new password
+    const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+    })
+
+    if (updateError) {
+        return { error: updateError.message }
+    }
+
+    return { success: true }
+}
+
+// Password Reset Actions
+
+export async function requestPasswordReset(email: string) {
+    const supabase = await createClient()
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`
+    })
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    return { success: true, message: 'Password reset link sent to your email!' }
+}
+
+export async function resetPassword(newPassword: string) {
+    const supabase = await createClient()
+
+    const { error } = await supabase.auth.updateUser({
+        password: newPassword
+    })
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    return { success: true }
+}

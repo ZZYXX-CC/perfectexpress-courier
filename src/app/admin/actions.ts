@@ -68,11 +68,14 @@ export async function updateShipment(
             const {
                 sendShipmentApprovedEmail,
                 sendShipmentDispatchedEmail,
-                sendShipmentDeliveredEmail
+                sendShipmentDeliveredEmail,
+                sendPaymentConfirmedEmail
             } = await import('@/lib/email')
 
             const senderEmail = (shipment.sender_info as any)?.email
             const receiverEmail = (shipment.receiver_info as any)?.email
+            const senderName = (shipment.sender_info as any)?.name || 'Customer'
+            const receiverName = (shipment.receiver_info as any)?.name || 'Customer'
             const shipmentAny = shipment as any
             const recipients = [senderEmail, receiverEmail].filter(Boolean) as string[]
 
@@ -83,14 +86,24 @@ export async function updateShipment(
                 }
             }
 
-            // 2. Dispatched - Notify BOTH
+            // 2. Payment Confirmed (status becomes 'accepted') - Notify BOTH
+            if (updates.status === 'accepted' && shipment.status !== 'accepted') {
+                if (senderEmail) {
+                    await sendPaymentConfirmedEmail(senderEmail, shipment.tracking_number as string, senderName)
+                }
+                if (receiverEmail) {
+                    await sendPaymentConfirmedEmail(receiverEmail, shipment.tracking_number as string, receiverName)
+                }
+            }
+
+            // 3. Dispatched - Notify BOTH
             if (updates.status === 'in-transit' && shipment.status !== 'in-transit') {
                 for (const email of recipients) {
                     await sendShipmentDispatchedEmail(email, shipment.tracking_number as string, updates.current_location || shipment.current_location || 'Origin')
                 }
             }
 
-            // 3. Delivered - Notify BOTH
+            // 4. Delivered - Notify BOTH
             if (updates.status === 'delivered' && shipment.status !== 'delivered') {
                 for (const email of recipients) {
                     await sendShipmentDeliveredEmail(email, shipment.tracking_number as string)

@@ -45,11 +45,18 @@ const Footer = () => {
                     <div>
                         <h3 className="text-white font-semibold mb-6">Company</h3>
                         <ul className="space-y-3 text-sm">
-                            {['About Us', 'Careers', 'Our Blog', 'Contact', 'Privacy Policy'].map((item) => (
-                                <li key={item}>
-                                    <Link href="#" className="hover:text-primary transition-colors">{item}</Link>
-                                </li>
-                            ))}
+                            <li>
+                                <Link href="#company" className="hover:text-primary transition-colors">About Us</Link>
+                            </li>
+                            <li>
+                                <Link href="/support" className="hover:text-primary transition-colors">Support Center</Link>
+                            </li>
+                            <li>
+                                <Link href="#" className="hover:text-primary transition-colors">Contact</Link>
+                            </li>
+                            <li>
+                                <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
+                            </li>
                         </ul>
                     </div>
 

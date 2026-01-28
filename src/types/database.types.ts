@@ -9,6 +9,98 @@ export type Json =
 export type Database = {
     public: {
         Tables: {
+            chat_sessions: {
+                Row: {
+                    id: string
+                    visitor_name: string
+                    visitor_email: string
+                    user_id: string | null
+                    assigned_admin_id: string | null
+                    status: string | null
+                    unread_count: number | null
+                    last_message_at: string | null
+                    created_at: string | null
+                    updated_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    visitor_name: string
+                    visitor_email: string
+                    user_id?: string | null
+                    assigned_admin_id?: string | null
+                    status?: string | null
+                    unread_count?: number | null
+                    last_message_at?: string | null
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    visitor_name?: string
+                    visitor_email?: string
+                    user_id?: string | null
+                    assigned_admin_id?: string | null
+                    status?: string | null
+                    unread_count?: number | null
+                    last_message_at?: string | null
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "chat_sessions_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "chat_sessions_assigned_admin_id_fkey"
+                        columns: ["assigned_admin_id"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            },
+            chat_messages: {
+                Row: {
+                    id: string
+                    session_id: string
+                    sender_type: string
+                    sender_name: string | null
+                    message: string
+                    is_read: boolean | null
+                    created_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    session_id: string
+                    sender_type: string
+                    sender_name?: string | null
+                    message: string
+                    is_read?: boolean | null
+                    created_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    session_id?: string
+                    sender_type?: string
+                    sender_name?: string | null
+                    message?: string
+                    is_read?: boolean | null
+                    created_at?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "chat_messages_session_id_fkey"
+                        columns: ["session_id"]
+                        isOneToOne: false
+                        referencedRelation: "chat_sessions"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            },
             profiles: {
                 Row: {
                     created_at: string | null
@@ -93,6 +185,88 @@ export type Database = {
                         columns: ["user_id"]
                         isOneToOne: false
                         referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            },
+            support_tickets: {
+                Row: {
+                    id: string
+                    ticket_number: string | null
+                    user_id: string | null
+                    name: string
+                    email: string
+                    subject: string
+                    status: string | null
+                    priority: string | null
+                    created_at: string | null
+                    updated_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    ticket_number?: string | null
+                    user_id?: string | null
+                    name: string
+                    email: string
+                    subject: string
+                    status?: string | null
+                    priority?: string | null
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    ticket_number?: string | null
+                    user_id?: string | null
+                    name?: string
+                    email?: string
+                    subject?: string
+                    status?: string | null
+                    priority?: string | null
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "support_tickets_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            },
+            ticket_replies: {
+                Row: {
+                    id: string
+                    ticket_id: string
+                    sender_type: string
+                    sender_name: string | null
+                    message: string
+                    created_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    ticket_id: string
+                    sender_type: string
+                    sender_name?: string | null
+                    message: string
+                    created_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    ticket_id?: string
+                    sender_type?: string
+                    sender_name?: string | null
+                    message?: string
+                    created_at?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "ticket_replies_ticket_id_fkey"
+                        columns: ["ticket_id"]
+                        isOneToOne: false
+                        referencedRelation: "support_tickets"
                         referencedColumns: ["id"]
                     },
                 ]

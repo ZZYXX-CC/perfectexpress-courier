@@ -1,7 +1,6 @@
-
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,8 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area'
 import Navbar from '@/components/layout/Navbar'
 import Link from 'next/link'
-import { Package, Truck, CheckCircle, Clock, Plus, Eye, MapPin, Calendar, DollarSign, CreditCard, User, Mail } from 'lucide-react'
+import { Package, Truck, CheckCircle, Clock, Plus, Eye, MapPin, Calendar, DollarSign, CreditCard, User, Mail, Wifi } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { useRealtimeShipments } from '@/hooks/useRealtimeShipments'
 
 type Shipment = {
     id: string
@@ -24,17 +24,44 @@ type Shipment = {
     history: any
     created_at: string | null
     price?: number | null
+    user_id?: string | null
 }
 
-export default function DashboardClient({ user, profile, shipments }: { user: any, profile: any, shipments: Shipment[] }) {
+export default function DashboardClient({ user, profile, shipments: initialShipments }: { user: any, profile: any, shipments: Shipment[] }) {
+    const [shipments, setShipments] = useState<Shipment[]>(initialShipments)
     const [detailsModalOpen, setDetailsModalOpen] = useState(false)
     const [detailsShipment, setDetailsShipment] = useState<Shipment | null>(null)
 
-    const stats = {
+    // Real-time update handlers - only for this user's shipments
+    const handleRealtimeInsert = useCallback((newShipment: Shipment) => {
+        if (newShipment.user_id === user.id) {
+            setShipments(prev => [newShipment, ...prev])
+        }
+    }, [user.id])
+
+    const handleRealtimeUpdate = useCallback((updatedShipment: Shipment) => {
+        setShipments(prev => prev.map(s => 
+            s.id === updatedShipment.id ? updatedShipment : s
+        ))
+        // Update details modal if open
+        if (detailsShipment?.id === updatedShipment.id) {
+            setDetailsShipment(updatedShipment)
+        }
+    }, [detailsShipment?.id])
+
+    // Subscribe to real-time updates for this user's shipments
+    useRealtimeShipments({
+        onInsert: handleRealtimeInsert,
+        onUpdate: handleRealtimeUpdate,
+        showToasts: true,
+        filter: { column: 'user_id', value: user.id }
+    })
+
+    const stats = useMemo(() => ({
         total: shipments.length,
         delivered: shipments.filter(s => s.status === 'delivered').length,
         active: shipments.filter(s => ['in-transit', 'out-for-delivery', 'pending', 'accepted'].includes(s.status || '')).length,
-    }
+    }), [shipments])
 
     const getStatusColor = (status: string | null) => {
         switch (status) {
@@ -54,9 +81,15 @@ export default function DashboardClient({ user, profile, shipments }: { user: an
             <main className="container mx-auto px-4 pt-32 pb-20">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-secondary">
-                            Welcome, {profile?.full_name || user.email}
-                        </h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-bold text-secondary">
+                                Welcome, {profile?.full_name || user.email}
+                            </h1>
+                            <span className="flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                <Wifi size={12} className="animate-pulse" />
+                                Live
+                            </span>
+                        </div>
                         <p className="text-slate-500">Manage and track your shipments</p>
                     </div>
                     <Link href="/ship">

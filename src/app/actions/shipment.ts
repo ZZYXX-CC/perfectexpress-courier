@@ -57,14 +57,26 @@ export async function createShipment(formData: ShipmentFormData) {
         return { error: 'Failed to create shipment. Please try again.' }
     }
 
-    // Trigger Email Notification (Non-blocking)
+    // Trigger Email Notification (Non-blocking) - Notify BOTH sender and receiver
     try {
-        const { sendShipmentCreatedEmail } = await import('@/lib/email')
+        const { sendShipmentCreatedEmail, sendShipmentReceiverNotification } = await import('@/lib/email')
+        
+        // Notify sender
         await sendShipmentCreatedEmail(
             formData.sender_email,
             data?.tracking_number || 'N/A',
             formData.sender_name
         )
+        
+        // Notify receiver that a package is coming their way
+        if (formData.receiver_email) {
+            await sendShipmentReceiverNotification(
+                formData.receiver_email,
+                data?.tracking_number || 'N/A',
+                formData.receiver_name,
+                formData.sender_name
+            )
+        }
     } catch (emailError) {
         console.error('Failed to send creation email:', emailError)
         // We don't fail the whole action if email fails
