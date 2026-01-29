@@ -1,0 +1,230 @@
+{
+  "node": {
+    "601a54e1e61ebec4ee8d22d385482431483c383d59": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "action-browser"
+      },
+      "exportedName": "createChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "781dce578e8850f3344c600f141f5999ba6b9b7064": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "action-browser"
+      },
+      "exportedName": "sendChatMessage",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4025a0ee08735742c2e4d64b5ee759f70a786392ad": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "action-browser"
+      },
+      "exportedName": "getChatMessages",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "002f5ed4f625427543c2a6a5db3b9cb3d969f79799": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getUserProfile",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "getUserProfile",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "007341bb103b370054f6b9cc33ac33224b9dcff7e2": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getUser",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "getUser",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "008503b81149d7817e0f43f961b36699ad4a34baab": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "signOut",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "signOut",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "00d8e0eef0f934d18a328f07cb46d0ad918bd58fa0": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "isAdmin",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "isAdmin",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "40084c06809d3ca4b7b6159e737657d178bb309475": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "resetPassword",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "resetPassword",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "40213a1e3093de513f699db95f31707c4f8426fa2e": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "signUp",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "signUp",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "4028fd0ec15a845b2972c9f920209bd381d23f23ea": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getUserShipments",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "getUserShipments",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "404315f94ff57c0f21b673c3d120c11a11c6bf0faa": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "signIn",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "signIn",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "407ae9ffba7e0dd474adf70fd00f2febfc97c1be34": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "updateEmail",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "updateEmail",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "40a5b5fe51690aef9e38cb0009c0260ed0cb580ff0": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "updateProfile",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "updateProfile",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "40bf41dfbd186604dfd48d38b0aa3e61454ac7027a": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "requestPasswordReset",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "requestPasswordReset",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "60af25071d0248e87884adb790be360bf76e96f082": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "changePassword",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc"
+      },
+      "exportedName": "changePassword",
+      "filename": "src/app/actions/auth.ts"
+    }
+  },
+  "edge": {}
+}

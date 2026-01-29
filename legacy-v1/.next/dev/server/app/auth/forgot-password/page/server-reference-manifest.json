@@ -1,0 +1,65 @@
+{
+  "node": {
+    "60b514bc9dac2e166e161835b73dc28240aa517c38": {
+      "workers": {
+        "app/auth/forgot-password/page": {
+          "moduleId": "[project]/.next-internal/server/app/auth/forgot-password/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/chat.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/auth/forgot-password/page": "action-browser"
+      },
+      "exportedName": "createChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "780cfad9819c039b2b6996bc6154909a571b1535f1": {
+      "workers": {
+        "app/auth/forgot-password/page": {
+          "moduleId": "[project]/.next-internal/server/app/auth/forgot-password/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/chat.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/auth/forgot-password/page": "action-browser"
+      },
+      "exportedName": "sendChatMessage",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4014455e22b76c012584d01728b3a7e44c3d3f72fe": {
+      "workers": {
+        "app/auth/forgot-password/page": {
+          "moduleId": "[project]/.next-internal/server/app/auth/forgot-password/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/chat.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/auth/forgot-password/page": "action-browser"
+      },
+      "exportedName": "getChatMessages",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "40dcc810a117f42fd2e7a053ff4d883ba8ef7a91f0": {
+      "workers": {
+        "app/auth/forgot-password/page": {
+          "moduleId": "[project]/.next-internal/server/app/auth/forgot-password/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/chat.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "requestPasswordReset",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/auth/forgot-password/page": "action-browser"
+      },
+      "exportedName": "requestPasswordReset",
+      "filename": "src/app/actions/auth.ts"
+    }
+  },
+  "edge": {}
+}

@@ -1,0 +1,20 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/chat/page": "/admin/chat",
+  "/admin/page": "/admin",
+  "/admin/tickets/page": "/admin/tickets",
+  "/api/keep-alive/route": "/api/keep-alive",
+  "/auth/forgot-password/page": "/auth/forgot-password",
+  "/auth/login/page": "/auth/login",
+  "/auth/reset-password/page": "/auth/reset-password",
+  "/auth/signup/page": "/auth/signup",
+  "/dashboard/page": "/dashboard",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/",
+  "/profile/page": "/profile",
+  "/ship/page": "/ship",
+  "/support/[ticket_id]/page": "/support/[ticket_id]",
+  "/support/page": "/support",
+  "/track/[tracking_number]/page": "/track/[tracking_number]"
+}

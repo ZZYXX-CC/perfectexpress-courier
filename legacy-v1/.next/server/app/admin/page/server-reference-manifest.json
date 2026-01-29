@@ -1,0 +1,170 @@
+{
+  "node": {
+    "601a54e1e61ebec4ee8d22d385482431483c383d59": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "createChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "781dce578e8850f3344c600f141f5999ba6b9b7064": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "sendChatMessage",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4025a0ee08735742c2e4d64b5ee759f70a786392ad": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "getChatMessages",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "40f774832d930e6fd97dcc43c7a3b100de39254f6f": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "getAllShipments",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "getAllShipments",
+      "filename": "src/app/admin/actions.ts"
+    },
+    "700b4acd3fed7b1790c2e227d5433578c2c24fced0": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "logShipmentEvent",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "logShipmentEvent",
+      "filename": "src/app/admin/actions.ts"
+    },
+    "60b70e5d345c1c55c9d51722a54eb4d029e2319f13": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "updateShipment",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "updateShipment",
+      "filename": "src/app/admin/actions.ts"
+    },
+    "40fd6e93b39dd985ae1380e80e499a16e9295b960a": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "deleteShipment",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "deleteShipment",
+      "filename": "src/app/admin/actions.ts"
+    },
+    "4051a4397eb60e9ba5a9a49de7c6c95252495f2856": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "getAllUsers",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "getAllUsers",
+      "filename": "src/app/admin/actions.ts"
+    },
+    "60b3c0ea9a339b5dc43eee9dcc5f415c9bd8e467ec": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "updateUserRole",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "updateUserRole",
+      "filename": "src/app/admin/actions.ts"
+    },
+    "4092472c94f9fd42775606cd47ff12f60047ee17bb": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "createUser",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "createUser",
+      "filename": "src/app/admin/actions.ts"
+    },
+    "4023fc5c56a08eded849c2b60f98760867ea10f3a0": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "createShipment",
+          "filename": "src/app/actions/shipment.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "createShipment",
+      "filename": "src/app/actions/shipment.ts"
+    }
+  },
+  "edge": {}
+}

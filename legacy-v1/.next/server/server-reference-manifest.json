@@ -1,0 +1,1015 @@
+{
+  "node": {
+    "601a54e1e61ebec4ee8d22d385482431483c383d59": {
+      "workers": {
+        "app/_not-found/page": {
+          "moduleId": 21525,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/forgot-password/page": {
+          "moduleId": 47003,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/login/page": {
+          "moduleId": 92027,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/reset-password/page": {
+          "moduleId": 45526,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/signup/page": {
+          "moduleId": 84446,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/page": {
+          "moduleId": 56750,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/support/page": {
+          "moduleId": 79416,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/_not-found/page": "action-browser",
+        "app/admin/chat/page": "action-browser",
+        "app/admin/page": "action-browser",
+        "app/admin/tickets/page": "action-browser",
+        "app/auth/forgot-password/page": "action-browser",
+        "app/auth/login/page": "action-browser",
+        "app/auth/reset-password/page": "action-browser",
+        "app/auth/signup/page": "action-browser",
+        "app/dashboard/page": "action-browser",
+        "app/page": "action-browser",
+        "app/profile/page": "action-browser",
+        "app/ship/page": "action-browser",
+        "app/support/[ticket_id]/page": "action-browser",
+        "app/support/page": "action-browser",
+        "app/track/[tracking_number]/page": "action-browser"
+      },
+      "filename": "src/app/actions/chat.ts",
+      "exportedName": "createChatSession"
+    },
+    "781dce578e8850f3344c600f141f5999ba6b9b7064": {
+      "workers": {
+        "app/_not-found/page": {
+          "moduleId": 21525,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/forgot-password/page": {
+          "moduleId": 47003,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/login/page": {
+          "moduleId": 92027,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/reset-password/page": {
+          "moduleId": 45526,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/signup/page": {
+          "moduleId": 84446,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/page": {
+          "moduleId": 56750,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/support/page": {
+          "moduleId": 79416,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/_not-found/page": "action-browser",
+        "app/admin/chat/page": "action-browser",
+        "app/admin/page": "action-browser",
+        "app/admin/tickets/page": "action-browser",
+        "app/auth/forgot-password/page": "action-browser",
+        "app/auth/login/page": "action-browser",
+        "app/auth/reset-password/page": "action-browser",
+        "app/auth/signup/page": "action-browser",
+        "app/dashboard/page": "action-browser",
+        "app/page": "action-browser",
+        "app/profile/page": "action-browser",
+        "app/ship/page": "action-browser",
+        "app/support/[ticket_id]/page": "action-browser",
+        "app/support/page": "action-browser",
+        "app/track/[tracking_number]/page": "action-browser"
+      },
+      "filename": "src/app/actions/chat.ts",
+      "exportedName": "sendChatMessage"
+    },
+    "4025a0ee08735742c2e4d64b5ee759f70a786392ad": {
+      "workers": {
+        "app/_not-found/page": {
+          "moduleId": 21525,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/forgot-password/page": {
+          "moduleId": 47003,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/login/page": {
+          "moduleId": 92027,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/reset-password/page": {
+          "moduleId": 45526,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/auth/signup/page": {
+          "moduleId": 84446,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/page": {
+          "moduleId": 56750,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/support/page": {
+          "moduleId": 79416,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        },
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/_not-found/page": "action-browser",
+        "app/admin/chat/page": "action-browser",
+        "app/admin/page": "action-browser",
+        "app/admin/tickets/page": "action-browser",
+        "app/auth/forgot-password/page": "action-browser",
+        "app/auth/login/page": "action-browser",
+        "app/auth/reset-password/page": "action-browser",
+        "app/auth/signup/page": "action-browser",
+        "app/dashboard/page": "action-browser",
+        "app/page": "action-browser",
+        "app/profile/page": "action-browser",
+        "app/ship/page": "action-browser",
+        "app/support/[ticket_id]/page": "action-browser",
+        "app/support/page": "action-browser",
+        "app/track/[tracking_number]/page": "action-browser"
+      },
+      "filename": "src/app/actions/chat.ts",
+      "exportedName": "getChatMessages"
+    },
+    "4023fc5c56a08eded849c2b60f98760867ea10f3a0": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "createShipment",
+          "filename": "src/app/actions/shipment.ts"
+        },
+        "app/page": {
+          "moduleId": 56750,
+          "async": false,
+          "exportedName": "createShipment",
+          "filename": "src/app/actions/shipment.ts"
+        },
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "createShipment",
+          "filename": "src/app/actions/shipment.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser",
+        "app/page": "action-browser",
+        "app/ship/page": "action-browser"
+      },
+      "filename": "src/app/actions/shipment.ts",
+      "exportedName": "createShipment"
+    },
+    "40f774832d930e6fd97dcc43c7a3b100de39254f6f": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "getAllShipments",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "filename": "src/app/admin/actions.ts",
+      "exportedName": "getAllShipments"
+    },
+    "700b4acd3fed7b1790c2e227d5433578c2c24fced0": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "logShipmentEvent",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "filename": "src/app/admin/actions.ts",
+      "exportedName": "logShipmentEvent"
+    },
+    "60b70e5d345c1c55c9d51722a54eb4d029e2319f13": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "updateShipment",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "filename": "src/app/admin/actions.ts",
+      "exportedName": "updateShipment"
+    },
+    "40fd6e93b39dd985ae1380e80e499a16e9295b960a": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "deleteShipment",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "filename": "src/app/admin/actions.ts",
+      "exportedName": "deleteShipment"
+    },
+    "4051a4397eb60e9ba5a9a49de7c6c95252495f2856": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "getAllUsers",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "filename": "src/app/admin/actions.ts",
+      "exportedName": "getAllUsers"
+    },
+    "60b3c0ea9a339b5dc43eee9dcc5f415c9bd8e467ec": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "updateUserRole",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "filename": "src/app/admin/actions.ts",
+      "exportedName": "updateUserRole"
+    },
+    "4092472c94f9fd42775606cd47ff12f60047ee17bb": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 69973,
+          "async": false,
+          "exportedName": "createUser",
+          "filename": "src/app/admin/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "filename": "src/app/admin/actions.ts",
+      "exportedName": "createUser"
+    },
+    "009a18ceb083bab5ad24884d10753cc89c6b893002": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "getActiveChatSessions",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "filename": "src/app/actions/chat.ts",
+      "exportedName": "getActiveChatSessions"
+    },
+    "40ceed2991eeb6f8616fabb5f58d0ee2f68e273e4d": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "closeChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "filename": "src/app/actions/chat.ts",
+      "exportedName": "closeChatSession"
+    },
+    "40007ca5d3341f9372d0ec690a3592d7880edcaa5e": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "markMessagesAsRead",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "filename": "src/app/actions/chat.ts",
+      "exportedName": "markMessagesAsRead"
+    },
+    "00ad3389bc6e849e8e49280e3217eb7470b0717f05": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "getAllTickets",
+          "filename": "src/app/actions/tickets.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "getAllTickets",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser",
+        "app/support/[ticket_id]/page": "rsc"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "getAllTickets"
+    },
+    "40961d57596d15b186988c034e4b4cab8da2fd9b36": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "getTicketReplies",
+          "filename": "src/app/actions/tickets.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "getTicketReplies",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser",
+        "app/support/[ticket_id]/page": "rsc"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "getTicketReplies"
+    },
+    "40224a9559beab856ec27d04f090cab3d0a1b4ddfa": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "addTicketReply",
+          "filename": "src/app/actions/tickets.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "addTicketReply",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser",
+        "app/support/[ticket_id]/page": "action-browser"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "addTicketReply"
+    },
+    "608092312853408db614b5587d4866138db4bce027": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "updateTicketStatus",
+          "filename": "src/app/actions/tickets.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "updateTicketStatus",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser",
+        "app/support/[ticket_id]/page": "rsc"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "updateTicketStatus"
+    },
+    "60bb62346b4b393d76981d087157cde0e7045231a2": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "updateTicketPriority",
+          "filename": "src/app/actions/tickets.ts"
+        },
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "updateTicketPriority",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser",
+        "app/support/[ticket_id]/page": "rsc"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "updateTicketPriority"
+    },
+    "40bf41dfbd186604dfd48d38b0aa3e61454ac7027a": {
+      "workers": {
+        "app/auth/forgot-password/page": {
+          "moduleId": 47003,
+          "async": false,
+          "exportedName": "requestPasswordReset",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "requestPasswordReset",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "requestPasswordReset",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/auth/forgot-password/page": "action-browser",
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "requestPasswordReset"
+    },
+    "404315f94ff57c0f21b673c3d120c11a11c6bf0faa": {
+      "workers": {
+        "app/auth/login/page": {
+          "moduleId": 92027,
+          "async": false,
+          "exportedName": "signIn",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "signIn",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "signIn",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/auth/login/page": "action-browser",
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "signIn"
+    },
+    "40084c06809d3ca4b7b6159e737657d178bb309475": {
+      "workers": {
+        "app/auth/reset-password/page": {
+          "moduleId": 45526,
+          "async": false,
+          "exportedName": "resetPassword",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "resetPassword",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "resetPassword",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/auth/reset-password/page": "action-browser",
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "resetPassword"
+    },
+    "40213a1e3093de513f699db95f31707c4f8426fa2e": {
+      "workers": {
+        "app/auth/signup/page": {
+          "moduleId": 84446,
+          "async": false,
+          "exportedName": "signUp",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "signUp",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "signUp",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/auth/signup/page": "action-browser",
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "signUp"
+    },
+    "002f5ed4f625427543c2a6a5db3b9cb3d969f79799": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getUserProfile",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "getUserProfile",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "getUserProfile"
+    },
+    "007341bb103b370054f6b9cc33ac33224b9dcff7e2": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getUser",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "getUser",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "getUser"
+    },
+    "008503b81149d7817e0f43f961b36699ad4a34baab": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "signOut",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "signOut",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "signOut"
+    },
+    "00d8e0eef0f934d18a328f07cb46d0ad918bd58fa0": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "isAdmin",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "isAdmin",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "isAdmin"
+    },
+    "4028fd0ec15a845b2972c9f920209bd381d23f23ea": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "getUserShipments",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "getUserShipments",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "getUserShipments"
+    },
+    "407ae9ffba7e0dd474adf70fd00f2febfc97c1be34": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "updateEmail",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "updateEmail",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "action-browser"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "updateEmail"
+    },
+    "40a5b5fe51690aef9e38cb0009c0260ed0cb580ff0": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "updateProfile",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "updateProfile",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "action-browser"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "updateProfile"
+    },
+    "60af25071d0248e87884adb790be360bf76e96f082": {
+      "workers": {
+        "app/dashboard/page": {
+          "moduleId": 34099,
+          "async": false,
+          "exportedName": "changePassword",
+          "filename": "src/app/actions/auth.ts"
+        },
+        "app/profile/page": {
+          "moduleId": 89406,
+          "async": false,
+          "exportedName": "changePassword",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/dashboard/page": "rsc",
+        "app/profile/page": "action-browser"
+      },
+      "filename": "src/app/actions/auth.ts",
+      "exportedName": "changePassword"
+    },
+    "40b121c4d42d3a64eb159542d6dc3a5574fe470055": {
+      "workers": {
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "createTicket",
+          "filename": "src/app/actions/tickets.ts"
+        },
+        "app/support/page": {
+          "moduleId": 79416,
+          "async": false,
+          "exportedName": "createTicket",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/support/[ticket_id]/page": "rsc",
+        "app/support/page": "action-browser"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "createTicket"
+    },
+    "00e748acc27b9f533a514cfb222438c8691aa7823a": {
+      "workers": {
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "getUserTickets",
+          "filename": "src/app/actions/tickets.ts"
+        },
+        "app/support/page": {
+          "moduleId": 79416,
+          "async": false,
+          "exportedName": "getUserTickets",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/support/[ticket_id]/page": "rsc",
+        "app/support/page": "action-browser"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "getUserTickets"
+    },
+    "4034ae4a9f305f57b2e8bf0a348dc1e6cd09ca9947": {
+      "workers": {
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "getTicket",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/support/[ticket_id]/page": "rsc"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "getTicket"
+    },
+    "4091ccdca2a43602e1fafc6d8999024ef00bd17721": {
+      "workers": {
+        "app/support/[ticket_id]/page": {
+          "moduleId": 11706,
+          "async": false,
+          "exportedName": "getTicketByNumber",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/support/[ticket_id]/page": "rsc"
+      },
+      "filename": "src/app/actions/tickets.ts",
+      "exportedName": "getTicketByNumber"
+    },
+    "40e3da00e00022548d2ac9b9dd46f0eee2ef1f8448": {
+      "workers": {
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "getShipment",
+          "filename": "src/app/actions/get-shipment.ts"
+        }
+      },
+      "layer": {
+        "app/track/[tracking_number]/page": "rsc"
+      },
+      "filename": "src/app/actions/get-shipment.ts",
+      "exportedName": "getShipment"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "3wmoaNv95ztVopwC8xiOlrqaR5Wh/dSVZEp+ooUlBTA="
+}

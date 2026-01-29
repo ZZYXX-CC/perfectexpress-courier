@@ -1,0 +1,65 @@
+{
+  "node": {
+    "601a54e1e61ebec4ee8d22d385482431483c383d59": {
+      "workers": {
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/ship/page": "action-browser"
+      },
+      "exportedName": "createChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "781dce578e8850f3344c600f141f5999ba6b9b7064": {
+      "workers": {
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/ship/page": "action-browser"
+      },
+      "exportedName": "sendChatMessage",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4025a0ee08735742c2e4d64b5ee759f70a786392ad": {
+      "workers": {
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/ship/page": "action-browser"
+      },
+      "exportedName": "getChatMessages",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4023fc5c56a08eded849c2b60f98760867ea10f3a0": {
+      "workers": {
+        "app/ship/page": {
+          "moduleId": 72665,
+          "async": false,
+          "exportedName": "createShipment",
+          "filename": "src/app/actions/shipment.ts"
+        }
+      },
+      "layer": {
+        "app/ship/page": "action-browser"
+      },
+      "exportedName": "createShipment",
+      "filename": "src/app/actions/shipment.ts"
+    }
+  },
+  "edge": {}
+}

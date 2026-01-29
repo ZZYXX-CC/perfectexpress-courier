@@ -1,7 +1,9 @@
 
 export interface Shipment {
   id: string;
-  status: 'In Transit' | 'Delivered' | 'Pending' | 'Out for Delivery';
+  status: 'pending' | 'quoted' | 'confirmed' | 'in-transit' | 'out-for-delivery' | 'delivered' | 'held' | 'cancelled';
+  price?: number;
+  paymentStatus?: 'paid' | 'unpaid';
   origin: string;
   destination: string;
   estimatedArrival: string;

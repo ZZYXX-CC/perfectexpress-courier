@@ -1,0 +1,95 @@
+{
+  "node": {
+    "601a54e1e61ebec4ee8d22d385482431483c383d59": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "exportedName": "createChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "781dce578e8850f3344c600f141f5999ba6b9b7064": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "exportedName": "sendChatMessage",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4025a0ee08735742c2e4d64b5ee759f70a786392ad": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "exportedName": "getChatMessages",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "009a18ceb083bab5ad24884d10753cc89c6b893002": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "getActiveChatSessions",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "exportedName": "getActiveChatSessions",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "40ceed2991eeb6f8616fabb5f58d0ee2f68e273e4d": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "closeChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "exportedName": "closeChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "40007ca5d3341f9372d0ec690a3592d7880edcaa5e": {
+      "workers": {
+        "app/admin/chat/page": {
+          "moduleId": 28266,
+          "async": false,
+          "exportedName": "markMessagesAsRead",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/chat/page": "action-browser"
+      },
+      "exportedName": "markMessagesAsRead",
+      "filename": "src/app/actions/chat.ts"
+    }
+  },
+  "edge": {}
+}

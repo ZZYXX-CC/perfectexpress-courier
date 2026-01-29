@@ -1,0 +1,125 @@
+{
+  "node": {
+    "601a54e1e61ebec4ee8d22d385482431483c383d59": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "createChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "781dce578e8850f3344c600f141f5999ba6b9b7064": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "sendChatMessage",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4025a0ee08735742c2e4d64b5ee759f70a786392ad": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "getChatMessages",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "00ad3389bc6e849e8e49280e3217eb7470b0717f05": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "getAllTickets",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "getAllTickets",
+      "filename": "src/app/actions/tickets.ts"
+    },
+    "40961d57596d15b186988c034e4b4cab8da2fd9b36": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "getTicketReplies",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "getTicketReplies",
+      "filename": "src/app/actions/tickets.ts"
+    },
+    "40224a9559beab856ec27d04f090cab3d0a1b4ddfa": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "addTicketReply",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "addTicketReply",
+      "filename": "src/app/actions/tickets.ts"
+    },
+    "608092312853408db614b5587d4866138db4bce027": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "updateTicketStatus",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "updateTicketStatus",
+      "filename": "src/app/actions/tickets.ts"
+    },
+    "60bb62346b4b393d76981d087157cde0e7045231a2": {
+      "workers": {
+        "app/admin/tickets/page": {
+          "moduleId": 15179,
+          "async": false,
+          "exportedName": "updateTicketPriority",
+          "filename": "src/app/actions/tickets.ts"
+        }
+      },
+      "layer": {
+        "app/admin/tickets/page": "action-browser"
+      },
+      "exportedName": "updateTicketPriority",
+      "filename": "src/app/actions/tickets.ts"
+    }
+  },
+  "edge": {}
+}

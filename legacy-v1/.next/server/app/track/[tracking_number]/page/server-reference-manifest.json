@@ -1,0 +1,65 @@
+{
+  "node": {
+    "601a54e1e61ebec4ee8d22d385482431483c383d59": {
+      "workers": {
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "createChatSession",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/track/[tracking_number]/page": "action-browser"
+      },
+      "exportedName": "createChatSession",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "781dce578e8850f3344c600f141f5999ba6b9b7064": {
+      "workers": {
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "sendChatMessage",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/track/[tracking_number]/page": "action-browser"
+      },
+      "exportedName": "sendChatMessage",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "4025a0ee08735742c2e4d64b5ee759f70a786392ad": {
+      "workers": {
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "getChatMessages",
+          "filename": "src/app/actions/chat.ts"
+        }
+      },
+      "layer": {
+        "app/track/[tracking_number]/page": "action-browser"
+      },
+      "exportedName": "getChatMessages",
+      "filename": "src/app/actions/chat.ts"
+    },
+    "40e3da00e00022548d2ac9b9dd46f0eee2ef1f8448": {
+      "workers": {
+        "app/track/[tracking_number]/page": {
+          "moduleId": 33382,
+          "async": false,
+          "exportedName": "getShipment",
+          "filename": "src/app/actions/get-shipment.ts"
+        }
+      },
+      "layer": {
+        "app/track/[tracking_number]/page": "rsc"
+      },
+      "exportedName": "getShipment",
+      "filename": "src/app/actions/get-shipment.ts"
+    }
+  },
+  "edge": {}
+}

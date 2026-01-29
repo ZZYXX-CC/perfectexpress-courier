@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '../services/supabase';
 
 interface UserSettingsProps {
     onBack: () => void;
@@ -8,12 +9,78 @@ interface UserSettingsProps {
 const UserSettings: React.FC<UserSettingsProps> = ({ onBack }) => {
     const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications'>('profile');
     const [loading, setLoading] = useState(false);
+    const [profileLoading, setProfileLoading] = useState(true);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [formData, setFormData] = useState({
+        fullName: '',
+        email: '',
+        companyName: '',
+        phoneNumber: ''
+    });
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                setProfileLoading(false);
+                return;
+            }
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                setFormData({
+                    fullName: profile.full_name || '',
+                    email: profile.email || user.email || '',
+                    companyName: '',
+                    phoneNumber: ''
+                });
+            } else {
+                setFormData({
+                    fullName: user.user_metadata?.full_name || '',
+                    email: user.email || '',
+                    companyName: '',
+                    phoneNumber: ''
+                });
+            }
+            setProfileLoading(false);
+        };
+
+        loadProfile();
+    }, []);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        await new Promise(r => setTimeout(r, 1200)); // Simulate save
-        setLoading(false);
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    full_name: formData.fullName,
+                    email: formData.email,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            alert('Profile updated successfully');
+        } catch (err: any) {
+            console.error('Error saving profile:', err);
+            alert('Failed to save profile: ' + (err.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -84,24 +151,57 @@ const UserSettings: React.FC<UserSettingsProps> = ({ onBack }) => {
                                         <h2 className="text-lg font-bold text-textMain uppercase tracking-tight mb-1">Personal Information</h2>
                                         <p className="text-xs text-textMuted">Update your identification details and company association.</p>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Full Name</label>
-                                            <input type="text" defaultValue="ALEX MERCER" className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" />
+                                    {profileLoading ? (
+                                        <div className="text-center py-12">
+                                            <div className="inline-block animate-spin mb-4">
+                                                <iconify-icon icon="solar:refresh-linear" width="32" class="text-red-600"></iconify-icon>
+                                            </div>
+                                            <p className="text-textMuted text-sm">Loading profile...</p>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Email Address</label>
-                                            <input type="email" defaultValue="alex.mercer@innovate.corp" className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" />
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Full Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={formData.fullName}
+                                                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                                    className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" 
+                                                    placeholder="FULL NAME"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Email Address</label>
+                                                <input 
+                                                    type="email" 
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                    className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" 
+                                                    placeholder="EMAIL@DOMAIN.COM"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Company Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={formData.companyName}
+                                                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                                                    className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" 
+                                                    placeholder="COMPANY NAME"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Phone Number</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={formData.phoneNumber}
+                                                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                                    className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" 
+                                                    placeholder="+1 (555) 000-0000"
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Company Name</label>
-                                            <input type="text" defaultValue="INNOVATE CORP" className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Phone Number</label>
-                                            <input type="text" defaultValue="+1 (555) 019-2834" className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" />
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             )}
 
@@ -114,15 +214,57 @@ const UserSettings: React.FC<UserSettingsProps> = ({ onBack }) => {
                                     <div className="space-y-6 max-w-md">
                                         <div className="space-y-2">
                                             <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Current Password</label>
-                                            <input type="password" placeholder="••••••••••••" className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" />
+                                            <div className="relative">
+                                                <input 
+                                                    type={showCurrentPassword ? "text" : "password"} 
+                                                    placeholder="••••••••••••" 
+                                                    className="w-full bg-bgMain border border-borderColor rounded-sm px-4 pr-12 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" 
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-textMuted hover:text-textMain transition-colors"
+                                                    aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                                                >
+                                                    <iconify-icon icon={showCurrentPassword ? "solar:eye-closed-linear" : "solar:eye-linear"} width="18"></iconify-icon>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">New Password</label>
-                                            <input type="password" placeholder="••••••••••••" className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" />
+                                            <div className="relative">
+                                                <input 
+                                                    type={showNewPassword ? "text" : "password"} 
+                                                    placeholder="••••••••••••" 
+                                                    className="w-full bg-bgMain border border-borderColor rounded-sm px-4 pr-12 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" 
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-textMuted hover:text-textMain transition-colors"
+                                                    aria-label={showNewPassword ? "Hide password" : "Show password"}
+                                                >
+                                                    <iconify-icon icon={showNewPassword ? "solar:eye-closed-linear" : "solar:eye-linear"} width="18"></iconify-icon>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[9px] font-black text-textMuted/80 uppercase tracking-widest">Confirm New Password</label>
-                                            <input type="password" placeholder="••••••••••••" className="w-full bg-bgMain border border-borderColor rounded-sm px-4 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" />
+                                            <div className="relative">
+                                                <input 
+                                                    type={showConfirmPassword ? "text" : "password"} 
+                                                    placeholder="••••••••••••" 
+                                                    className="w-full bg-bgMain border border-borderColor rounded-sm px-4 pr-12 py-3 focus:border-red-600 outline-none text-xs font-bold uppercase tracking-widest text-textMain" 
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-textMuted hover:text-textMain transition-colors"
+                                                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                                >
+                                                    <iconify-icon icon={showConfirmPassword ? "solar:eye-closed-linear" : "solar:eye-linear"} width="18"></iconify-icon>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="pt-6 border-t border-borderColor">
