@@ -46,13 +46,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
           password,
         });
         if (error) throw error;
-        // Wait a moment for auth state change to propagate
-        await new Promise(resolve => setTimeout(resolve, 300));
-        onLogin(email);
+        
+        // Reset loading immediately - onAuthStateChange will handle navigation
+        setLoading(false);
+        
+        // Call onLogin (non-blocking) - it will navigate via onAuthStateChange
+        onLogin(email).catch(err => {
+          console.error('Error in onLogin:', err);
+          // If onLogin fails, navigate manually as fallback
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 500);
+        });
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
-    } finally {
       setLoading(false);
     }
   };

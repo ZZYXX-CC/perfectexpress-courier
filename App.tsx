@@ -204,13 +204,8 @@ const AppContent: React.FC = () => {
   };
 
   const handleLogin = async (email: string) => {
-    // Wait for session and sync user before navigating
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      await syncUser(session.user);
-    }
-    // Small delay to ensure state is set
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Navigate immediately - onAuthStateChange will sync user in background
+    // This prevents the login page from hanging
     navigate('/dashboard');
   };
 
