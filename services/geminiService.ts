@@ -24,14 +24,36 @@ export const generateMockShipment = (id: string): Shipment => {
   const statuses: Shipment['status'][] = ['In Transit', 'Out for Delivery', 'Pending', 'Delivered'];
   const status = statuses[Math.floor(Math.random() * statuses.length)];
   
+  const isIntl = Math.random() > 0.5;
+
   return {
     id: id.toUpperCase(),
     status: status,
-    origin: "London Distribution Center",
-    destination: "New York Hub",
+    origin: isIntl ? "London Distribution Center" : "Los Angeles Gateway",
+    destination: isIntl ? "New York Hub" : "Seattle Fulfillment",
     estimatedArrival: "Oct 24, 2024",
     currentLocation: status === 'Delivered' ? "Home Address" : "Local Sorting Office",
     weight: "2.4 kg",
+    dimensions: "35x25x10 cm",
+    serviceType: "Express International",
+    items: [
+      { description: "High-Performance Mechanical Parts", quantity: 2, value: "$450.00", sku: "MCH-992-X" },
+      { description: "Documentation Bundle", quantity: 1, value: "$0.00", sku: "DOC-STD" }
+    ],
+    sender: {
+      name: "Logistics Coordinator",
+      company: "TechFlow Supply Ltd.",
+      street: "44 Industrial Way",
+      city: isIntl ? "London" : "Los Angeles",
+      country: isIntl ? "UK" : "USA"
+    },
+    recipient: {
+      name: "Alex Mercer",
+      company: "Innovate Corp",
+      street: "882 Innovation Drive",
+      city: isIntl ? "New York" : "Seattle",
+      country: "USA"
+    },
     history: [
       { date: "2024-10-20", time: "09:00", location: "Sender Location", description: "Package dropped off and ready to ship." },
       { date: "2024-10-21", time: "14:30", location: "Central Sorting Hub", description: "Sorted and sent on the next available route." },

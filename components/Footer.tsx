@@ -1,6 +1,10 @@
 import React from 'react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  setPage: (page: string) => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ setPage }) => {
   return (
     <footer className="py-20 bg-bgMain border-t border-borderColor transition-colors duration-300">
       <div className="container mx-auto px-6">
@@ -20,29 +24,28 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-textMuted/70 mb-8">Our Network</h4>
             <ul className="space-y-4 text-[10px] font-bold text-textMuted uppercase tracking-widest">
-              <li><a href="#" className="hover:text-red-600 transition-colors">North America</a></li>
-              <li><a href="#" className="hover:text-red-600 transition-colors">European Hubs</a></li>
-              <li><a href="#" className="hover:text-red-600 transition-colors">Asia Pacific</a></li>
-              <li><a href="#" className="hover:text-red-600 transition-colors">Local Delivery</a></li>
+              <li><button onClick={() => setPage('network-na')} className="hover:text-red-600 transition-colors text-left">North America</button></li>
+              <li><button onClick={() => setPage('network-eu')} className="hover:text-red-600 transition-colors text-left">European Hubs</button></li>
+              <li><button onClick={() => setPage('network-ap')} className="hover:text-red-600 transition-colors text-left">Asia Pacific</button></li>
+              <li><button onClick={() => setPage('network-local')} className="hover:text-red-600 transition-colors text-left">Local Delivery</button></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-textMuted/70 mb-8">Helpful Links</h4>
             <ul className="space-y-4 text-[10px] font-bold text-textMuted uppercase tracking-widest">
-              <li><a href="#" className="hover:text-red-600 transition-colors">Shipping Guide</a></li>
-              <li><a href="#" className="hover:text-red-600 transition-colors">Track Package</a></li>
-              <li><a href="#" className="hover:text-red-600 transition-colors">Support Center</a></li>
-              <li><a href="#" className="hover:text-red-600 transition-colors">Contact Us</a></li>
+              <li><button onClick={() => setPage('guide')} className="hover:text-red-600 transition-colors text-left">Shipping Guide</button></li>
+              <li><button onClick={() => setPage('tracking')} className="hover:text-red-600 transition-colors text-left">Track Package</button></li>
+              <li><button onClick={() => setPage('support')} className="hover:text-red-600 transition-colors text-left">Support Center</button></li>
             </ul>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-12 border-t border-borderColor">
           <div className="flex gap-8 text-[9px] font-black uppercase tracking-[0.2em] text-textMuted/80">
-            <a href="#" className="hover:text-textMain transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-textMain transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-textMain transition-colors">Cookie Settings</a>
+            <button onClick={() => setPage('privacy')} className="hover:text-textMain transition-colors">Privacy Policy</button>
+            <button onClick={() => setPage('terms')} className="hover:text-textMain transition-colors">Terms of Service</button>
+            <button onClick={() => setPage('cookies')} className="hover:text-textMain transition-colors">Cookie Settings</button>
           </div>
 
           <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-textMuted/80">

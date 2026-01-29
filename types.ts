@@ -7,7 +7,27 @@ export interface Shipment {
   estimatedArrival: string;
   currentLocation: string;
   weight: string;
+  dimensions: string;
+  serviceType: string;
   history: ShipmentEvent[];
+  items: ShipmentItem[];
+  sender: AddressInfo;
+  recipient: AddressInfo;
+}
+
+export interface ShipmentItem {
+  description: string;
+  quantity: number;
+  value: string;
+  sku: string;
+}
+
+export interface AddressInfo {
+  name: string;
+  company?: string;
+  street: string;
+  city: string;
+  country: string;
 }
 
 export interface ShipmentEvent {

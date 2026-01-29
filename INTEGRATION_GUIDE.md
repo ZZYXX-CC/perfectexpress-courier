@@ -1,44 +1,61 @@
 # PerfectExpress V2 Integration Guide
 
-## Option 1: Automated Setup (Recommended)
-We have included a `setup.sh` script to automate the process.
+This guide details how to push the new frontend code into the existing `ZZYXX-CC/perfectexpress-courier` repository without overwriting the legacy application.
 
-1. Open your terminal in this folder.
-2. Run:
-   ```bash
-   chmod +x setup.sh
-   ./setup.sh
-   ```
-3. Follow the on-screen instructions to push your changes.
+## Prerequisites
+- Git installed.
+- Access to the target repository.
+- The files from this current project downloaded or available locally.
 
-## Option 2: Manual Integration
-If you prefer to do this manually, follow these steps:
+## Integration Steps
 
-1.  **Clone the existing repository**
-    ```bash
-    git clone https://github.com/ZZYXX-CC/perfectexpress-courier.git
-    cd perfectexpress-courier
-    ```
+Run the following commands in your terminal to create a clean subdirectory for the new app and push it.
 
-2.  **Create a new branch**
-    ```bash
-    git checkout -b feature/frontend-v2
-    ```
+```bash
+# 1. Clone the existing repository
+git clone https://github.com/ZZYXX-CC/perfectexpress-courier.git
+cd perfectexpress-courier
 
-3.  **Create the V2 directory**
-    ```bash
-    mkdir frontend-v2
-    ```
+# 2. Create a new branch for the V2 integration
+git checkout -b feature/frontend-v2
 
-4.  **Copy Files**
-    Copy all files from this project (excluding `.git` and `perfectexpress-courier` folder) into the `frontend-v2` folder.
+# 3. Create a directory for the new application
+# We use 'frontend-v2' to keep it separate from the legacy root files
+mkdir frontend-v2
 
-5.  **Commit and Push**
-    ```bash
-    git add frontend-v2
-    git commit -m "feat: add perfect-express-v2 frontend implementation"
-    git push origin feature/frontend-v2
-    ```
+# 4. Copy your new files into this folder
+# Assuming your new files (index.html, index.tsx, components/, etc.) are in a folder named 'new-source'
+# Adjust the source path '../new-source/*' as needed
+cp -r ../new-source/* frontend-v2/
 
-## Notes on Architecture
-The `index.html` is configured to use relative paths (`./index.tsx`). This ensures the app runs correctly inside the `/frontend-v2/` subdirectory without needing root-level access on the domain.
+# 5. Verify Structure
+# Your repo structure should look like:
+# perfectexpress-courier/
+# ├── (Old legacy files...)
+# └── frontend-v2/
+#     ├── index.html
+#     ├── index.tsx
+#     ├── components/
+#     ├── services/
+#     └── ...
+
+# 6. Stage and Commit
+git add frontend-v2
+git commit -m "feat: add perfect-express-v2 frontend implementation"
+
+# 7. Push to GitHub
+git push origin feature/frontend-v2
+```
+
+## Running the V2 App Locally
+
+To run the app from within the repo:
+
+1.  Navigate to the folder: `cd frontend-v2`
+2.  Serve the file using any static server (e.g., Python, VS Code Live Server, or `serve`):
+    *   **Python:** `python3 -m http.server 8000`
+    *   **Node:** `npx serve .`
+
+## Notes on Pathing
+
+The `index.html` has been updated to use `<script type="module" src="./index.tsx"></script>`. This **relative path** (`./`) is critical. It allows the application to run correctly regardless of whether it is hosted at `domain.com/` or `domain.com/frontend-v2/`.

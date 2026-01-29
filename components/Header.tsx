@@ -64,6 +64,13 @@ const Header: React.FC<HeaderProps> = ({ currentPage, setPage, theme, toggleThem
 
           {currentUser ? (
             <div className="hidden sm:flex items-center gap-3">
+               <button 
+                  onClick={() => setPage('dashboard')}
+                  className={`hidden md:block px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors ${currentPage === 'dashboard' ? 'text-red-600' : 'text-textMuted hover:text-textMain'}`}
+               >
+                 Dashboard
+               </button>
+               <div className="w-[1px] h-6 bg-borderColor hidden md:block"></div>
                <div className="text-right hidden md:block">
                   <p className="text-[9px] font-black uppercase tracking-widest text-textMain">{currentUser.name}</p>
                   <p className="text-[8px] font-bold text-red-600 uppercase tracking-widest">{currentUser.role}</p>
@@ -112,6 +119,15 @@ const Header: React.FC<HeaderProps> = ({ currentPage, setPage, theme, toggleThem
             <div className="h-px bg-borderColor w-full my-2"></div>
             {currentUser ? (
               <>
+                 <button
+                   onClick={() => {
+                     setPage('dashboard');
+                     setIsMobileMenuOpen(false);
+                   }}
+                   className={`text-left metadata-label text-xs ${currentPage === 'dashboard' ? 'text-red-600' : 'text-textMuted'}`}
+                 >
+                   Dashboard
+                 </button>
                  <div className="text-left">
                     <p className="text-[10px] font-black uppercase tracking-widest text-textMain">{currentUser.name}</p>
                     <p className="text-[8px] font-bold text-red-600 uppercase tracking-widest">{currentUser.role}</p>
