@@ -28,6 +28,8 @@ export const NotificationCenter: React.FC = () => {
         switch (type) {
             case 'shipment_update': return 'solar:delivery-linear';
             case 'ticket_reply': return 'solar:chat-line-linear';
+            case 'chat_message': return 'solar:chat-round-dots-linear';
+            case 'payment_update': return 'solar:wallet-linear';
             case 'system': return 'solar:settings-linear';
             default: return 'solar:bell-linear';
         }

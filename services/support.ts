@@ -66,7 +66,18 @@ export const createTicket = async (data: {
 
     if (replyError) { /* initial reply failed, ticket still created */ }
 
-    // 3. Notify Admins
+    // 3. Notify the ticket creator (confirmation)
+    if (data.userId) {
+        await notificationService.createNotification({
+            user_id: data.userId,
+            type: 'ticket_reply',
+            title: 'Ticket Submitted',
+            message: `Your support ticket ${ticketNumber} ("${data.subject}") has been received. Our team will respond shortly.`,
+            link: `/dashboard/tickets/${ticket.id}`
+        });
+    }
+
+    // 4. Notify Admins
     await notificationService.notifyAdmins(
         'New Support Ticket',
         `A new ticket (${ticketNumber}) has been created by ${data.name}: ${data.subject}`,
@@ -156,26 +167,26 @@ export const addReply = async (ticketId: string, message: string, senderType: 'c
         }
     } else {
         // Trigger notification for ALL admins when a customer replies
+        const { data: ticket } = await supabase.from('support_tickets').select('ticket_number').eq('id', ticketId).single();
+        const ticketLabel = ticket?.ticket_number || ticketId;
         const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
         if (admins) {
             for (const admin of admins) {
-                const { error: notifError } = await notificationService.createNotification({
+                await notificationService.createNotification({
                     user_id: admin.id,
                     type: 'ticket_reply',
                     title: 'Customer Response',
-                    message: `${senderName} replied to ticket.`,
+                    message: `${senderName} replied to ticket ${ticketLabel}.`,
                     link: `/dashboard/tickets/${ticketId}`
                 });
 
-                // Email Notification for Admins
                 const { data: adminProfile } = await supabase.from('profiles').select('email').eq('id', admin.id).single();
                 if (adminProfile) {
                     await emailService.sendEmail({
                         to: adminProfile.email,
-                        ...emailService.templates.supportReply('CUSTOMER_REPLY', message)
+                        ...emailService.templates.supportReply(ticketLabel, message)
                     });
                 }
-
             }
         }
     }

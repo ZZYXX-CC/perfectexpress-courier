@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { notificationService } from './notificationService';
 
 export interface ChatSession {
     id: string;
@@ -94,6 +95,45 @@ export const sendChatMessage = async (payload: {
         .from('chat_sessions')
         .update({ updated_at: new Date().toISOString(), status: 'active' })
         .eq('id', payload.sessionId);
+
+    // Trigger notifications for chat messages
+    try {
+        const { data: session } = await supabase
+            .from('chat_sessions')
+            .select('user_id, user_name')
+            .eq('id', payload.sessionId)
+            .single();
+
+        if (session) {
+            if (payload.senderType === 'customer') {
+                const { data: admins } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('role', 'admin');
+                if (admins) {
+                    for (const admin of admins) {
+                        await notificationService.createNotification({
+                            user_id: admin.id,
+                            type: 'chat_message',
+                            title: 'New Chat Message',
+                            message: `${payload.senderName || 'A customer'} sent a live chat message.`,
+                            link: `/dashboard?tab=chat`
+                        });
+                    }
+                }
+            } else if (payload.senderType === 'admin' && session.user_id) {
+                await notificationService.createNotification({
+                    user_id: session.user_id,
+                    type: 'chat_message',
+                    title: 'Agent Response',
+                    message: `${payload.senderName || 'Support agent'} replied to your chat.`,
+                    link: `/dashboard?tab=chat`
+                });
+            }
+        }
+    } catch {
+        // Non-blocking: notification failure shouldn't break chat
+    }
 
     return data as ChatMessage;
 };

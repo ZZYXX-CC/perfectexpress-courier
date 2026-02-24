@@ -109,9 +109,31 @@ const AdminShipmentEditor: React.FC<AdminShipmentEditorProps> = ({ shipment, onS
 
         try {
             if (shipment) {
-                // Use tracking_number for updates since shipment.id is the tracking_number string
                 const { error } = await supabase.from('shipments').update(payload).eq('tracking_number', shipment.id);
                 if (error) throw error;
+
+                // Notify the shipment owner about the edit
+                const { data: ship } = await supabase.from('shipments').select('user_id').eq('tracking_number', shipment.id).single();
+                if (ship?.user_id) {
+                    const { data: { user: currentUser } } = await supabase.auth.getUser();
+                    if (ship.user_id !== currentUser?.id) {
+                        const changes: string[] = [];
+                        if (formData.status !== shipment.status) changes.push(`status → ${formData.status.toUpperCase()}`);
+                        if (formData.paymentStatus !== (shipment.paymentStatus || (shipment as any).payment_status)) changes.push(`payment → ${formData.paymentStatus.toUpperCase()}`);
+                        if (formData.price !== ((shipment.price || (shipment as any).price)?.toString() || '')) changes.push('price updated');
+                        if (formData.currentLocation !== (shipment.currentLocation || (shipment as any).current_location || '')) changes.push(`location → ${formData.currentLocation}`);
+
+                        await notificationService.createNotification({
+                            user_id: ship.user_id,
+                            type: 'shipment_update',
+                            title: 'Shipment Updated',
+                            message: changes.length > 0
+                                ? `Your shipment ${shipment.id} was updated: ${changes.join(', ')}.`
+                                : `Your shipment ${shipment.id} details have been updated.`,
+                            link: `/track/${shipment.id}`
+                        });
+                    }
+                }
             } else {
                 // Generate tracking number for new shipments
                 const trackingNumber = generateTrackingNumber();

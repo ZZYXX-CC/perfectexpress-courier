@@ -4,7 +4,7 @@ import { emailService } from './emailService';
 export interface Notification {
     id: string;
     user_id: string;
-    type: 'shipment_update' | 'ticket_reply' | 'system';
+    type: 'shipment_update' | 'ticket_reply' | 'chat_message' | 'payment_update' | 'system';
     title: string;
     message: string;
     link?: string;

@@ -70,7 +70,7 @@ export const updateShipment = async (trackingNumber: string, updates: ShipmentUp
             if (ship.user_id !== actorId || impersonatedId) {
                 await notificationService.createNotification({
                     user_id: ship.user_id,
-                    type: 'shipment_update',
+                    type: updates.payment_status && !updates.status ? 'payment_update' : 'shipment_update',
                     title: updates.status ? 'Shipment Updated' : 'Payment Received',
                     message: updates.status
                         ? `Your shipment ${trackingNumber} is now ${updates.status.toUpperCase()}.`
@@ -202,6 +202,14 @@ export const updateUserRole = async (userId: string, newRole: 'client' | 'admin'
         .eq('id', userId);
 
     if (error) return { error: 'Failed to update user role' };
+
+    await notificationService.createNotification({
+        user_id: userId,
+        type: 'system',
+        title: 'Account Role Updated',
+        message: `Your account role has been changed to ${newRole.toUpperCase()}. ${newRole === 'admin' ? 'You now have administrative access.' : 'Your admin privileges have been revoked.'}`,
+        link: '/dashboard'
+    });
 
     return { success: true };
 };
