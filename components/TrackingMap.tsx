@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { Icon } from '@iconify/react'
 import L from 'leaflet'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 // Sub-component to handle map resize invalidation
 function ResizeMap() {
@@ -139,6 +139,8 @@ export default function TrackingMap({
     } | null>(null)
     const [isResolving, setIsResolving] = useState(false)
     const [geocodeFailed, setGeocodeFailed] = useState(false)
+    const [tileIndex, setTileIndex] = useState(0)
+    const tileErrorCountRef = useRef(0)
 
     const hasValidCoordinates =
         !!location &&
@@ -296,18 +298,39 @@ export default function TrackingMap({
         iconAnchor: [10, 10]
     })
 
-    const tileConfig =
+    const tileSources =
         theme === 'light'
-            ? {
-                  url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
-                  attribution:
-                      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              }
-            : {
-                  url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-                  attribution:
-                      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              }
+            ? [
+                  {
+                      url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+                      attribution:
+                          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                  },
+                  {
+                      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  }
+              ]
+            : [
+                  {
+                      url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+                      attribution:
+                          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                  },
+                  {
+                      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  }
+              ]
+
+    const safeTileIndex = Math.min(tileIndex, tileSources.length - 1)
+    const tileConfig = tileSources[safeTileIndex]
+
+    useEffect(() => {
+        // reset to primary tile provider when location/theme changes
+        setTileIndex(0)
+        tileErrorCountRef.current = 0
+    }, [theme, center?.[0], center?.[1]])
 
     const mapPlaceholder = (
         <div className={`bg-bgSurface rounded-sm border border-borderColor overflow-hidden ${className}`}>
@@ -361,7 +384,19 @@ export default function TrackingMap({
                 className="z-0"
             >
                 <ResizeMap />
-                <TileLayer attribution={tileConfig.attribution} url={tileConfig.url} />
+                <TileLayer
+                    attribution={tileConfig.attribution}
+                    url={tileConfig.url}
+                    eventHandlers={{
+                        tileerror: () => {
+                            tileErrorCountRef.current += 1
+                            // If primary provider fails repeatedly, fall back to OSM.
+                            if (tileErrorCountRef.current >= 3 && tileIndex < tileSources.length - 1) {
+                                setTileIndex((prev) => Math.min(prev + 1, tileSources.length - 1))
+                            }
+                        }
+                    }}
+                />
                 <Marker position={center} icon={pulsingIcon}>
                     <Popup>
                         <div className="text-xs font-bold">
