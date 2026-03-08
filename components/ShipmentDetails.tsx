@@ -12,6 +12,32 @@ interface ShipmentDetailsProps {
 const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) => {
    const [aiInsight, setAiInsight] = useState<string>('');
 
+   const formatAddressLines = (street?: string, city?: string, country?: string) => {
+      const safeStreet = (street || '').trim();
+      const cityCountry = [city, country].filter(Boolean).join(', ').trim();
+
+      if (!safeStreet) {
+         return { line1: cityCountry, line2: '' };
+      }
+
+      if (!cityCountry) {
+         return { line1: safeStreet, line2: '' };
+      }
+
+      const streetLower = safeStreet.toLowerCase();
+      const cityLower = (city || '').toLowerCase();
+      const countryLower = (country || '').toLowerCase();
+
+      const hasCity = cityLower && streetLower.includes(cityLower);
+      const hasCountry = countryLower && streetLower.includes(countryLower);
+
+      if (hasCity && hasCountry) {
+         return { line1: safeStreet, line2: '' };
+      }
+
+      return { line1: safeStreet, line2: cityCountry };
+   };
+
    useEffect(() => {
       getTrackingInsight(shipment.id, shipment.status).then(setAiInsight);
    }, [shipment.id, shipment.status]);
@@ -75,8 +101,15 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                            <span className="text-[10px] font-black uppercase tracking-widest">Origin / Sender</span>
                         </div>
                         <p className="text-sm font-bold text-textMain">{shipment.sender.company || shipment.sender.name}</p>
-                        <p className="text-xs text-textMuted mt-1">{shipment.sender.street}</p>
-                        <p className="text-xs text-textMuted">{shipment.sender.city}, {shipment.sender.country}</p>
+                        {(() => {
+                           const senderAddress = formatAddressLines(shipment.sender.street, shipment.sender.city, shipment.sender.country);
+                           return (
+                              <>
+                                 <p className="text-xs text-textMuted mt-1">{senderAddress.line1}</p>
+                                 {senderAddress.line2 && <p className="text-xs text-textMuted">{senderAddress.line2}</p>}
+                              </>
+                           );
+                        })()}
                      </div>
                      <div className="bg-bgSurface border border-borderColor rounded-sm p-6">
                         <div className="flex items-center gap-2 mb-4 text-textMuted">
@@ -84,8 +117,15 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                            <span className="text-[10px] font-black uppercase tracking-widest">Destination / Recipient</span>
                         </div>
                         <p className="text-sm font-bold text-textMain">{shipment.recipient.company || shipment.recipient.name}</p>
-                        <p className="text-xs text-textMuted mt-1">{shipment.recipient.street}</p>
-                        <p className="text-xs text-textMuted">{shipment.recipient.city}, {shipment.recipient.country}</p>
+                        {(() => {
+                           const recipientAddress = formatAddressLines(shipment.recipient.street, shipment.recipient.city, shipment.recipient.country);
+                           return (
+                              <>
+                                 <p className="text-xs text-textMuted mt-1">{recipientAddress.line1}</p>
+                                 {recipientAddress.line2 && <p className="text-xs text-textMuted">{recipientAddress.line2}</p>}
+                              </>
+                           );
+                        })()}
                      </div>
                   </motion.div>
 
