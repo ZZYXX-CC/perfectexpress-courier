@@ -70,10 +70,14 @@ const TrackingPage: React.FC<TrackingPageProps> = ({ user }) => {
     return (
       <section className="pt-32 pb-24 bg-bgMain min-h-screen">
         <div className="container mx-auto px-6">
-          <div className="text-center">
-            <div className="inline-block animate-spin mb-4">
-              <iconify-icon icon="solar:refresh-linear" width="32" class="text-red-600"></iconify-icon>
+          <div className="max-w-xl mx-auto bg-bgSurface border border-borderColor rounded-sm p-10 text-center shadow-2xl">
+            <div className="inline-flex items-center justify-center w-16 h-16 mx-auto mb-5 border border-red-600/30 rounded-full bg-red-600/5">
+              <iconify-icon icon="solar:refresh-linear" width="28" class="text-red-600 animate-spin"></iconify-icon>
             </div>
+            <p className="metadata-label text-red-600 mb-2">Live Tracking</p>
+            <h2 className="text-2xl md:text-3xl font-black heading-font uppercase tracking-tighter text-textMain mb-2">
+              Fetching Shipment Intel
+            </h2>
             <p className="text-textMuted text-sm font-medium">Loading shipment details...</p>
           </div>
         </div>
@@ -85,9 +89,12 @@ const TrackingPage: React.FC<TrackingPageProps> = ({ user }) => {
     return (
       <section className="pt-32 pb-24 bg-bgMain min-h-screen">
         <div className="container mx-auto px-6">
-          <div className="text-center max-w-md mx-auto">
-            <iconify-icon icon="solar:box-linear" width="64" class="text-textMuted mb-6 opacity-50"></iconify-icon>
-            <h2 className="text-2xl font-black heading-font uppercase tracking-tighter text-textMain mb-4">
+          <div className="text-center max-w-xl mx-auto bg-bgSurface border border-borderColor rounded-sm p-10 shadow-2xl">
+            <div className="inline-flex items-center justify-center w-16 h-16 mx-auto mb-6 border border-borderColor rounded-full bg-bgMain/70">
+              <iconify-icon icon="solar:box-linear" width="30" class="text-textMuted opacity-70"></iconify-icon>
+            </div>
+            <p className="metadata-label text-red-600 mb-2">Tracking Exception</p>
+            <h2 className="text-2xl md:text-3xl font-black heading-font uppercase tracking-tighter text-textMain mb-4">
               Shipment Not Found
             </h2>
             <p className="text-textMuted text-sm mb-8">{error || 'The tracking number you entered does not exist.'}</p>

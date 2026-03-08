@@ -38,6 +38,13 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
       return { line1: safeStreet, line2: cityCountry };
    };
 
+   const formatStatusLabel = (status: Shipment['status']) => {
+      return status
+         .split('-')
+         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+         .join(' ');
+   };
+
    useEffect(() => {
       getTrackingInsight(shipment.id, shipment.status).then(setAiInsight);
    }, [shipment.id, shipment.status]);
@@ -72,7 +79,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      <div className="text-right">
                         <p className="metadata-label text-textMuted mb-1">Current Status</p>
                         <p className={`text-lg font-bold uppercase tracking-tight ${shipment.status === 'delivered' ? 'text-green-500' : 'text-textMain'
-                           }`}>{shipment.status.replace(/-/g, ' ')}</p>
+                           }`}>{formatStatusLabel(shipment.status)}</p>
                      </div>
                      <div className="text-right">
                         <p className="metadata-label text-textMuted mb-1">Est. Arrival</p>
@@ -158,36 +165,34 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                         Shipment Progress
                      </h3>
                      <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-borderColor">
-                        <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-borderColor">
-                           {(() => {
-                              // Filter consecutive duplicates with robust normalization
-                              const filteredHistory = [...shipment.history].reverse().reduce((acc: any[], event: any) => {
-                                 const last = acc[acc.length - 1];
+                        {(() => {
+                           // Filter consecutive duplicates with robust normalization
+                           const filteredHistory = [...shipment.history].reverse().reduce((acc: any[], event: any) => {
+                              const last = acc[acc.length - 1];
 
-                                 const normalize = (str: string) => str?.toLowerCase().trim().replace(/\s+/g, ' ') || '';
+                              const normalize = (str: string) => str?.toLowerCase().trim().replace(/\s+/g, ' ') || '';
 
-                                 if (!last ||
-                                    normalize(last.status) !== normalize(event.status) ||
-                                    normalize(last.location) !== normalize(event.location)) {
-                                    acc.push(event);
-                                 }
-                                 return acc;
-                              }, []);
+                              if (!last ||
+                                 normalize(last.status) !== normalize(event.status) ||
+                                 normalize(last.location) !== normalize(event.location)) {
+                                 acc.push(event);
+                              }
+                              return acc;
+                           }, []);
 
-                              return filteredHistory.map((event, i) => (
-                                 <div key={i} className="relative pl-10 group">
-                                    <div className={`absolute left-0 top-1.5 w-[23px] h-[23px] bg-bgMain border rounded flex items-center justify-center transition-all ${i === 0 ? 'border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.3)] animate-pulse' : 'border-borderColor'}`}>
-                                       <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-red-600 shadow-[0_0_5px_#dc2626]' : 'bg-textMuted'}`}></div>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-2">
-                                       <p className="text-sm font-bold text-textMain uppercase tracking-tight">{event.location}</p>
-                                       <p className="text-[9px] font-black text-textMuted uppercase tracking-widest">{event.date} • {event.time}</p>
-                                    </div>
-                                    <p className="text-xs text-textMuted font-medium">{event.description}</p>
+                           return filteredHistory.map((event, i) => (
+                              <div key={i} className="relative pl-10 group">
+                                 <div className={`absolute left-0 top-1.5 w-[23px] h-[23px] bg-bgMain border rounded flex items-center justify-center transition-all ${i === 0 ? 'border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.3)] animate-pulse' : 'border-borderColor'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-red-600 shadow-[0_0_5px_#dc2626]' : 'bg-textMuted'}`}></div>
                                  </div>
-                              ));
-                           })()}
-                        </div>
+                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-2">
+                                    <p className="text-sm font-bold text-textMain uppercase tracking-tight">{event.location}</p>
+                                    <p className="text-[9px] font-black text-textMuted uppercase tracking-widest">{event.date} • {event.time}</p>
+                                 </div>
+                                 <p className="text-xs text-textMuted font-medium">{event.description}</p>
+                              </div>
+                           ));
+                        })()}
                      </div>
                   </motion.div>
                </div>
