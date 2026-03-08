@@ -136,6 +136,36 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      </div>
                   </motion.div>
 
+                  {/* Route Strip */}
+                  <motion.div
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.18 }}
+                     className="bg-bgSurface border border-borderColor rounded-sm p-4 md:p-5"
+                  >
+                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                        <div className="min-w-0">
+                           <p className="text-[9px] font-black uppercase tracking-widest text-textMuted mb-1">Origin</p>
+                           <p className="text-sm font-bold text-textMain break-words leading-tight flex items-center gap-2">
+                              <iconify-icon icon="solar:box-linear" width="15"></iconify-icon>
+                              <span>{shipment.sender.city || shipment.origin || 'Origin'}</span>
+                           </p>
+                        </div>
+
+                        <div className="flex flex-col items-center justify-center text-textMuted">
+                           <iconify-icon icon="solar:round-arrow-right-linear" width="16"></iconify-icon>
+                        </div>
+
+                        <div className="min-w-0 text-right">
+                           <p className="text-[9px] font-black uppercase tracking-widest text-textMuted mb-1">Destination</p>
+                           <p className="text-sm font-bold text-textMain break-words leading-tight inline-flex items-center gap-2 justify-end">
+                              <iconify-icon icon="solar:map-point-linear" width="15"></iconify-icon>
+                              <span>{shipment.recipient.city || shipment.destination || 'Destination'}</span>
+                           </p>
+                        </div>
+                     </div>
+                  </motion.div>
+
                   {/* Route Map Visual */}
                   <motion.div
                      initial={{ opacity: 0, y: 20 }}
