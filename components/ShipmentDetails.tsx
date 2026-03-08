@@ -136,33 +136,52 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      </div>
                   </motion.div>
 
-                  {/* Route Strip */}
+                  {/* Origin / Destination City Strip */}
                   <motion.div
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
                      transition={{ delay: 0.18 }}
-                     className="bg-bgSurface border border-borderColor rounded-sm p-4 md:p-5"
+                     className="bg-bgSurface/20 border border-borderColor rounded-sm p-8 relative overflow-hidden h-64 flex items-center justify-between px-4 md:px-16"
                   >
-                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                        <div className="min-w-0">
-                           <p className="text-[9px] font-black uppercase tracking-widest text-textMuted mb-1">Origin</p>
-                           <p className="text-sm font-bold text-textMain break-words leading-tight flex items-center gap-2">
-                              <iconify-icon icon="solar:box-linear" width="15"></iconify-icon>
-                              <span>{shipment.sender.city || shipment.origin || 'Origin'}</span>
-                           </p>
-                        </div>
+                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(var(--text-muted) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
-                        <div className="flex flex-col items-center justify-center text-textMuted">
-                           <iconify-icon icon="solar:round-arrow-right-linear" width="16"></iconify-icon>
+                     <div className="relative z-10 text-center min-w-0">
+                        <div className="w-16 h-16 bg-bgMain border border-borderColor rounded-full flex items-center justify-center text-textMuted mb-4 mx-auto shadow-lg">
+                           <iconify-icon icon="solar:box-linear" width="24"></iconify-icon>
                         </div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-textMuted mb-1">Origin</p>
+                        <p className="text-xl font-black heading-font text-textMain truncate max-w-[140px] md:max-w-[200px]">
+                           {shipment.sender.city || shipment.origin || 'Origin'}
+                        </p>
+                     </div>
 
-                        <div className="min-w-0 text-right">
-                           <p className="text-[9px] font-black uppercase tracking-widest text-textMuted mb-1">Destination</p>
-                           <p className="text-sm font-bold text-textMain break-words leading-tight inline-flex items-center gap-2 justify-end">
-                              <iconify-icon icon="solar:map-point-linear" width="15"></iconify-icon>
-                              <span>{shipment.recipient.city || shipment.destination || 'Destination'}</span>
-                           </p>
+                     <div className="flex-1 mx-4 md:mx-8 relative">
+                        <div className="h-[2px] w-full bg-borderColor relative overflow-hidden">
+                           <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: '50%' }}
+                              transition={{ duration: 1.5, ease: 'easeInOut' }}
+                              className="absolute left-0 top-0 bottom-0 bg-red-600"
+                           ></motion.div>
                         </div>
+                        <motion.div
+                           initial={{ left: 0 }}
+                           animate={{ left: '50%' }}
+                           transition={{ duration: 1.5, ease: 'easeInOut' }}
+                           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-bgMain border-2 border-red-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.4)] z-20"
+                        >
+                           <iconify-icon icon="solar:plane-linear" width="16" class="text-red-600"></iconify-icon>
+                        </motion.div>
+                     </div>
+
+                     <div className="relative z-10 text-center min-w-0">
+                        <div className="w-16 h-16 bg-bgMain border border-borderColor rounded-full flex items-center justify-center text-textMuted mb-4 mx-auto shadow-lg">
+                           <iconify-icon icon="solar:map-point-linear" width="24"></iconify-icon>
+                        </div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-textMuted mb-1">Destination</p>
+                        <p className="text-xl font-black heading-font text-textMain truncate max-w-[140px] md:max-w-[200px]">
+                           {shipment.recipient.city || shipment.destination || 'Destination'}
+                        </p>
                      </div>
                   </motion.div>
 
