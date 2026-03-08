@@ -48,6 +48,8 @@ const GEOCODE_CACHE_TTL = 1000 * 60 * 60 * 12 // 12 hours
 
 const sanitizeLocationText = (text: string) => text.replace(/\s+/g, ' ').trim()
 
+const HUB_WORDS = /(hub|warehouse|facility|station|depot|delivery|center|centre|terminal|port|airport)/gi
+
 const extractCityQuery = (text: string) => {
     const cleaned = sanitizeLocationText(text)
     if (!cleaned) return ''
@@ -57,11 +59,32 @@ const extractCityQuery = (text: string) => {
         .map((part) => part.trim())
         .filter(Boolean)
 
+    // Prefer "City, Country" when available.
     if (parts.length >= 2) {
         return `${parts[0]}, ${parts[parts.length - 1]}`
     }
 
-    return parts[0] || cleaned
+    // Strip logistic suffixes like "Tokyo Delivery Hub" -> "Tokyo"
+    const stripped = cleaned.replace(HUB_WORDS, '').replace(/\s+/g, ' ').trim()
+    if (stripped) return stripped
+
+    return cleaned
+}
+
+const buildLocationQueries = (currentLocation?: string, destinationAddress?: string, originAddress?: string) => {
+    const rawCandidates = [currentLocation, destinationAddress, originAddress].filter(Boolean) as string[]
+    const expanded = rawCandidates.flatMap((raw) => {
+        const cleaned = sanitizeLocationText(raw)
+        const primary = extractCityQuery(cleaned)
+        const parts = cleaned.split(',').map((p) => p.trim()).filter(Boolean)
+        const cityOnly = parts[0] || ''
+        const countryOnly = parts.length > 1 ? parts[parts.length - 1] : ''
+        const noHub = cleaned.replace(HUB_WORDS, '').replace(/\s+/g, ' ').trim()
+
+        return [primary, cityOnly, noHub, countryOnly]
+    })
+
+    return [...new Set(expanded.map((q) => sanitizeLocationText(q)).filter(Boolean))]
 }
 
 const getCachedGeocode = (key: string) => {
@@ -122,9 +145,8 @@ export default function TrackingMap({
         isValidCoordinate(location.lat, -90, 90) &&
         isValidCoordinate(location.lng, -180, 180)
 
-    const locationQuery = useMemo(() => {
-        const candidate = currentLocation || destinationAddress || originAddress || ''
-        return extractCityQuery(candidate)
+    const locationQueries = useMemo(() => {
+        return buildLocationQueries(currentLocation, destinationAddress, originAddress)
     }, [currentLocation, destinationAddress, originAddress])
 
     useEffect(() => {
@@ -158,24 +180,22 @@ export default function TrackingMap({
             return
         }
 
-        if (!locationQuery) {
+        if (!locationQueries.length) {
             setResolvedLocation(null)
             setGeocodeFailed(true)
             setIsResolving(false)
             return
         }
 
-        const cacheKey = locationQuery.toLowerCase()
-        const cached = getCachedGeocode(cacheKey)
-        if (cached) {
-            setResolvedLocation({
-                lat: cached.lat,
-                lng: cached.lng,
-                label: cached.label || locationQuery
-            })
-            setGeocodeFailed(false)
-            setIsResolving(false)
-            return
+        // Use the first cached hit from our query candidates.
+        for (const query of locationQueries) {
+            const cached = getCachedGeocode(query.toLowerCase())
+            if (cached) {
+                setResolvedLocation({ lat: cached.lat, lng: cached.lng, label: cached.label || query })
+                setGeocodeFailed(false)
+                setIsResolving(false)
+                return
+            }
         }
 
         setIsResolving(true)
@@ -183,40 +203,67 @@ export default function TrackingMap({
 
         const controller = new AbortController()
 
+        const geocodeOpenMeteo = async (query: string) => {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`
+            const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } })
+            if (!response.ok) throw new Error('Open-Meteo geocoding request failed')
+
+            const data = (await response.json()) as {
+                results?: Array<{ latitude: number; longitude: number; name?: string; country?: string }>
+            }
+
+            const first = data?.results?.[0]
+            const lat = first?.latitude
+            const lng = first?.longitude
+            if (!first || !isValidCoordinate(lat, -90, 90) || !isValidCoordinate(lng, -180, 180)) return null
+
+            const label = [first.name, first.country].filter(Boolean).join(', ') || query
+            return { lat, lng, label }
+        }
+
+        const geocodeNominatim = async (query: string) => {
+            const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`
+            const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } })
+            if (!response.ok) throw new Error('Nominatim geocoding request failed')
+
+            const results = (await response.json()) as Array<{ lat: string; lon: string; display_name?: string; name?: string }>
+            const first = results?.[0]
+            const lat = first ? Number(first.lat) : NaN
+            const lng = first ? Number(first.lon) : NaN
+            if (!first || !isValidCoordinate(lat, -90, 90) || !isValidCoordinate(lng, -180, 180)) return null
+
+            const label = first.display_name || first.name || query
+            return { lat, lng, label }
+        }
+
         const geocode = async () => {
             try {
-                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(locationQuery)}`
-                const response = await fetch(url, {
-                    signal: controller.signal,
-                    headers: {
-                        Accept: 'application/json'
+                for (const query of locationQueries) {
+                    let result: { lat: number; lng: number; label: string } | null = null
+
+                    try {
+                        result = await geocodeOpenMeteo(query)
+                    } catch {
+                        result = null
                     }
-                })
 
-                if (!response.ok) throw new Error('Geocoding request failed')
+                    if (!result) {
+                        try {
+                            result = await geocodeNominatim(query)
+                        } catch {
+                            result = null
+                        }
+                    }
 
-                const results = (await response.json()) as Array<{
-                    lat: string
-                    lon: string
-                    display_name?: string
-                    name?: string
-                }>
+                    if (!result) continue
 
-                const first = results?.[0]
-                const lat = first ? Number(first.lat) : NaN
-                const lng = first ? Number(first.lon) : NaN
-
-                if (!first || !isValidCoordinate(lat, -90, 90) || !isValidCoordinate(lng, -180, 180)) {
-                    throw new Error('No valid geocode result')
+                    setCachedGeocode(query.toLowerCase(), result)
+                    if (!mounted) return
+                    setResolvedLocation(result)
+                    setGeocodeFailed(false)
+                    return
                 }
 
-                const label = first.display_name || first.name || locationQuery
-                setCachedGeocode(cacheKey, { lat, lng, label })
-
-                if (!mounted) return
-                setResolvedLocation({ lat, lng, label })
-                setGeocodeFailed(false)
-            } catch {
                 if (!mounted || controller.signal.aborted) return
                 setResolvedLocation(null)
                 setGeocodeFailed(true)
@@ -237,7 +284,7 @@ export default function TrackingMap({
         currentLocation,
         destinationAddress,
         originAddress,
-        locationQuery
+        locationQueries
     ])
 
     const center = resolvedLocation ? [resolvedLocation.lat, resolvedLocation.lng] as [number, number] : null
@@ -286,8 +333,8 @@ export default function TrackingMap({
                                       ? 'Unable to map this shipment location right now'
                                       : 'Location data unavailable for this shipment'}
                             </p>
-                            {locationQuery && (
-                                <p className="text-[11px] text-textMuted mt-2 opacity-70">{locationQuery}</p>
+                            {locationQueries.length > 0 && (
+                                <p className="text-[11px] text-textMuted mt-2 opacity-70">{locationQueries[0]}</p>
                             )}
                         </div>
                     </div>
