@@ -557,11 +557,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                        <div className="grid grid-cols-2 gap-4">
                                           <div>
                                              <p className="metadata-label text-textMuted mb-1">Origin</p>
-                                             <p className="text-sm font-bold text-textMain truncate">{shipment.origin}</p>
+                                             <p className="text-sm font-bold text-textMain break-words leading-tight">{shipment.origin}</p>
                                           </div>
                                           <div>
                                              <p className="metadata-label text-textMuted mb-1">Destination</p>
-                                             <p className="text-sm font-bold text-textMain truncate">{shipment.destination}</p>
+                                             <p className="text-sm font-bold text-textMain break-words leading-tight">{shipment.destination}</p>
                                           </div>
                                        </div>
 
