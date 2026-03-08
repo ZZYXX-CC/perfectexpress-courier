@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { Icon } from '@iconify/react'
 import L from 'leaflet'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 // Sub-component to handle map resize invalidation
 function ResizeMap() {
@@ -43,21 +43,224 @@ interface TrackingMapProps {
 const isValidCoordinate = (value: unknown, min: number, max: number): value is number =>
     typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max
 
+const geocodeCache = new Map<string, { lat: number; lng: number; label: string; cachedAt: number }>()
+const GEOCODE_CACHE_TTL = 1000 * 60 * 60 * 12 // 12 hours
+
+const sanitizeLocationText = (text: string) => text.replace(/\s+/g, ' ').trim()
+
+const extractCityQuery = (text: string) => {
+    const cleaned = sanitizeLocationText(text)
+    if (!cleaned) return ''
+
+    const parts = cleaned
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+
+    if (parts.length >= 2) {
+        return `${parts[0]}, ${parts[parts.length - 1]}`
+    }
+
+    return parts[0] || cleaned
+}
+
+const getCachedGeocode = (key: string) => {
+    const inMemory = geocodeCache.get(key)
+    if (inMemory && Date.now() - inMemory.cachedAt <= GEOCODE_CACHE_TTL) {
+        return inMemory
+    }
+
+    if (typeof window === 'undefined') return null
+
+    const storageKey = `tracking-map-geocode:${key}`
+    const raw = window.sessionStorage.getItem(storageKey)
+    if (!raw) return null
+
+    try {
+        const parsed = JSON.parse(raw) as { lat: number; lng: number; label: string; cachedAt: number }
+        if (Date.now() - parsed.cachedAt > GEOCODE_CACHE_TTL) {
+            window.sessionStorage.removeItem(storageKey)
+            return null
+        }
+
+        geocodeCache.set(key, parsed)
+        return parsed
+    } catch {
+        window.sessionStorage.removeItem(storageKey)
+        return null
+    }
+}
+
+const setCachedGeocode = (key: string, value: { lat: number; lng: number; label: string }) => {
+    const payload = { ...value, cachedAt: Date.now() }
+    geocodeCache.set(key, payload)
+
+    if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(`tracking-map-geocode:${key}`, JSON.stringify(payload))
+    }
+}
+
 export default function TrackingMap({
     className,
     currentLocation,
+    originAddress,
+    destinationAddress,
     location,
     status
 }: TrackingMapProps) {
-    const hasValidLocation =
+    const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+    const [resolvedLocation, setResolvedLocation] = useState<{
+        lat: number
+        lng: number
+        label: string
+    } | null>(null)
+    const [isResolving, setIsResolving] = useState(false)
+    const [geocodeFailed, setGeocodeFailed] = useState(false)
+
+    const hasValidCoordinates =
         !!location &&
         isValidCoordinate(location.lat, -90, 90) &&
         isValidCoordinate(location.lng, -180, 180)
 
-    const defaultCenter: [number, number] = [51.505, -0.09]
-    const center: [number, number] = hasValidLocation
-        ? [location!.lat, location!.lng]
-        : defaultCenter
+    const locationQuery = useMemo(() => {
+        const candidate = currentLocation || destinationAddress || originAddress || ''
+        return extractCityQuery(candidate)
+    }, [currentLocation, destinationAddress, originAddress])
+
+    useEffect(() => {
+        const resolveTheme = () => {
+            const attr = document.documentElement.getAttribute('data-theme')
+            setTheme(attr === 'light' ? 'light' : 'dark')
+        }
+
+        resolveTheme()
+
+        const observer = new MutationObserver(resolveTheme)
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        })
+
+        return () => observer.disconnect()
+    }, [])
+
+    useEffect(() => {
+        let mounted = true
+
+        if (hasValidCoordinates && location) {
+            setResolvedLocation({
+                lat: location.lat,
+                lng: location.lng,
+                label: sanitizeLocationText(currentLocation || destinationAddress || originAddress || 'Shipment Location')
+            })
+            setGeocodeFailed(false)
+            setIsResolving(false)
+            return
+        }
+
+        if (!locationQuery) {
+            setResolvedLocation(null)
+            setGeocodeFailed(true)
+            setIsResolving(false)
+            return
+        }
+
+        const cacheKey = locationQuery.toLowerCase()
+        const cached = getCachedGeocode(cacheKey)
+        if (cached) {
+            setResolvedLocation({
+                lat: cached.lat,
+                lng: cached.lng,
+                label: cached.label || locationQuery
+            })
+            setGeocodeFailed(false)
+            setIsResolving(false)
+            return
+        }
+
+        setIsResolving(true)
+        setGeocodeFailed(false)
+
+        const controller = new AbortController()
+
+        const geocode = async () => {
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(locationQuery)}`
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                })
+
+                if (!response.ok) throw new Error('Geocoding request failed')
+
+                const results = (await response.json()) as Array<{
+                    lat: string
+                    lon: string
+                    display_name?: string
+                    name?: string
+                }>
+
+                const first = results?.[0]
+                const lat = first ? Number(first.lat) : NaN
+                const lng = first ? Number(first.lon) : NaN
+
+                if (!first || !isValidCoordinate(lat, -90, 90) || !isValidCoordinate(lng, -180, 180)) {
+                    throw new Error('No valid geocode result')
+                }
+
+                const label = first.display_name || first.name || locationQuery
+                setCachedGeocode(cacheKey, { lat, lng, label })
+
+                if (!mounted) return
+                setResolvedLocation({ lat, lng, label })
+                setGeocodeFailed(false)
+            } catch {
+                if (!mounted || controller.signal.aborted) return
+                setResolvedLocation(null)
+                setGeocodeFailed(true)
+            } finally {
+                if (mounted) setIsResolving(false)
+            }
+        }
+
+        geocode()
+
+        return () => {
+            mounted = false
+            controller.abort()
+        }
+    }, [
+        hasValidCoordinates,
+        location,
+        currentLocation,
+        destinationAddress,
+        originAddress,
+        locationQuery
+    ])
+
+    const center = resolvedLocation ? [resolvedLocation.lat, resolvedLocation.lng] as [number, number] : null
+
+    const pulsingIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div class="map-marker-container"><div class="map-pulse"></div></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    })
+
+    const tileConfig =
+        theme === 'light'
+            ? {
+                  url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+                  attribution:
+                      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              }
+            : {
+                  url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+                  attribution:
+                      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              }
 
     const mapPlaceholder = (
         <div className={`bg-bgSurface rounded-sm border border-borderColor overflow-hidden ${className}`}>
@@ -71,13 +274,21 @@ export default function TrackingMap({
                         </span>
                     )}
                 </div>
+
                 <div className="flex-1 p-6 space-y-4">
                     <div className="flex items-center justify-center p-8 border border-dashed border-borderColor rounded-sm bg-bgMain/50">
                         <div className="text-center">
                             <Icon icon="solar:map-linear" width="48" className="text-textMuted mx-auto mb-2 opacity-50" />
                             <p className="text-xs text-textMuted font-medium">
-                                {hasValidLocation ? 'Initializing Map...' : 'Location data unavailable for this shipment'}
+                                {isResolving
+                                    ? 'Resolving shipment location...'
+                                    : geocodeFailed
+                                      ? 'Unable to map this shipment location right now'
+                                      : 'Location data unavailable for this shipment'}
                             </p>
+                            {locationQuery && (
+                                <p className="text-[11px] text-textMuted mt-2 opacity-70">{locationQuery}</p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -85,40 +296,30 @@ export default function TrackingMap({
         </div>
     )
 
-    if (!hasValidLocation) {
+    if (!center) {
         return mapPlaceholder
     }
 
-    const mapKey = `${center[0]}-${center[1]}`
-
-    const pulsingIcon = L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div class="map-marker-container"><div class="map-pulse"></div></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-    })
+    const mapKey = `${center[0]}-${center[1]}-${theme}`
 
     return (
         <div className={`rounded-sm overflow-hidden border border-borderColor bg-bgSurface ${className}`} style={{ height: '400px', width: '100%', position: 'relative' }}>
             <MapContainer
                 key={mapKey}
                 center={center}
-                zoom={13}
+                zoom={10}
                 scrollWheelZoom={false}
                 attributionControl={false}
                 style={{ height: '100%', width: '100%', zIndex: 1 }}
                 className="z-0"
             >
                 <ResizeMap />
-                <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                />
+                <TileLayer attribution={tileConfig.attribution} url={tileConfig.url} />
                 <Marker position={center} icon={pulsingIcon}>
                     <Popup>
                         <div className="text-xs font-bold">
                             <p className="text-red-600 uppercase mb-1">{status || 'Shipment Location'}</p>
-                            <p className="text-slate-800">{currentLocation || 'Updating...'}</p>
+                            <p className="text-slate-800">{resolvedLocation.label || currentLocation || 'Updating...'}</p>
                         </div>
                     </Popup>
                 </Marker>
