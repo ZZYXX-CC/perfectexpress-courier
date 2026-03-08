@@ -9,7 +9,6 @@ import { useEffect } from 'react'
 function ResizeMap() {
     const map = useMap()
     useEffect(() => {
-        // Short delay to ensure animations/layout are finished
         const timer = setTimeout(() => {
             map.invalidateSize()
         }, 500)
@@ -18,7 +17,6 @@ function ResizeMap() {
     return null
 }
 
-// Fix for default marker icons in Leaflet + Vite/React
 const DefaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -42,17 +40,24 @@ interface TrackingMapProps {
     status?: string
 }
 
+const isValidCoordinate = (value: unknown, min: number, max: number): value is number =>
+    typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max
+
 export default function TrackingMap({
     className,
     currentLocation,
-    originAddress,
-    destinationAddress,
     location,
     status
 }: TrackingMapProps) {
-    // Default center (London) if no location provided
+    const hasValidLocation =
+        !!location &&
+        isValidCoordinate(location.lat, -90, 90) &&
+        isValidCoordinate(location.lng, -180, 180)
+
     const defaultCenter: [number, number] = [51.505, -0.09]
-    const center: [number, number] = location ? [location.lat, location.lng] : defaultCenter
+    const center: [number, number] = hasValidLocation
+        ? [location!.lat, location!.lng]
+        : defaultCenter
 
     const mapPlaceholder = (
         <div className={`bg-bgSurface rounded-sm border border-borderColor overflow-hidden ${className}`}>
@@ -70,7 +75,9 @@ export default function TrackingMap({
                     <div className="flex items-center justify-center p-8 border border-dashed border-borderColor rounded-sm bg-bgMain/50">
                         <div className="text-center">
                             <Icon icon="solar:map-linear" width="48" className="text-textMuted mx-auto mb-2 opacity-50" />
-                            <p className="text-xs text-textMuted font-medium">Initializing Map...</p>
+                            <p className="text-xs text-textMuted font-medium">
+                                {hasValidLocation ? 'Initializing Map...' : 'Location data unavailable for this shipment'}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -78,11 +85,12 @@ export default function TrackingMap({
         </div>
     )
 
-    // Using a key on MapContainer forces re-render when center changes
-    // This is a common pattern for Leaflet in React
+    if (!hasValidLocation) {
+        return mapPlaceholder
+    }
+
     const mapKey = `${center[0]}-${center[1]}`
 
-    // Custom pulsing marker icon
     const pulsingIcon = L.divIcon({
         className: 'custom-div-icon',
         html: `<div class="map-marker-container"><div class="map-pulse"></div></div>`,
@@ -118,4 +126,3 @@ export default function TrackingMap({
         </div>
     )
 }
-

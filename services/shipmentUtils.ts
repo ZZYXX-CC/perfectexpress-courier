@@ -73,6 +73,20 @@ const formatWeight = (value?: string | number): string => {
     return `${raw} kg`;
 };
 
+const normalizeCoordinates = (coords?: any): { lat: number; lng: number } | undefined => {
+    if (!coords || typeof coords !== 'object') return undefined;
+
+    const lat = Number(coords.lat);
+    const lng = Number(coords.lng);
+
+    const isValidLat = Number.isFinite(lat) && lat >= -90 && lat <= 90;
+    const isValidLng = Number.isFinite(lng) && lng >= -180 && lng <= 180;
+
+    if (!isValidLat || !isValidLng) return undefined;
+
+    return { lat, lng };
+};
+
 export const mapShipmentRow = (data: any): Shipment => {
     const senderInfo = data?.sender_info || {};
     const receiverInfo = data?.receiver_info || {};
@@ -130,7 +144,7 @@ export const mapShipmentRow = (data: any): Shipment => {
         },
         price: priceValue,
         paymentStatus: data?.payment_status,
-        coordinates: data?.coordinates,
+        coordinates: normalizeCoordinates(data?.coordinates),
         createdAt: data?.created_at
     };
 };
