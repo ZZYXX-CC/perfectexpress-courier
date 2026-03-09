@@ -133,17 +133,15 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                   </div>
 
                   <div className="flex items-center gap-2">
-                     {isMapFullscreen && (
-                        <a
-                           href={googleMapsUrl}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-sm font-black uppercase tracking-widest text-[10px] transition-all"
-                        >
-                           <iconify-icon icon="solar:map-point-wave-linear" width="16"></iconify-icon>
-                           Open in Google Maps
-                        </a>
-                     )}
+                     <a
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-sm font-black uppercase tracking-widest text-[10px] transition-all"
+                     >
+                        <iconify-icon icon="solar:map-point-wave-linear" width="16"></iconify-icon>
+                        Open in Google Maps
+                     </a>
 
                      <button
                         onClick={() => setIsMapFullscreen(prev => !prev)}
