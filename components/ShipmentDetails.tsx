@@ -164,6 +164,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                   destinationAddress={`${shipment.recipient.city}, ${shipment.recipient.country}`}
                   location={shipment.coordinates}
                   status={shipment.status}
+                  fullscreenMode={isMapFullscreen}
                   className={isMapFullscreen ? 'flex-1 min-h-0 h-full' : 'h-[380px] md:h-[460px]'}
                />
             </motion.div>

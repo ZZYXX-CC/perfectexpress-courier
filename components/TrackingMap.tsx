@@ -6,14 +6,26 @@ import L from 'leaflet'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 // Sub-component to handle map resize invalidation
-function ResizeMap() {
+function ResizeMap({ resizeKey }: { resizeKey: string }) {
     const map = useMap()
+
     useEffect(() => {
-        const timer = setTimeout(() => {
-            map.invalidateSize()
-        }, 500)
-        return () => clearTimeout(timer)
-    }, [map])
+        // Run multiple invalidations across a few frames to handle mobile viewport/layout settling.
+        const timers: Array<ReturnType<typeof setTimeout>> = []
+        const schedule = [0, 120, 280, 500]
+
+        schedule.forEach((delay) => {
+            timers.push(
+                setTimeout(() => {
+                    map.invalidateSize()
+                    map.setView(map.getCenter(), map.getZoom(), { animate: false })
+                }, delay)
+            )
+        })
+
+        return () => timers.forEach((t) => clearTimeout(t))
+    }, [map, resizeKey])
+
     return null
 }
 
@@ -38,6 +50,7 @@ interface TrackingMapProps {
         lng: number
     }
     status?: string
+    fullscreenMode?: boolean
 }
 
 const isValidCoordinate = (value: unknown, min: number, max: number): value is number =>
@@ -129,7 +142,8 @@ export default function TrackingMap({
     originAddress,
     destinationAddress,
     location,
-    status
+    status,
+    fullscreenMode = false
 }: TrackingMapProps) {
     const [theme, setTheme] = useState<'light' | 'dark'>('dark')
     const [resolvedLocation, setResolvedLocation] = useState<{
@@ -371,6 +385,7 @@ export default function TrackingMap({
     }
 
     const mapKey = `${center[0]}-${center[1]}-${theme}`
+    const resizeKey = `${mapKey}-${fullscreenMode ? 'fullscreen' : 'normal'}`
 
     return (
         <div className={`rounded-sm overflow-hidden border border-borderColor bg-bgSurface ${className}`} style={{ width: '100%', position: 'relative' }}>
@@ -383,7 +398,7 @@ export default function TrackingMap({
                 style={{ height: '100%', width: '100%', zIndex: 1 }}
                 className="z-0"
             >
-                <ResizeMap />
+                <ResizeMap resizeKey={resizeKey} />
                 <TileLayer
                     attribution={tileConfig.attribution}
                     url={tileConfig.url}
