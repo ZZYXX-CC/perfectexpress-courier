@@ -11,6 +11,7 @@ interface ShipmentDetailsProps {
 
 const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) => {
    const [aiInsight, setAiInsight] = useState<string>('');
+   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
 
    const formatAddressLines = (street?: string, city?: string, country?: string) => {
       const safeStreet = (street || '').trim();
@@ -105,30 +106,45 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                </div>
             </motion.div>
 
-            {/* Full-Page Tracking Map */}
+            {/* Tracking Map */}
             <motion.div
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.12 }}
-               className="mb-10"
+               className={`mb-10 ${isMapFullscreen ? 'fixed inset-0 z-[100] bg-bgMain p-6 md:p-8 overflow-auto' : ''}`}
             >
                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                   <div>
                      <p className="metadata-label text-red-600 mb-1">Live Map View</p>
                      <h2 className="text-xl md:text-2xl font-black heading-font uppercase tracking-tight text-textMain">
-                        Full Page Route Visibility
+                        Route Visibility
                      </h2>
                   </div>
 
-                  <a
-                     href={googleMapsUrl}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-600 text-white hover:bg-red-700 rounded-sm font-black uppercase tracking-widest text-[10px] transition-all"
-                  >
-                     <iconify-icon icon="solar:map-point-wave-linear" width="16"></iconify-icon>
-                     Open in Google Maps
-                  </a>
+                  <div className="flex items-center gap-2">
+                     {isMapFullscreen && (
+                        <a
+                           href={googleMapsUrl}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-sm font-black uppercase tracking-widest text-[10px] transition-all"
+                        >
+                           <iconify-icon icon="solar:map-point-wave-linear" width="16"></iconify-icon>
+                           Open in Google Maps
+                        </a>
+                     )}
+
+                     <button
+                        onClick={() => setIsMapFullscreen(prev => !prev)}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-bgSurface border border-borderColor hover:border-red-600 text-textMain rounded-sm font-black uppercase tracking-widest text-[10px] transition-all"
+                     >
+                        <iconify-icon
+                           icon={isMapFullscreen ? 'solar:minimize-square-linear' : 'solar:maximize-square-linear'}
+                           width="16"
+                        ></iconify-icon>
+                        {isMapFullscreen ? 'Exit Full Screen' : 'Full Screen'}
+                     </button>
+                  </div>
                </div>
 
                <TrackingMap
@@ -137,7 +153,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                   destinationAddress={`${shipment.recipient.city}, ${shipment.recipient.country}`}
                   location={shipment.coordinates}
                   status={shipment.status}
-                  className="h-[65vh] md:h-[78vh]"
+                  className={isMapFullscreen ? 'h-[78vh] md:h-[84vh]' : 'h-[380px] md:h-[460px]'}
                />
             </motion.div>
 
