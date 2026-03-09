@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Shipment } from '../types';
 import { getTrackingInsight } from '../services/geminiService';
@@ -49,6 +49,22 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
       getTrackingInsight(shipment.id, shipment.status).then(setAiInsight);
    }, [shipment.id, shipment.status]);
 
+   const googleMapsUrl = useMemo(() => {
+      if (shipment.coordinates?.lat && shipment.coordinates?.lng) {
+         return `https://www.google.com/maps?q=${shipment.coordinates.lat},${shipment.coordinates.lng}`;
+      }
+
+      const query = [
+         shipment.currentLocation,
+         shipment.recipient.city,
+         shipment.recipient.country,
+      ]
+         .filter(Boolean)
+         .join(', ');
+
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || shipment.id)}`;
+   }, [shipment]);
+
    return (
       <section className="pt-32 pb-24 bg-bgMain min-h-screen">
          <div className="container mx-auto px-6">
@@ -87,6 +103,42 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      </div>
                   </div>
                </div>
+            </motion.div>
+
+            {/* Full-Page Tracking Map */}
+            <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.12 }}
+               className="mb-10"
+            >
+               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                  <div>
+                     <p className="metadata-label text-red-600 mb-1">Live Map View</p>
+                     <h2 className="text-xl md:text-2xl font-black heading-font uppercase tracking-tight text-textMain">
+                        Full Page Route Visibility
+                     </h2>
+                  </div>
+
+                  <a
+                     href={googleMapsUrl}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-600 text-white hover:bg-red-700 rounded-sm font-black uppercase tracking-widest text-[10px] transition-all"
+                  >
+                     <iconify-icon icon="solar:map-point-wave-linear" width="16"></iconify-icon>
+                     Open in Google Maps
+                  </a>
+               </div>
+
+               <TrackingMap
+                  currentLocation={shipment.currentLocation}
+                  originAddress={`${shipment.sender.city}, ${shipment.sender.country}`}
+                  destinationAddress={`${shipment.recipient.city}, ${shipment.recipient.country}`}
+                  location={shipment.coordinates}
+                  status={shipment.status}
+                  className="h-[65vh] md:h-[78vh]"
+               />
             </motion.div>
 
             {/* Content Grid */}
@@ -183,23 +235,6 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                            {shipment.recipient.city || shipment.destination || 'Destination'}
                         </p>
                      </div>
-                  </motion.div>
-
-                  {/* Route Map Visual */}
-                  <motion.div
-                     initial={{ opacity: 0, y: 20 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     transition={{ delay: 0.2 }}
-                     className="h-[400px] mb-8"
-                  >
-                     <TrackingMap
-                        currentLocation={shipment.currentLocation}
-                        originAddress={`${shipment.sender.city}, ${shipment.sender.country}`}
-                        destinationAddress={`${shipment.recipient.city}, ${shipment.recipient.country}`}
-                        location={shipment.coordinates}
-                        status={shipment.status}
-                        className="h-full border border-borderColor"
-                     />
                   </motion.div>
 
                   {/* History Feed */}
