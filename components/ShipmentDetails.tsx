@@ -66,6 +66,17 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
       return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || shipment.id)}`;
    }, [shipment]);
 
+   useEffect(() => {
+      if (!isMapFullscreen) return;
+
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+         document.body.style.overflow = previousOverflow;
+      };
+   }, [isMapFullscreen]);
+
    return (
       <section className="pt-32 pb-24 bg-bgMain min-h-screen">
          <div className="container mx-auto px-6">
@@ -111,9 +122,9 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.12 }}
-               className={`mb-10 ${isMapFullscreen ? 'fixed inset-0 z-[100] bg-bgMain p-6 md:p-8 overflow-auto' : ''}`}
+               className={`mb-10 ${isMapFullscreen ? 'fixed inset-0 z-[100] bg-bgMain p-3 md:p-6 overflow-hidden flex flex-col h-dvh' : ''}`}
             >
-               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 shrink-0">
                   <div>
                      <p className="metadata-label text-red-600 mb-1">Live Map View</p>
                      <h2 className="text-xl md:text-2xl font-black heading-font uppercase tracking-tight text-textMain">
@@ -153,7 +164,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                   destinationAddress={`${shipment.recipient.city}, ${shipment.recipient.country}`}
                   location={shipment.coordinates}
                   status={shipment.status}
-                  className={isMapFullscreen ? 'h-[78vh] md:h-[84vh]' : 'h-[380px] md:h-[460px]'}
+                  className={isMapFullscreen ? 'flex-1 min-h-0 h-full' : 'h-[380px] md:h-[460px]'}
                />
             </motion.div>
 

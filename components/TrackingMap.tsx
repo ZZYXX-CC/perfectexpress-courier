@@ -373,7 +373,7 @@ export default function TrackingMap({
     const mapKey = `${center[0]}-${center[1]}-${theme}`
 
     return (
-        <div className={`rounded-sm overflow-hidden border border-borderColor bg-bgSurface ${className}`} style={{ height: '400px', width: '100%', position: 'relative' }}>
+        <div className={`rounded-sm overflow-hidden border border-borderColor bg-bgSurface ${className}`} style={{ width: '100%', position: 'relative' }}>
             <MapContainer
                 key={mapKey}
                 center={center}
