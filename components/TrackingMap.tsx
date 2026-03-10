@@ -84,6 +84,32 @@ const extractCityQuery = (text: string) => {
     return cleaned
 }
 
+const extractCoordinatesFromText = (text?: string) => {
+    if (!text) return null
+
+    const patterns = [
+        /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
+        /[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
+        /[?&]ll=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
+        /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+        /(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/
+    ]
+
+    for (const pattern of patterns) {
+        const match = text.match(pattern)
+        if (!match) continue
+
+        const lat = Number(match[1])
+        const lng = Number(match[2])
+
+        if (isValidCoordinate(lat, -90, 90) && isValidCoordinate(lng, -180, 180)) {
+            return { lat, lng }
+        }
+    }
+
+    return null
+}
+
 const buildLocationQueries = (currentLocation?: string, destinationAddress?: string, originAddress?: string) => {
     const rawCandidates = [currentLocation, destinationAddress, originAddress].filter(Boolean) as string[]
     const expanded = rawCandidates.flatMap((raw) => {
@@ -189,6 +215,17 @@ export default function TrackingMap({
             setResolvedLocation({
                 lat: location.lat,
                 lng: location.lng,
+                label: sanitizeLocationText(currentLocation || destinationAddress || originAddress || 'Shipment Location')
+            })
+            setGeocodeFailed(false)
+            setIsResolving(false)
+            return
+        }
+
+        const parsedCoords = extractCoordinatesFromText(currentLocation) || extractCoordinatesFromText(destinationAddress)
+        if (parsedCoords) {
+            setResolvedLocation({
+                ...parsedCoords,
                 label: sanitizeLocationText(currentLocation || destinationAddress || originAddress || 'Shipment Location')
             })
             setGeocodeFailed(false)

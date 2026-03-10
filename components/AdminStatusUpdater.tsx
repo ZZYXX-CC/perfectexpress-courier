@@ -44,19 +44,21 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
 
             // Auto-parse map link
             if (name === 'mapLink' && value) {
-                // Try to extract lat/lng from common Google Maps URL formats
-                // Format 1: @lat,lng
-                const atMatch = value.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                if (atMatch) {
-                    updates.latitude = atMatch[1];
-                    updates.longitude = atMatch[2];
-                } else {
-                    // Format 2: ?q=lat,lng
-                    const qMatch = value.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-                    if (qMatch) {
-                        updates.latitude = qMatch[1];
-                        updates.longitude = qMatch[2];
-                    }
+                const coordinatePatterns = [
+                    /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/, // @lat,lng
+                    /[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/, // ?q=lat,lng
+                    /[?&]ll=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/, // ?ll=lat,lng
+                    /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/, // !3dlat!4dlng
+                    /(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/ // plain "lat,lng"
+                ];
+
+                const match = coordinatePatterns
+                    .map((pattern) => value.match(pattern))
+                    .find(Boolean);
+
+                if (match) {
+                    updates.latitude = match[1];
+                    updates.longitude = match[2];
                 }
             }
             return updates;
