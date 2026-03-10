@@ -5,24 +5,41 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 export async function signUp(formData: { email: string; password: string; fullName: string }) {
-    const supabase = await createClient()
+    try {
+        if (!formData.email || !formData.password || !formData.fullName) {
+            return { error: 'Please fill in all required fields.' }
+        }
 
-    const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-            data: {
-                full_name: formData.fullName,
+        const supabase = await createClient()
+
+        const { data, error } = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+                data: {
+                    full_name: formData.fullName,
+                },
             },
-        },
-    })
+        })
 
-    if (error) {
-        return { error: error.message }
+        if (error) {
+            return { error: error.message }
+        }
+
+        revalidatePath('/', 'layout')
+
+        const requiresEmailConfirmation = !data.session
+        return {
+            success: true,
+            requiresEmailConfirmation,
+            message: requiresEmailConfirmation
+                ? 'Check your email to confirm your account!'
+                : 'Account created successfully! Redirecting...'
+        }
+    } catch (error) {
+        console.error('Sign up failed:', error)
+        return { error: 'Unable to create account right now. Please try again.' }
     }
-
-    revalidatePath('/', 'layout')
-    return { success: true, message: 'Check your email to confirm your account!' }
 }
 
 export async function signIn(formData: { email: string; password: string }) {

@@ -9,39 +9,71 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { toast } from 'sonner'
 import { Loader2, UserPlus } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 
 export default function SignUpPage() {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [fullName, setFullName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [formError, setFormError] = useState('')
+    const [formSuccess, setFormSuccess] = useState('')
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        setFormError('')
+        setFormSuccess('')
 
-        if (!fullName || !email || !password) {
-            toast.error('Please fill in all fields')
+        if (!fullName || !email || !password || !confirmPassword) {
+            const message = 'Please fill in all fields'
+            setFormError(message)
+            toast.error(message)
             return
         }
 
         if (password !== confirmPassword) {
-            toast.error('Passwords do not match')
+            const message = 'Passwords do not match'
+            setFormError(message)
+            toast.error(message)
             return
         }
 
         if (password.length < 6) {
-            toast.error('Password must be at least 6 characters')
+            const message = 'Password must be at least 6 characters'
+            setFormError(message)
+            toast.error(message)
             return
         }
 
         startTransition(async () => {
-            const result = await signUp({ email, password, fullName })
-            if (result.error) {
-                toast.error(result.error)
-            } else {
-                toast.success(result.message || 'Account created successfully!')
+            try {
+                const result = await signUp({ email, password, fullName })
+
+                if (result.error) {
+                    setFormError(result.error)
+                    toast.error(result.error)
+                    return
+                }
+
+                const successMessage = result.message || 'Account created successfully!'
+                setFormSuccess(successMessage)
+                setPassword('')
+                setConfirmPassword('')
+                toast.success(successMessage)
+
+                if (result.requiresEmailConfirmation) {
+                    return
+                }
+
+                router.refresh()
+                router.push('/dashboard')
+            } catch {
+                const message = 'Unable to create account right now. Please try again.'
+                setFormError(message)
+                toast.error(message)
             }
         })
     }
@@ -62,6 +94,17 @@ export default function SignUpPage() {
 
                     <form onSubmit={handleSubmit}>
                         <CardContent className="space-y-4">
+                            {formError ? (
+                                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                    {formError}
+                                </p>
+                            ) : null}
+
+                            {formSuccess ? (
+                                <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                                    {formSuccess}
+                                </p>
+                            ) : null}
                             <div className="space-y-2">
                                 <Label htmlFor="fullName">Full Name</Label>
                                 <Input
@@ -72,6 +115,7 @@ export default function SignUpPage() {
                                     onChange={(e) => setFullName(e.target.value)}
                                     className="bg-white/50"
                                     required
+                                    disabled={isPending}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -84,6 +128,7 @@ export default function SignUpPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="bg-white/50"
                                     required
+                                    disabled={isPending}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -96,6 +141,7 @@ export default function SignUpPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="bg-white/50"
                                     required
+                                    disabled={isPending}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -108,6 +154,7 @@ export default function SignUpPage() {
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     className="bg-white/50"
                                     required
+                                    disabled={isPending}
                                 />
                             </div>
                         </CardContent>
