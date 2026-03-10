@@ -200,52 +200,11 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                {/* Main Info */}
                <div className="lg:col-span-2 space-y-6">
 
-                  {/* Address Details */}
-                  <motion.div
-                     initial={{ opacity: 0, y: 20 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     transition={{ delay: 0.1 }}
-                     className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  >
-                     <div className="bg-bgSurface border border-borderColor rounded-sm p-6">
-                        <div className="flex items-center gap-2 mb-4 text-textMuted">
-                           <iconify-icon icon="solar:box-linear" width="16"></iconify-icon>
-                           <span className="text-[10px] font-black uppercase tracking-widest">Sender Details</span>
-                        </div>
-                        <p className="text-sm font-bold text-textMain">{shipment.sender.company || shipment.sender.name}</p>
-                        {(() => {
-                           const senderAddress = formatAddressLines(shipment.sender.street, shipment.sender.city, shipment.sender.country);
-                           return (
-                              <>
-                                 <p className="text-xs text-textMuted mt-1">{senderAddress.line1}</p>
-                                 {senderAddress.line2 && <p className="text-xs text-textMuted">{senderAddress.line2}</p>}
-                              </>
-                           );
-                        })()}
-                     </div>
-                     <div className="bg-bgSurface border border-borderColor rounded-sm p-6">
-                        <div className="flex items-center gap-2 mb-4 text-textMuted">
-                           <iconify-icon icon="solar:map-point-linear" width="16"></iconify-icon>
-                           <span className="text-[10px] font-black uppercase tracking-widest">Receiver Details</span>
-                        </div>
-                        <p className="text-sm font-bold text-textMain">{shipment.recipient.company || shipment.recipient.name}</p>
-                        {(() => {
-                           const recipientAddress = formatAddressLines(shipment.recipient.street, shipment.recipient.city, shipment.recipient.country);
-                           return (
-                              <>
-                                 <p className="text-xs text-textMuted mt-1">{recipientAddress.line1}</p>
-                                 {recipientAddress.line2 && <p className="text-xs text-textMuted">{recipientAddress.line2}</p>}
-                              </>
-                           );
-                        })()}
-                     </div>
-                  </motion.div>
-
                   {/* Route Overview */}
                   <motion.div
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
-                     transition={{ delay: 0.18 }}
+                     transition={{ delay: 0.1 }}
                      className="bg-bgSurface/20 border border-borderColor rounded-sm p-8 relative overflow-hidden h-64 flex items-center justify-between px-4 md:px-16"
                   >
                      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(var(--text-muted) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
@@ -287,6 +246,47 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                         <p className="text-xl font-black heading-font text-textMain truncate max-w-[140px] md:max-w-[200px]">
                            {shipment.recipient.city || shipment.destination || 'Destination'}
                         </p>
+                     </div>
+                  </motion.div>
+
+                  {/* Address Details */}
+                  <motion.div
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.18 }}
+                     className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  >
+                     <div className="bg-bgSurface border border-borderColor rounded-sm p-6">
+                        <div className="flex items-center gap-2 mb-4 text-textMuted">
+                           <iconify-icon icon="solar:box-linear" width="16"></iconify-icon>
+                           <span className="text-[10px] font-black uppercase tracking-widest">Sender Details</span>
+                        </div>
+                        <p className="text-sm font-bold text-textMain">{shipment.sender.company || shipment.sender.name}</p>
+                        {(() => {
+                           const senderAddress = formatAddressLines(shipment.sender.street, shipment.sender.city, shipment.sender.country);
+                           return (
+                              <>
+                                 <p className="text-xs text-textMuted mt-1">{senderAddress.line1}</p>
+                                 {senderAddress.line2 && <p className="text-xs text-textMuted">{senderAddress.line2}</p>}
+                              </>
+                           );
+                        })()}
+                     </div>
+                     <div className="bg-bgSurface border border-borderColor rounded-sm p-6">
+                        <div className="flex items-center gap-2 mb-4 text-textMuted">
+                           <iconify-icon icon="solar:map-point-linear" width="16"></iconify-icon>
+                           <span className="text-[10px] font-black uppercase tracking-widest">Receiver Details</span>
+                        </div>
+                        <p className="text-sm font-bold text-textMain">{shipment.recipient.company || shipment.recipient.name}</p>
+                        {(() => {
+                           const recipientAddress = formatAddressLines(shipment.recipient.street, shipment.recipient.city, shipment.recipient.country);
+                           return (
+                              <>
+                                 <p className="text-xs text-textMuted mt-1">{recipientAddress.line1}</p>
+                                 {recipientAddress.line2 && <p className="text-xs text-textMuted">{recipientAddress.line2}</p>}
+                              </>
+                           );
+                        })()}
                      </div>
                   </motion.div>
 
