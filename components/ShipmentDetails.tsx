@@ -25,14 +25,18 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
          return { line1: safeStreet, line2: '' };
       }
 
-      const streetLower = safeStreet.toLowerCase();
-      const cityLower = (city || '').toLowerCase();
-      const countryLower = (country || '').toLowerCase();
+      const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, ' ').trim();
+
+      const streetLower = normalize(safeStreet);
+      const cityCountryLower = normalize(cityCountry);
+      const cityLower = normalize(city || '');
+      const countryLower = normalize(country || '');
 
       const hasCity = cityLower && streetLower.includes(cityLower);
       const hasCountry = countryLower && streetLower.includes(countryLower);
 
-      if (hasCity && hasCountry) {
+      // Avoid duplicate second line when street already effectively equals city/country text.
+      if (streetLower === cityCountryLower || (hasCity && hasCountry)) {
          return { line1: safeStreet, line2: '' };
       }
 
