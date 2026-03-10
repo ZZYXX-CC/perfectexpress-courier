@@ -316,7 +316,7 @@ export default function TrackingMap({
         theme === 'light'
             ? [
                   {
-                      url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+                      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                       attribution:
                           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                   },
@@ -327,7 +327,7 @@ export default function TrackingMap({
               ]
             : [
                   {
-                      url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+                      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
                       attribution:
                           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                   },
@@ -386,13 +386,14 @@ export default function TrackingMap({
 
     const mapKey = `${center[0]}-${center[1]}-${theme}`
     const resizeKey = `${mapKey}-${fullscreenMode ? 'fullscreen' : 'normal'}`
+    const initialZoom = hasValidCoordinates ? 12 : 7
 
     return (
         <div className={`rounded-sm overflow-hidden border border-borderColor bg-bgSurface ${className}`} style={{ width: '100%', position: 'relative' }}>
             <MapContainer
                 key={mapKey}
                 center={center}
-                zoom={10}
+                zoom={initialZoom}
                 scrollWheelZoom={false}
                 attributionControl={false}
                 style={{ height: '100%', width: '100%', zIndex: 1 }}
