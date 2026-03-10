@@ -211,16 +211,14 @@ export default function TrackingMap({
     useEffect(() => {
         let mounted = true
 
-        if (hasValidCoordinates && location) {
-            setResolvedLocation({
-                lat: location.lat,
-                lng: location.lng,
-                label: sanitizeLocationText(currentLocation || destinationAddress || originAddress || 'Shipment Location')
-            })
-            setGeocodeFailed(false)
-            setIsResolving(false)
-            return
-        }
+        const fallbackCoordinates =
+            hasValidCoordinates && location
+                ? {
+                      lat: location.lat,
+                      lng: location.lng,
+                      label: sanitizeLocationText(currentLocation || destinationAddress || originAddress || 'Shipment Location')
+                  }
+                : null
 
         const parsedCoords = extractCoordinatesFromText(currentLocation) || extractCoordinatesFromText(destinationAddress)
         if (parsedCoords) {
@@ -234,8 +232,13 @@ export default function TrackingMap({
         }
 
         if (!locationQueries.length) {
-            setResolvedLocation(null)
-            setGeocodeFailed(true)
+            if (fallbackCoordinates) {
+                setResolvedLocation(fallbackCoordinates)
+                setGeocodeFailed(false)
+            } else {
+                setResolvedLocation(null)
+                setGeocodeFailed(true)
+            }
             setIsResolving(false)
             return
         }
@@ -318,6 +321,13 @@ export default function TrackingMap({
                 }
 
                 if (!mounted || controller.signal.aborted) return
+
+                if (fallbackCoordinates) {
+                    setResolvedLocation(fallbackCoordinates)
+                    setGeocodeFailed(false)
+                    return
+                }
+
                 setResolvedLocation(null)
                 setGeocodeFailed(true)
             } finally {
