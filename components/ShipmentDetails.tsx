@@ -103,17 +103,6 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                         {shipment.id}
                      </h1>
                   </div>
-                  <div className="flex gap-8">
-                     <div className="text-right">
-                        <p className="metadata-label text-textMuted mb-1">Current Status</p>
-                        <p className={`text-lg font-bold uppercase tracking-tight ${shipment.status === 'delivered' ? 'text-green-500' : 'text-textMain'
-                           }`}>{formatStatusLabel(shipment.status)}</p>
-                     </div>
-                     <div className="text-right">
-                        <p className="metadata-label text-textMuted mb-1">Est. Arrival</p>
-                        <p className="text-lg font-bold text-textMain uppercase tracking-tight">{shipment.estimatedArrival}</p>
-                     </div>
-                  </div>
                </div>
             </motion.div>
 
