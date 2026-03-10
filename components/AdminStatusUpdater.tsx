@@ -88,10 +88,6 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 lat: parseFloat(formData.latitude),
                 lng: parseFloat(formData.longitude)
             };
-        } else if (locationChanged) {
-            // If location text changed but no fresh coordinates were supplied,
-            // clear stale coordinates so tracking map can resolve from new location text.
-            updates.coordinates = null;
         }
 
         try {
