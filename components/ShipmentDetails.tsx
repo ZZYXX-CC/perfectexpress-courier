@@ -117,6 +117,33 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                </div>
             </motion.div>
 
+            {/* Status Summary */}
+            <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.08 }}
+               className="mb-8 bg-bgSurface border border-borderColor rounded-sm p-5 md:p-6"
+            >
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+                  <div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-textMuted mb-1">Current Status</p>
+                     <p className={`text-sm md:text-base font-black uppercase tracking-tight ${shipment.status === 'delivered' ? 'text-green-500' : 'text-textMain'}`}>
+                        {formatStatusLabel(shipment.status)}
+                     </p>
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-textMuted mb-1">Estimated Delivery</p>
+                     <p className="text-sm md:text-base font-black uppercase tracking-tight text-textMain">{shipment.estimatedArrival}</p>
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-textMuted mb-1">Last Known Location</p>
+                     <p className="text-sm md:text-base font-black tracking-tight text-textMain">
+                        {shipment.currentLocation || shipment.history?.[shipment.history.length - 1]?.location || 'Location update pending'}
+                     </p>
+                  </div>
+               </div>
+            </motion.div>
+
             {/* Tracking Map */}
             <motion.div
                initial={{ opacity: 0, y: 20 }}
@@ -183,7 +210,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      <div className="bg-bgSurface border border-borderColor rounded-sm p-6">
                         <div className="flex items-center gap-2 mb-4 text-textMuted">
                            <iconify-icon icon="solar:box-linear" width="16"></iconify-icon>
-                           <span className="text-[10px] font-black uppercase tracking-widest">Origin / Sender</span>
+                           <span className="text-[10px] font-black uppercase tracking-widest">Sender Details</span>
                         </div>
                         <p className="text-sm font-bold text-textMain">{shipment.sender.company || shipment.sender.name}</p>
                         {(() => {
@@ -199,7 +226,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      <div className="bg-bgSurface border border-borderColor rounded-sm p-6">
                         <div className="flex items-center gap-2 mb-4 text-textMuted">
                            <iconify-icon icon="solar:map-point-linear" width="16"></iconify-icon>
-                           <span className="text-[10px] font-black uppercase tracking-widest">Destination / Recipient</span>
+                           <span className="text-[10px] font-black uppercase tracking-widest">Receiver Details</span>
                         </div>
                         <p className="text-sm font-bold text-textMain">{shipment.recipient.company || shipment.recipient.name}</p>
                         {(() => {
@@ -214,7 +241,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      </div>
                   </motion.div>
 
-                  {/* Origin / Destination City Strip */}
+                  {/* Route Overview */}
                   <motion.div
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
@@ -272,7 +299,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                   >
                      <h3 className="metadata-label text-textMuted mb-8 flex items-center gap-2">
                         <iconify-icon icon="solar:history-linear" width="14"></iconify-icon>
-                        Shipment Progress
+                        Tracking History
                      </h3>
                      <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-borderColor">
                         {(() => {
@@ -316,10 +343,10 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                >
                   {/* Package Specs */}
                   <div className="bg-bgMain border border-borderColor rounded-sm p-8">
-                     <h3 className="metadata-label text-textMuted mb-6">Manifest Specifications</h3>
+                     <h3 className="metadata-label text-textMuted mb-6">Package Information</h3>
                      <div className="space-y-4">
                         <div className="flex justify-between items-center py-3 border-b border-borderColor">
-                           <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider">Gross Weight</span>
+                           <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider">Weight</span>
                            <span className="text-sm font-bold text-textMain">{shipment.weight}</span>
                         </div>
                         <div className="flex justify-between items-center py-3 border-b border-borderColor">
@@ -327,7 +354,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                            <span className="text-sm font-bold text-textMain">{shipment.dimensions}</span>
                         </div>
                         <div className="flex justify-between items-center py-3 border-b border-borderColor">
-                           <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider">Service Tier</span>
+                           <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider">Delivery Service</span>
                            <span className="text-sm font-bold text-textMain text-right">{shipment.serviceType}</span>
                         </div>
                      </div>
@@ -335,7 +362,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
 
                   {/* Item Inventory */}
                   <div className="bg-bgMain border border-borderColor rounded-sm p-8">
-                     <h3 className="metadata-label text-textMuted mb-6">Item Inventory</h3>
+                     <h3 className="metadata-label text-textMuted mb-6">Package Items</h3>
                      <div className="space-y-6">
                         {shipment.items.map((item, idx) => (
                            <div key={idx} className="flex gap-4 items-start">
@@ -354,7 +381,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                   <div className="bg-red-600/5 border border-red-600/20 rounded-sm p-8">
                      <div className="flex items-center gap-3 mb-4">
                         <iconify-icon icon="solar:shield-check-linear" width="20" class="text-red-600"></iconify-icon>
-                        <h3 className="metadata-label text-red-600">AI Insight</h3>
+                        <h3 className="metadata-label text-red-600">Shipment Insight</h3>
                      </div>
                      <p className="text-xs text-textMain font-medium leading-relaxed italic opacity-80">
                         {aiInsight || "Analyzing manifest data..."}
