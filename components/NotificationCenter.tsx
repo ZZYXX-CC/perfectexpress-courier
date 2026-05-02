@@ -89,7 +89,8 @@ export const NotificationCenter: React.FC = () => {
                                         key={notif.id}
                                         onClick={() => {
                                             markAsRead(notif.id);
-                                            if (notif.link) window.location.href = notif.link;
+                                            setIsOpen(false);
+                                            navigate('/notifications');
                                         }}
                                         className={`p-4 border-b border-borderColor/50 last:border-0 cursor-pointer transition-colors hover:bg-white/5 flex gap-4 ${!notif.is_read ? 'bg-red-600/5 border-l-2 border-l-red-600' : ''}`}
                                     >
