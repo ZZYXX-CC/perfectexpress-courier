@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const NotificationPage: React.FC = () => {
     const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotifications();
     const navigate = useNavigate();
+    const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -27,6 +28,24 @@ const NotificationPage: React.FC = () => {
             case 'payment_update': return 'Payment Update';
             case 'system': return 'System Event';
             default: return 'Notification';
+        }
+    };
+
+    const getLinkLabel = (link: string) => {
+        if (link.startsWith('/track/')) return 'Track Shipment';
+        if (link.includes('/tickets/')) return 'View Ticket';
+        if (link.includes('tab=chat')) return 'Open Chat';
+        if (link === '/dashboard') return 'Go to Dashboard';
+        return 'View Details';
+    };
+
+    const handleNotificationClick = (notifId: string) => {
+        // Toggle expand/collapse
+        if (expandedId === notifId) {
+            setExpandedId(null);
+        } else {
+            setExpandedId(notifId);
+            markAsRead(notifId);
         }
     };
 
@@ -75,49 +94,96 @@ const NotificationPage: React.FC = () => {
                             </button>
                         </div>
                     ) : (
-                        notifications.map((notif, index) => (
-                            <motion.div
-                                key={notif.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                onClick={() => {
-                                    markAsRead(notif.id);
-                                    if (notif.link) navigate(notif.link);
-                                }}
-                                className={`group bg-bgSurface/40 border p-6 rounded-sm cursor-pointer transition-all hover:border-red-600/50 flex flex-col md:flex-row gap-6 relative overflow-hidden ${!notif.is_read ? 'border-red-600/30' : 'border-borderColor'}`}
-                            >
-                                {/* Unread Indicator */}
-                                {!notif.is_read && (
-                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-red-600"></div>
-                                )}
+                        notifications.map((notif, index) => {
+                            const isExpanded = expandedId === notif.id;
 
-                                <div className={`w-12 h-12 rounded-sm flex items-center justify-center shrink-0 border ${!notif.is_read ? 'bg-red-600/10 border-red-600/20 text-red-600' : 'bg-bgSurface border-borderColor text-textMuted'}`}>
-                                    <Icon icon={getIcon(notif.type)} width="24" />
-                                </div>
+                            return (
+                                <motion.div
+                                    key={notif.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className={`group bg-bgSurface/40 border rounded-sm transition-all relative overflow-hidden ${
+                                        isExpanded
+                                            ? 'border-red-600/50'
+                                            : !notif.is_read
+                                                ? 'border-red-600/30 hover:border-red-600/50'
+                                                : 'border-borderColor hover:border-red-600/50'
+                                    }`}
+                                >
+                                    {/* Unread Indicator */}
+                                    {!notif.is_read && (
+                                        <div className="absolute top-0 left-0 w-1.5 h-full bg-red-600"></div>
+                                    )}
 
-                                <div className="flex-grow">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-600 mb-1 block">{getTypeLabel(notif.type)}</span>
-                                            <h3 className={`text-sm font-bold uppercase tracking-tight ${!notif.is_read ? 'text-textMain' : 'text-textMuted'}`}>{notif.title}</h3>
+                                    {/* Clickable header area */}
+                                    <div
+                                        onClick={() => handleNotificationClick(notif.id)}
+                                        className="p-6 cursor-pointer flex flex-col md:flex-row gap-6"
+                                    >
+                                        <div className={`w-12 h-12 rounded-sm flex items-center justify-center shrink-0 border ${!notif.is_read ? 'bg-red-600/10 border-red-600/20 text-red-600' : 'bg-bgSurface border-borderColor text-textMuted'}`}>
+                                            <Icon icon={getIcon(notif.type)} width="24" />
                                         </div>
-                                        <span className="text-[10px] font-mono text-textMuted uppercase whitespace-nowrap">
-                                            {new Date(notif.created_at).toLocaleDateString()} — {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                    <p className={`text-[11px] leading-relaxed max-w-2xl ${!notif.is_read ? 'text-textMain font-medium' : 'text-textMuted'}`}>
-                                        {notif.message}
-                                    </p>
-                                </div>
 
-                                <div className="md:flex items-center hidden">
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Icon icon="solar:arrow-right-linear" width="20" className="text-red-600" />
+                                        <div className="flex-grow">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-600 mb-1 block">{getTypeLabel(notif.type)}</span>
+                                                    <h3 className={`text-sm font-bold uppercase tracking-tight ${!notif.is_read ? 'text-textMain' : 'text-textMuted'}`}>{notif.title}</h3>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-[10px] font-mono text-textMuted uppercase whitespace-nowrap">
+                                                        {new Date(notif.created_at).toLocaleDateString()} — {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                    <Icon
+                                                        icon={isExpanded ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
+                                                        width="16"
+                                                        className="text-textMuted group-hover:text-red-600 transition-colors shrink-0"
+                                                    />
+                                                </div>
+                                            </div>
+                                            {/* Preview text (always visible) */}
+                                            {!isExpanded && (
+                                                <p className={`text-[11px] leading-relaxed max-w-2xl line-clamp-1 ${!notif.is_read ? 'text-textMain font-medium' : 'text-textMuted'}`}>
+                                                    {notif.message}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        ))
+
+                                    {/* Expanded content */}
+                                    <AnimatePresence>
+                                        {isExpanded && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="px-6 pb-6 pt-0 ml-0 md:ml-[4.5rem] border-t border-borderColor/50">
+                                                    <p className="text-xs leading-relaxed text-textMain mt-4 mb-5">
+                                                        {notif.message}
+                                                    </p>
+                                                    {notif.link && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(notif.link!);
+                                                            }}
+                                                            className="inline-flex items-center gap-2 bg-red-600/10 border border-red-600/20 text-red-500 hover:bg-red-600/20 hover:text-red-400 px-4 py-2 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all"
+                                                        >
+                                                            <Icon icon="solar:arrow-right-up-linear" width="14" />
+                                                            {getLinkLabel(notif.link)}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            );
+                        })
                     )}
                 </div>
             </div>
