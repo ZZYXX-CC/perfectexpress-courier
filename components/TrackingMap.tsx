@@ -119,9 +119,25 @@ export default function TrackingMap({
         // Build a prioritized list of addresses to try geocoding
         const candidates: string[] = []
 
-        // Priority 1: currentLocation (the admin-set location text) — ALWAYS geocode this
+        // Priority 1: currentLocation — expand into progressively simpler variants
+        // e.g. "Westford sorting facility, 85 Wharf St, West Gosford" →
+        //   1. "Westford sorting facility, 85 Wharf St, West Gosford" (full)
+        //   2. "85 Wharf St, West Gosford" (without facility prefix)
+        //   3. "West Gosford" (just the city/last segment)
         if (hasAdminLocation) {
-            candidates.push(currentLocation!)
+            const full = currentLocation!.trim()
+            candidates.push(full)
+
+            const parts = full.split(',').map(p => p.trim()).filter(Boolean)
+            if (parts.length >= 2) {
+                // Try without the first segment (often a facility/hub name)
+                const withoutPrefix = parts.slice(1).join(', ')
+                if (withoutPrefix.length >= 3) candidates.push(withoutPrefix)
+
+                // Try just the last segment (usually the city)
+                const lastPart = parts[parts.length - 1]
+                if (lastPart.length >= 3 && lastPart !== withoutPrefix) candidates.push(lastPart)
+            }
         }
 
         // Only fall back to destination/origin if admin hasn't set a location
