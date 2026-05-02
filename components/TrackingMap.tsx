@@ -190,13 +190,16 @@ export default function TrackingMap({
         tryGeocode()
     }, [currentLocation, originAddress, destinationAddress, location, hasAdminLocation])
 
-    // Priority: geocoded currentLocation > stored coordinates > geocoded fallback > default
-    // When admin sets a location, geocoded result takes precedence over stale stored coords
+    // Priority: geocoded currentLocation > stored coordinates > default
+    // When admin has set a location, NEVER use stored coords (they're likely stale destination coords)
+    // This prevents a flash of the wrong location while geocoding resolves
     const center: [number, number] = geocodedCenter
         ? geocodedCenter
-        : (location?.lat && location?.lng)
-            ? [location.lat, location.lng]
-            : defaultCenter
+        : (hasAdminLocation)
+            ? defaultCenter  // Don't flash stale destination — show neutral until geocoding completes
+            : (location?.lat && location?.lng)
+                ? [location.lat, location.lng]
+                : defaultCenter
 
     const mapKey = `${center[0]}-${center[1]}-${theme}-${isFullscreen ? 'fs' : 'normal'}`
 
