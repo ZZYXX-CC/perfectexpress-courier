@@ -85,7 +85,8 @@ const TrackingCard: React.FC<TrackingCardProps> = ({ onTrack }) => {
              <input
               type="text"
               placeholder="ENTER SHIPMENT REFERENCE (PFX-XXXXXXXX)"
-              className="w-full bg-bgMain/60 border-none rounded-sm pl-14 pr-6 py-5 focus:ring-1 focus:ring-textMuted outline-none transition-all text-textMain font-bold uppercase tracking-widest text-[10px]"
+              className="w-full bg-bgMain/60 border-none rounded-sm pl-14 pr-6 py-5 focus:ring-1 focus:ring-textMuted outline-none transition-all font-bold uppercase tracking-widest text-[10px]"
+              style={{ color: 'var(--text-main)', caretColor: 'var(--accent-red)' }}
               value={trackingId}
               onChange={(e) => setTrackingId(e.target.value)}
             />

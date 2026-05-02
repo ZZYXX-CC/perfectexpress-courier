@@ -127,6 +127,17 @@
       font-weight: 800;
     }
 
+    /* Ensure input text is always visible in both themes */
+    input, textarea, select {
+      color: var(--text-main);
+      caret-color: var(--accent-red);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
     ::-webkit-scrollbar {
       width: 5px;
     }
