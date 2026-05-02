@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { Icon } from '@iconify/react'
 import L from 'leaflet'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
 const TILE_URLS = {
     dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
@@ -102,37 +102,46 @@ export default function TrackingMap({
 }: TrackingMapProps) {
     const theme = useTheme()
     const defaultCenter: [number, number] = [51.505, -0.09]
+    const [isFullscreen, setIsFullscreen] = useState(false)
+    const mapContainerRef = useRef<HTMLDivElement>(null)
 
-    // Geocoded coordinates from the address text (used when no lat/lng provided)
+    // Geocoded coordinates from the address text
     const [geocodedCenter, setGeocodedCenter] = useState<[number, number] | null>(null)
     const [isGeocoding, setIsGeocoding] = useState(false)
     const lastGeocodedRef = useRef<string>('')
 
-    // Geocode the best available address text when no stored coordinates exist
-    useEffect(() => {
-        // If we already have stored coordinates, skip geocoding
-        if (location?.lat && location?.lng) {
-            setGeocodedCenter(null)
-            lastGeocodedRef.current = ''
-            return
-        }
+    // Determine if admin has set a meaningful currentLocation
+    const hasAdminLocation = !!(currentLocation && currentLocation.toLowerCase() !== 'pending' && currentLocation.trim().length >= 3)
 
+    // Always geocode when there's a currentLocation — stored coords may be stale
+    // (e.g. set at shipment creation to destination, not to current transit point)
+    useEffect(() => {
         // Build a prioritized list of addresses to try geocoding
         const candidates: string[] = []
 
-        // Priority 1: currentLocation (the admin-set location text)
-        if (currentLocation && currentLocation.toLowerCase() !== 'pending' && currentLocation.length >= 3) {
-            candidates.push(currentLocation)
+        // Priority 1: currentLocation (the admin-set location text) — ALWAYS geocode this
+        if (hasAdminLocation) {
+            candidates.push(currentLocation!)
         }
 
-        // Priority 2: destination city (where the package is going)
-        if (destinationAddress && destinationAddress.length >= 3) {
-            candidates.push(destinationAddress)
-        }
+        // Only fall back to destination/origin if admin hasn't set a location
+        if (!hasAdminLocation) {
+            // If we have stored coordinates and no admin location, just use those
+            if (location?.lat && location?.lng) {
+                setGeocodedCenter(null)
+                lastGeocodedRef.current = ''
+                return
+            }
 
-        // Priority 3: origin city (where it came from)
-        if (originAddress && originAddress.length >= 3) {
-            candidates.push(originAddress)
+            // Priority 2: destination city
+            if (destinationAddress && destinationAddress.length >= 3) {
+                candidates.push(destinationAddress)
+            }
+
+            // Priority 3: origin city
+            if (originAddress && originAddress.length >= 3) {
+                candidates.push(originAddress)
+            }
         }
 
         if (candidates.length === 0) {
@@ -157,21 +166,23 @@ export default function TrackingMap({
                     return
                 }
             }
-            // None resolved
+            // None resolved — clear so we fall back to stored coords or default
+            setGeocodedCenter(null)
             setIsGeocoding(false)
         }
 
         tryGeocode()
-    }, [currentLocation, originAddress, destinationAddress, location])
+    }, [currentLocation, originAddress, destinationAddress, location, hasAdminLocation])
 
-    // Priority: stored coordinates > geocoded coordinates > default
-    const center: [number, number] = location?.lat && location?.lng
-        ? [location.lat, location.lng]
-        : geocodedCenter
-            ? geocodedCenter
+    // Priority: geocoded currentLocation > stored coordinates > geocoded fallback > default
+    // When admin sets a location, geocoded result takes precedence over stale stored coords
+    const center: [number, number] = geocodedCenter
+        ? geocodedCenter
+        : (location?.lat && location?.lng)
+            ? [location.lat, location.lng]
             : defaultCenter
 
-    const mapKey = `${center[0]}-${center[1]}-${theme}`
+    const mapKey = `${center[0]}-${center[1]}-${theme}-${isFullscreen ? 'fs' : 'normal'}`
 
     // Custom pulsing marker icon
     const pulsingIcon = L.divIcon({
@@ -181,14 +192,103 @@ export default function TrackingMap({
         iconAnchor: [10, 10]
     })
 
+    // Fullscreen toggle
+    const toggleFullscreen = useCallback(() => {
+        setIsFullscreen(prev => !prev)
+    }, [])
+
+    // Close fullscreen on Escape
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isFullscreen) {
+                setIsFullscreen(false)
+            }
+        }
+        if (isFullscreen) {
+            document.addEventListener('keydown', handleKeyDown)
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = ''
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown)
+            document.body.style.overflow = ''
+        }
+    }, [isFullscreen])
+
+    // Open in Google Maps
+    const openGoogleMaps = useCallback(() => {
+        const url = `https://www.google.com/maps/@${center[0]},${center[1]},15z`
+        window.open(url, '_blank', 'noopener,noreferrer')
+    }, [center])
+
+    const fullscreenStyles: React.CSSProperties = isFullscreen
+        ? {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 9999,
+            borderRadius: 0,
+        }
+        : {
+            height: '400px',
+            width: '100%',
+            position: 'relative' as const,
+        }
+
     return (
-        <div className={`rounded-sm overflow-hidden border border-borderColor bg-bgSurface ${className}`} style={{ height: '400px', width: '100%', position: 'relative' }}>
+        <div
+            ref={mapContainerRef}
+            className={`rounded-sm overflow-hidden border border-borderColor bg-bgSurface ${isFullscreen ? '' : className}`}
+            style={fullscreenStyles}
+        >
+            {/* Top-left: Locating indicator */}
             {isGeocoding && (
-                <div className="absolute top-3 left-3 z-10 bg-bgMain/90 border border-borderColor rounded-sm px-3 py-1.5 flex items-center gap-2">
+                <div className="absolute top-3 left-3 z-[1000] bg-bgMain/90 border border-borderColor rounded-sm px-3 py-1.5 flex items-center gap-2">
                     <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
                     <span className="text-[9px] font-black uppercase tracking-widest text-textMuted">Locating...</span>
                 </div>
             )}
+
+            {/* Top-right: Map action buttons */}
+            <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2">
+                {/* Open in Google Maps */}
+                <button
+                    onClick={openGoogleMaps}
+                    title="Open in Google Maps"
+                    className="bg-bgMain/90 hover:bg-bgMain border border-borderColor rounded-sm px-3 py-1.5 flex items-center gap-2 transition-all hover:border-red-600/50 group cursor-pointer"
+                >
+                    <Icon icon="mdi:google-maps" width="14" className="text-textMuted group-hover:text-red-500 transition-colors" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-textMuted group-hover:text-textMain transition-colors hidden sm:inline">Google Maps</span>
+                </button>
+
+                {/* Fullscreen toggle */}
+                <button
+                    onClick={toggleFullscreen}
+                    title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen map'}
+                    className="bg-bgMain/90 hover:bg-bgMain border border-borderColor rounded-sm p-1.5 transition-all hover:border-red-600/50 group cursor-pointer"
+                >
+                    <Icon
+                        icon={isFullscreen ? 'solar:minimize-square-linear' : 'solar:maximize-square-linear'}
+                        width="16"
+                        className="text-textMuted group-hover:text-red-500 transition-colors"
+                    />
+                </button>
+            </div>
+
+            {/* Bottom-left: Status badge */}
+            {status && (
+                <div className="absolute bottom-3 left-3 z-[1000]">
+                    <span className="text-[9px] bg-bgMain/90 border border-red-500/20 text-red-500 px-2.5 py-1 rounded-sm uppercase tracking-widest font-bold">
+                        {status.replace(/-/g, ' ')}
+                    </span>
+                </div>
+            )}
+
             <MapContainer
                 key={mapKey}
                 center={center}
@@ -215,4 +315,3 @@ export default function TrackingMap({
         </div>
     )
 }
-
