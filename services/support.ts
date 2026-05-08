@@ -90,7 +90,7 @@ export const createTicket = async (data: {
 export const getUserTickets = async (userId: string) => {
     const { data, error } = await supabase
         .from('support_tickets')
-        .select('*')
+        .select('id, ticket_number, user_id, name, email, subject, status, priority, created_at, updated_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -101,7 +101,7 @@ export const getUserTickets = async (userId: string) => {
 export const getAllTickets = async () => {
     const { data, error } = await supabase
         .from('support_tickets')
-        .select('*')
+        .select('id, ticket_number, user_id, name, email, subject, status, priority, created_at, updated_at')
         .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -111,7 +111,7 @@ export const getAllTickets = async () => {
 export const getTicketDetails = async (ticketId: string) => {
     const { data: ticket, error: ticketError } = await supabase
         .from('support_tickets')
-        .select('*')
+        .select('id, ticket_number, user_id, name, email, subject, message, status, priority, created_at, updated_at')
         .eq('id', ticketId)
         .single();
 
@@ -119,7 +119,7 @@ export const getTicketDetails = async (ticketId: string) => {
 
     const { data: replies, error: replyError } = await supabase
         .from('ticket_replies')
-        .select('*')
+        .select('id, ticket_id, sender_type, sender_name, message, created_at')
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 

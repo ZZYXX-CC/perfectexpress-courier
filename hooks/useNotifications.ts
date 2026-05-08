@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { notificationService, Notification } from '../services/notificationService';
+import { getActiveUserId } from '../services/authGuard';
 
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -22,9 +23,7 @@ export const useNotifications = () => {
         loadNotifications();
 
         const fetchUserAndSubscribe = async () => {
-            const impersonatedId = localStorage.getItem('impersonated_user_id');
-            const { data: { user } } = await supabase.auth.getUser();
-            const activeUserId = impersonatedId || user?.id;
+            const activeUserId = await getActiveUserId();
 
             if (!activeUserId) return;
 
@@ -42,9 +41,7 @@ export const useNotifications = () => {
                     async (payload) => {
                         const newNotification = payload.new as Notification;
 
-                        // Verify it's for the current user (if we didn't use a strict filter)
-                        const { data: { user: authUser } } = await supabase.auth.getUser();
-                        const currentActiveUserId = impersonatedId || authUser?.id; // Re-fetch in case of change
+                        const currentActiveUserId = await getActiveUserId();
 
                         if (newNotification.user_id === currentActiveUserId) {
                             setNotifications(prev => [newNotification, ...prev]);

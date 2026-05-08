@@ -11,10 +11,10 @@ const TrackingCard: React.FC<TrackingCardProps> = ({ onTrack }) => {
   const [trackingId, setTrackingId] = useState('');
   const [loading, setLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
-  const [currentStatus, setCurrentStatus] = useState<Shipment['status'] | null>(null);
+  const [currentStatus, setCurrentStatus] = useState<string | null>(null);
   const [trackError, setTrackError] = useState<string | null>(null);
 
-  const statusOrder: Shipment['status'][] = [
+  const statusOrder: string[] = [
     'pending',
     'quoted',
     'confirmed',
@@ -23,28 +23,28 @@ const TrackingCard: React.FC<TrackingCardProps> = ({ onTrack }) => {
     'delivered'
   ];
 
-  const getProgress = (status: Shipment['status']) => {
+  const getProgress = (status: string) => {
     if (status === 'held') return 60;
     if (status === 'cancelled') return 0;
 
     const index = statusOrder.indexOf(status);
-    if (index === -1) return 0;
+    if (index === -1) return 50; // Unknown/custom statuses get 50%
     const base = Math.round((index / (statusOrder.length - 1)) * 100);
     return index === 0 ? 10 : base;
   };
 
-  const getProgressLabel = (status: Shipment['status']) => {
-    switch(status) {
-      case 'pending': return 'Order Created';
-      case 'quoted': return 'Awaiting Payment';
-      case 'confirmed': return 'Payment Confirmed';
-      case 'in-transit': return 'In Transit';
-      case 'out-for-delivery': return 'Out for Delivery';
-      case 'delivered': return 'Delivered';
-      case 'held': return 'On Hold';
-      case 'cancelled': return 'Cancelled';
-      default: return 'Tracking...';
-    }
+  const getProgressLabel = (status: string) => {
+    const knownLabels: Record<string, string> = {
+      'pending': 'Order Created',
+      'quoted': 'Awaiting Payment',
+      'confirmed': 'Payment Confirmed',
+      'in-transit': 'In Transit',
+      'out-for-delivery': 'Out for Delivery',
+      'delivered': 'Delivered',
+      'held': 'On Hold',
+      'cancelled': 'Cancelled',
+    };
+    return knownLabels[status] || status.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,8 +85,7 @@ const TrackingCard: React.FC<TrackingCardProps> = ({ onTrack }) => {
              <input
               type="text"
               placeholder="ENTER SHIPMENT REFERENCE (PFX-XXXXXXXX)"
-              className="w-full bg-white border-none rounded-sm pl-14 pr-6 py-5 focus:ring-1 focus:ring-textMuted outline-none transition-all font-bold uppercase tracking-widest text-[10px]"
-              style={{ color: '#171717', caretColor: '#dc2626' }}
+              className="w-full bg-bgSurface border-none rounded-sm pl-14 pr-6 py-5 focus:ring-1 focus:ring-textMuted outline-none transition-all font-bold uppercase tracking-widest text-[10px] text-textMain"
               value={trackingId}
               onChange={(e) => setTrackingId(e.target.value)}
             />
@@ -160,7 +159,7 @@ const TrackingCard: React.FC<TrackingCardProps> = ({ onTrack }) => {
                          { status: 'in-transit', label: 'in transit' },
                          { status: 'out-for-delivery', label: 'out for delivery' },
                          { status: 'delivered', label: 'delivered' }
-                      ] as { status: Shipment['status']; label: string }[]).map((step) => {
+                      ] as { status: string; label: string }[]).map((step) => {
                          const stepProgress = getProgress(step.status);
                          const currentProgress = getProgress(currentStatus);
                          const isActive = currentProgress >= stepProgress;

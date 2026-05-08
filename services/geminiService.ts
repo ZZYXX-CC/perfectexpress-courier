@@ -1,37 +1,27 @@
-import { GoogleGenAI, Content } from "@google/genai";
 import { Shipment } from "../types";
 import { supabase } from "./supabase";
 import { mapShipmentRow } from "./shipmentUtils";
 
-// Lazy initialization to prevent app crash if API key is missing
-let ai: GoogleGenAI | null = null;
+// All Gemini API calls now go through /api/gemini serverless function.
+// The API key never reaches the client bundle.
 
-const getAI = (): GoogleGenAI | null => {
-  if (ai) return ai;
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (apiKey) {
-    ai = new GoogleGenAI({ apiKey });
-    return ai;
-  }
-  return null;
-};
+const GEMINI_API_ENDPOINT = '/api/gemini';
 
 export const getTrackingInsight = async (shipmentId: string, status: string) => {
-  const client = getAI();
-  if (!client) {
-    return "Your package is on its way and everything is looking good. We'll let you know as soon as it gets closer!";
-  }
-
   try {
-    const response = await client.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: `Provide a friendly shipping update for order ${shipmentId}. Current status is: ${status}. Use simple, reassuring language. Let the customer know their package is being handled with care.`,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 100,
-      }
+    const response = await fetch(GEMINI_API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'tracking-insight',
+        payload: { shipmentId, status }
+      })
     });
-    return response.text;
+
+    if (!response.ok) throw new Error('API error');
+
+    const data = await response.json();
+    return data.text || "Your package is on its way and everything is looking good.";
   } catch {
     return "Your package is on its way and everything is looking good. We'll let you know as soon as it gets closer!";
   }
@@ -72,28 +62,21 @@ export const generateMockShipment = (id: string): Shipment => {
 };
 
 export const chatWithSupport = async (message: string, history: { role: 'user' | 'assistant', content: string }[]) => {
-  const client = getAI();
-  if (!client) {
-    return "I'm sorry, the AI assistant is currently unavailable. Please contact support@perfectexpress.co for assistance.";
-  }
-
   try {
-    const formattedHistory: Content[] = history.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }]
-    }));
-
-    const chat = client.chats.create({
-      model: 'gemini-1.5-flash',
-      history: formattedHistory,
-      config: {
-        systemInstruction: `You are the friendly Customer Support Assistant for PerfectExpress shipping. Be warm and helpful.`,
-      },
+    const response = await fetch(GEMINI_API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'chat',
+        payload: { message, history }
+      })
     });
 
-    const response = await chat.sendMessage({ message });
-    return response.text;
+    if (!response.ok) throw new Error('API error');
+
+    const data = await response.json();
+    return data.text || "I'm sorry, I'm having a little trouble connecting.";
   } catch {
-    return "I'm sorry, I'm having a little trouble connecting.";
+    return "I'm sorry, the AI assistant is currently unavailable. Please contact support@perfectexpress.co for assistance.";
   }
 };

@@ -30,6 +30,8 @@ const statusColors: Record<string, string> = {
    'held': 'text-red-500 bg-red-500/10 border-red-500/20',
    'cancelled': 'text-neutral-500 bg-neutral-500/10 border-neutral-500/20',
 };
+const DEFAULT_STATUS_COLOR = 'text-sky-400 bg-sky-400/10 border-sky-400/20';
+const getStatusColor = (status: string) => statusColors[status] || DEFAULT_STATUS_COLOR;
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
    const navigate = useNavigate();
@@ -497,7 +499,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                 </div>
                                              </td>
                                              <td className="p-4">
-                                                <span className={`px-2 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border ${statusColors[shipment.status] || 'border-slate-500 text-slate-500'}`}>
+                                                <span className={`px-2 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border ${getStatusColor(shipment.status)}`}>
                                                    {shipment.status}
                                                 </span>
                                              </td>
@@ -546,7 +548,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                 {shipment.id}
                                              </button>
                                           </div>
-                                          <span className={`px-2 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border ${statusColors[shipment.status] || 'border-slate-500 text-slate-500'}`}>
+                                          <span className={`px-2 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border ${getStatusColor(shipment.status)}`}>
                                              {shipment.status}
                                           </span>
                                        </div>

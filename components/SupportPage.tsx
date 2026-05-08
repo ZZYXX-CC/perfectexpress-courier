@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createTicket, getUserTickets, SupportTicket } from '../services/support';
 import { supabase } from '../services/supabase';
+import { getActiveUserId } from '../services/authGuard';
 
 const SupportPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,18 +18,21 @@ const SupportPage: React.FC = () => {
   const [myTickets, setMyTickets] = useState<SupportTicket[]>([]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
-      if (!authUser) return;
-      const impersonatedId = localStorage.getItem('impersonated_user_id');
-      if (impersonatedId) {
-        const { data: profile } = await supabase.from('profiles').select('full_name, email').eq('id', impersonatedId).single();
-        setUser({ ...authUser, id: impersonatedId });
+    const init = async () => {
+      const activeId = await getActiveUserId();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser || !activeId) return;
+
+      if (activeId !== authUser.id) {
+        // Impersonating (admin validated by getActiveUserId)
+        const { data: profile } = await supabase.from('profiles').select('full_name, email').eq('id', activeId).single();
+        setUser({ ...authUser, id: activeId });
         setFormState(prev => ({
           ...prev,
           email: profile?.email || '',
           name: profile?.full_name || ''
         }));
-        loadUserTickets(impersonatedId);
+        loadUserTickets(activeId);
       } else {
         setUser(authUser);
         setFormState(prev => ({
@@ -38,7 +42,8 @@ const SupportPage: React.FC = () => {
         }));
         loadUserTickets(authUser.id);
       }
-    });
+    };
+    init();
   }, []);
 
   const loadUserTickets = async (userId: string) => {

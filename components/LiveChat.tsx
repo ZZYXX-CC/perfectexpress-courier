@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import { getActiveUserId } from '../services/authGuard';
 import {
   ChatMessage,
   ChatSession,
@@ -38,9 +39,8 @@ const LiveChat: React.FC = () => {
       return;
     }
 
-    // When impersonating, load the impersonated user's profile for chat
-    const impersonatedId = localStorage.getItem('impersonated_user_id');
-    const targetId = impersonatedId || user.id;
+    // Uses secure impersonation check (admin-only)
+    const targetId = await getActiveUserId() || user.id;
 
     setUserId(targetId);
 
@@ -50,7 +50,7 @@ const LiveChat: React.FC = () => {
       .eq('id', targetId)
       .single();
 
-    if (impersonatedId && profile) {
+    if (targetId !== user.id && profile) {
       setUserEmail(profile.email || user.email || '');
       setUserName(profile.full_name || 'Customer');
     } else {

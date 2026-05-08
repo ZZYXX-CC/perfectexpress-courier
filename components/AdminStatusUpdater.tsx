@@ -254,58 +254,20 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     </div>
                 </div>
 
-                {/* Smart Actions */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            const originLabel = shipment.sender.city || shipment.origin || 'Origin';
-                            setFormData(prev => ({
-                                ...prev,
-                                status: 'in-transit',
-                                currentLocation: `${originLabel} Logistics Center`
-                            }));
-                        }}
-                        className="p-3 border border-borderColor rounded-sm hover:border-red-600 hover:text-red-600 text-textMuted text-[10px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-2 group"
-                    >
-                        <Icon icon="solar:transmission-square-linear" width="20" className="group-hover:scale-110 transition-transform" />
-                        Quick Dispatch
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            const destinationLabel = shipment.recipient.city || shipment.destination || 'Destination';
-                            setFormData(prev => ({
-                                ...prev,
-                                status: 'out-for-delivery',
-                                currentLocation: `${destinationLabel} Delivery Hub`
-                            }));
-                        }}
-                        className="p-3 border border-borderColor rounded-sm hover:border-green-600 hover:text-green-600 text-textMuted text-[10px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-2 group"
-                    >
-                        <Icon icon="solar:delivery-linear" width="20" className="group-hover:scale-110 transition-transform" />
-                        Out for Delivery
-                    </button>
-                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label className="metadata-label text-textMuted mb-1 block">Status</label>
-                        <select
+                        <input
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
                             className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none uppercase"
-                        >
-                            <option value="pending">Order Created</option>
-                            <option value="quoted">Quote Issued</option>
-                            <option value="confirmed">Payment Confirmed</option>
-                            <option value="in-transit">In Transit</option>
-                            <option value="out-for-delivery">Out for Delivery</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="held">Held / Exception</option>
-                            <option value="cancelled">Order Cancelled</option>
-                        </select>
+                            placeholder="ENTER STATUS (E.G. IN-TRANSIT, HELD, DELIVERED)"
+                        />
+                        <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
+                            Common: pending · quoted · confirmed · in-transit · out-for-delivery · delivered · held · cancelled
+                        </p>
                     </div>
 
                     <div>

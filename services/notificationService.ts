@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { emailService } from './emailService';
+import { getActiveUserId } from './authGuard';
 
 export interface Notification {
     id: string;
@@ -35,15 +36,13 @@ export const notificationService = {
     },
 
     async fetchNotifications() {
-        const impersonatedId = localStorage.getItem('impersonated_user_id');
-        const { data: { user } } = await supabase.auth.getUser();
-        const activeUserId = impersonatedId || user?.id;
+        const activeUserId = await getActiveUserId();
 
         if (!activeUserId) return { data: [], error: 'Not authenticated' };
 
         const { data, error } = await supabase
             .from('notifications')
-            .select('*')
+            .select('id, user_id, type, title, message, link, is_read, created_at')
             .eq('user_id', activeUserId)
             .order('created_at', { ascending: false })
             .limit(50);
@@ -60,9 +59,7 @@ export const notificationService = {
     },
 
     async markAllAsRead() {
-        const impersonatedId = localStorage.getItem('impersonated_user_id');
-        const { data: { user } } = await supabase.auth.getUser();
-        const activeUserId = impersonatedId || user?.id;
+        const activeUserId = await getActiveUserId();
 
         if (!activeUserId) return { error: 'Not authenticated' };
 

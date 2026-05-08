@@ -102,7 +102,7 @@
     .admin-input {
       background-color: transparent;
       border: 1px solid var(--border-color);
-      color: var(--accent-red);
+      color: var(--text-main);
       padding: 0.75rem 1rem;
       border-radius: 2px;
       width: 100%;
@@ -120,11 +120,12 @@
     }
 
     .admin-input::placeholder {
-      color: #404040;
+      color: var(--text-muted);
       text-transform: uppercase;
       font-size: 10px;
       letter-spacing: 0.1em;
       font-weight: 800;
+      opacity: 0.7;
     }
 
     /* Ensure input text is always visible in both themes */
@@ -135,7 +136,23 @@
 
     input::placeholder, textarea::placeholder {
       color: var(--text-muted);
-      opacity: 0.6;
+      opacity: 0.7;
+    }
+
+    /* Select dropdown option elements — render with proper theme colors */
+    select option {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+    }
+
+    /* Date/time input icon & text in light mode */
+    input[type="date"], input[type="datetime-local"], input[type="time"] {
+      color-scheme: dark;
+    }
+    [data-theme="light"] input[type="date"],
+    [data-theme="light"] input[type="datetime-local"],
+    [data-theme="light"] input[type="time"] {
+      color-scheme: light;
     }
 
     ::-webkit-scrollbar {
@@ -189,13 +206,17 @@
     }
 
     .leaflet-container {
-      background: #0a0a0a !important;
+      background: var(--bg-main) !important;
       height: 100% !important;
       width: 100% !important;
     }
 
     .leaflet-tile-pane {
       filter: grayscale(1) invert(0.1) brightness(0.8);
+    }
+
+    [data-theme="light"] .leaflet-tile-pane {
+      filter: grayscale(0.3) brightness(1);
     }
   </style>
   <!-- Removed importmap - using Vite's local node_modules resolution instead -->

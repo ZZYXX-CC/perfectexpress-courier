@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import { getTicketDetails, addReply, SupportTicket, TicketReply, updateTicketStatus } from '../../services/support';
 import { supabase } from '../../services/supabase';
 import { useToast } from '../ui/Toast';
+import { getActiveUserId } from '../../services/authGuard';
 
 const TicketDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -25,11 +26,11 @@ const TicketDetail: React.FC = () => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                const impersonatedId = localStorage.getItem('impersonated_user_id');
-                if (impersonatedId) {
-                    // When impersonating, present as the customer
-                    const { data: impersonatedProfile } = await supabase.from('profiles').select('role, email').eq('id', impersonatedId).single();
-                    setCurrentUser({ id: impersonatedId, email: impersonatedProfile?.email || '', role: impersonatedProfile?.role || 'client' });
+                const activeId = await getActiveUserId();
+                if (activeId && activeId !== user.id) {
+                    // Impersonating (admin validated by getActiveUserId)
+                    const { data: impersonatedProfile } = await supabase.from('profiles').select('role, email').eq('id', activeId).single();
+                    setCurrentUser({ id: activeId, email: impersonatedProfile?.email || '', role: impersonatedProfile?.role || 'client' });
                 } else {
                     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
                     setCurrentUser({ id: user.id, email: user.email || '', role: profile?.role || 'client' });
@@ -122,7 +123,7 @@ const TicketDetail: React.FC = () => {
                         <select
                             value={ticket.status}
                             onChange={(e) => handleUpdateStatus(e.target.value as any)}
-                            className="bg-bgMain border border-borderColor text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-sm outline-none focus:border-red-600"
+                            className="bg-bgMain border border-borderColor text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-sm outline-none focus:border-red-600 text-textMain"
                         >
                             <option value="open">OPEN</option>
                             <option value="in_progress">IN PROGRESS</option>
@@ -148,8 +149,6 @@ const TicketDetail: React.FC = () => {
                 <div className="absolute inset-0 bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:20px_20px] opacity-10 pointer-events-none"></div>
 
                 {replies.map((reply) => {
-                    const impersonatedId = localStorage.getItem('impersonated_user_id');
-                    const activeUserId = impersonatedId || currentUser?.id;
                     const isAdminMsg = reply.sender_type === 'admin';
 
                     // logic for alignment:

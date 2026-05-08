@@ -43,7 +43,7 @@ export const createChatSession = async (payload: {
 export const getUserChatSessions = async (userId: string) => {
     const { data, error } = await supabase
         .from('chat_sessions')
-        .select('*')
+        .select('id, user_id, user_email, user_name, status, created_at, updated_at')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false });
 
@@ -54,7 +54,7 @@ export const getUserChatSessions = async (userId: string) => {
 export const getAllChatSessions = async () => {
     const { data, error } = await supabase
         .from('chat_sessions')
-        .select('*')
+        .select('id, user_id, user_email, user_name, status, created_at, updated_at')
         .order('updated_at', { ascending: false });
 
     if (error) throw error;
@@ -64,7 +64,7 @@ export const getAllChatSessions = async () => {
 export const getChatMessages = async (sessionId: string) => {
     const { data, error } = await supabase
         .from('chat_messages')
-        .select('*')
+        .select('id, session_id, sender_type, sender_name, message, created_at')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true });
 

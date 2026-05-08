@@ -65,6 +65,7 @@ export const updateShipment = async (trackingNumber: string, updates: ShipmentUp
         if (ship?.user_id) {
             const { data: { user: currentUser } } = await supabase.auth.getUser();
             const impersonatedId = localStorage.getItem('impersonated_user_id');
+            // Only allow impersonation if caller is actually admin (validated by RLS)
             const actorId = currentUser?.id;
 
             if (ship.user_id !== actorId || impersonatedId) {
@@ -103,7 +104,7 @@ export const logShipmentEvent = async (
     // First, get the current shipment to access history
     const { data: shipment, error: fetchError } = await supabase
         .from('shipments')
-        .select('*')
+        .select('id, tracking_number, sender_info, receiver_info, parcel_details, status, payment_status, current_location, history, created_at, updated_at, price, user_id')
         .eq('tracking_number', trackingNumber)
         .single();
 
