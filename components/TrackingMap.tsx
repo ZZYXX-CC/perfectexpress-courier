@@ -283,7 +283,7 @@ export default function TrackingMap({
                     className="bg-bgMain/90 border border-red-600 rounded-sm px-3 py-1.5 flex items-center gap-2 transition-all cursor-pointer"
                 >
                     <Icon icon="mdi:google-maps" width="14" className="text-red-600" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-red-600 hidden sm:inline">Google Maps</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-red-600 hidden sm:inline">Open in Google Maps</span>
                 </button>
 
                 {/* Fullscreen toggle */}
