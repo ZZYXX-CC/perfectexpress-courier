@@ -280,22 +280,22 @@ export default function TrackingMap({
                 <button
                     onClick={openGoogleMaps}
                     title="Open in Google Maps"
-                    className="bg-bgMain/90 hover:bg-bgMain border border-borderColor rounded-sm px-3 py-1.5 flex items-center gap-2 transition-all hover:border-red-600/50 group cursor-pointer"
+                    className="bg-red-600 hover:bg-red-700 border border-red-600 rounded-sm px-3 py-1.5 flex items-center gap-2 transition-all cursor-pointer"
                 >
-                    <Icon icon="mdi:google-maps" width="14" className="text-textMuted group-hover:text-red-500 transition-colors" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-textMuted group-hover:text-textMain transition-colors hidden sm:inline">Google Maps</span>
+                    <Icon icon="mdi:google-maps" width="14" className="text-white" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white hidden sm:inline">Google Maps</span>
                 </button>
 
                 {/* Fullscreen toggle */}
                 <button
                     onClick={toggleFullscreen}
                     title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen map'}
-                    className="bg-bgMain/90 hover:bg-bgMain border border-borderColor rounded-sm p-1.5 transition-all hover:border-red-600/50 group cursor-pointer"
+                    className="bg-red-600 hover:bg-red-700 border border-red-600 rounded-sm p-1.5 transition-all cursor-pointer"
                 >
                     <Icon
                         icon={isFullscreen ? 'solar:minimize-square-linear' : 'solar:maximize-square-linear'}
                         width="16"
-                        className="text-textMuted group-hover:text-red-500 transition-colors"
+                        className="text-white"
                     />
                 </button>
             </div>
