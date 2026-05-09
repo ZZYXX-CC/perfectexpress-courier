@@ -290,13 +290,16 @@ export default function TrackingMap({
                 <button
                     onClick={toggleFullscreen}
                     title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen map'}
-                    className="bg-bgMain/90 border border-red-600 rounded-sm p-1.5 transition-all cursor-pointer"
+                    className="bg-bgMain/90 border border-red-600 rounded-sm px-3 py-1.5 flex items-center gap-2 transition-all cursor-pointer"
                 >
                     <Icon
                         icon={isFullscreen ? 'solar:minimize-square-linear' : 'solar:maximize-square-linear'}
                         width="16"
                         className="text-red-600"
                     />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-red-600 hidden sm:inline">
+                        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                    </span>
                 </button>
             </div>
 
