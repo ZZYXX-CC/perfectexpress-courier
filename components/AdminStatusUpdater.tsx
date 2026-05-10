@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { Shipment } from '../types';
-import { supabase } from '../services/supabase';
 import { useToast } from './ui/Toast';
 import { updateShipment, logShipmentEvent } from '../services/adminService';
 
@@ -77,8 +76,8 @@ async function geocodeAddress(address: string): Promise<{ lat: string; lng: stri
 
 /**
  * Reverse-geocode lat/lng to a concise address string via Nominatim.
- * Used to convert Google Maps URL coords into a geocodable address
- * that can be embedded in current_location for TrackingMap.
+ * Used to turn Google Maps URL coords into readable text while storing
+ * the actual map pin in the coordinates column.
  */
 async function reverseGeocodeAddress(lat: string, lng: string): Promise<string | null> {
     try {
@@ -171,85 +170,80 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps')
         );
 
-        // ── Step 1: Build the display location string ──
-        let currentLoc = (formData.currentLocation || shipment.currentLocation || 'System')
-            .replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '').trim(); // strip old embedded coords
+        const displayName = (formData.currentLocation || shipment.currentLocation || 'System')
+            .replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '')
+            .trim();
+        const locationDetail = formData.mapLink.trim();
 
-        if (formData.mapLink) {
+        let resolvedLat = formData.latitude;
+        let resolvedLng = formData.longitude;
+        let resolvedAddress = '';
+
+        if (locationDetail) {
             if (!isMapUrl) {
-                // Plain text address — append to location name
-                const cleanAddr = formData.mapLink.trim();
-                if (currentLoc && currentLoc !== 'System' &&
-                    !currentLoc.toLowerCase().includes(cleanAddr.toLowerCase())) {
-                    currentLoc = `${currentLoc}, ${cleanAddr}`;
-                } else if (!currentLoc || currentLoc === 'System') {
-                    currentLoc = cleanAddr;
-                }
+                resolvedAddress = locationDetail;
             } else {
                 // Maps URL — reverse-geocode coords for a display address
-                let resolvedAddr: string | null = null;
-                if (formData.latitude && formData.longitude) {
-                    resolvedAddr = await reverseGeocodeAddress(formData.latitude, formData.longitude);
+                if (resolvedLat && resolvedLng) {
+                    resolvedAddress = await reverseGeocodeAddress(resolvedLat, resolvedLng) || '';
                 }
-                if (!resolvedAddr) {
-                    const placeMatch = formData.mapLink.match(/\/place\/([^/@]+)/);
+                if (!resolvedAddress) {
+                    const placeMatch = locationDetail.match(/\/place\/([^/@]+)/);
                     if (placeMatch) {
-                        resolvedAddr = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-                    }
-                }
-                if (resolvedAddr) {
-                    if (currentLoc && currentLoc !== 'System' &&
-                        !currentLoc.toLowerCase().includes(resolvedAddr.toLowerCase())) {
-                        currentLoc = `${currentLoc}, ${resolvedAddr}`;
-                    } else if (!currentLoc || currentLoc === 'System') {
-                        currentLoc = resolvedAddr;
+                        resolvedAddress = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
                     }
                 }
             }
         }
 
-        // ── Step 2: Resolve coordinates ──
-        let resolvedLat = formData.latitude;
-        let resolvedLng = formData.longitude;
+        const currentLoc = [displayName, resolvedAddress]
+            .filter(Boolean)
+            .filter((part, index, parts) => index === 0 || !parts[0].toLowerCase().includes(part.toLowerCase()))
+            .join(', ') || 'System';
 
         if (!resolvedLat || !resolvedLng) {
-            // Try geocoding the Location Search text first (most specific)
-            if (formData.mapLink && !isMapUrl && formData.mapLink.trim().length >= 3) {
-                const result = await geocodeAddress(formData.mapLink.trim());
+            // Geocode the address/map detail first. It is intentionally the precise box.
+            if (resolvedAddress && resolvedAddress.length >= 3) {
+                const result = await geocodeAddress(resolvedAddress);
                 if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
             }
-            // Try geocoding the full current location string
-            if ((!resolvedLat || !resolvedLng) && currentLoc && currentLoc !== 'System' && currentLoc.length >= 3) {
+
+            // Fallback to the combined visible location.
+            if ((!resolvedLat || !resolvedLng) && currentLoc !== 'System' && currentLoc.length >= 3) {
                 const result = await geocodeAddress(currentLoc);
                 if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
             }
-            // Try geocoding just the current location field (without appended address)
-            if ((!resolvedLat || !resolvedLng) && formData.currentLocation && formData.currentLocation.length >= 3) {
-                const result = await geocodeAddress(formData.currentLocation);
+
+            // Last resort: building/location name alone.
+            if ((!resolvedLat || !resolvedLng) && displayName && displayName !== 'System' && displayName.length >= 3) {
+                const result = await geocodeAddress(displayName);
                 if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
             }
-        }
-
-        // ── Step 3: Embed coords in location string for reliable map display ──
-        // TrackingMap reads these directly via mapShipmentRow — no Nominatim needed at display time
-        if (resolvedLat && resolvedLng) {
-            currentLoc = `${currentLoc} [@${resolvedLat},${resolvedLng}]`;
         }
 
         setGeocoding(false);
 
         const statusChanged = formData.status !== shipment.status;
-        // Strip embedded coords from comparison so we detect actual text changes
-        const cleanShipmentLoc = (shipment.currentLocation || '').replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '').trim();
-        const cleanCurrentLoc = currentLoc.replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '').trim();
-        const locationChanged = cleanCurrentLoc !== cleanShipmentLoc
-            || (formData.mapLink && formData.mapLink.trim().length > 0);
+        const cleanShipmentLoc = (shipment.currentLocation || '').trim();
+        const locationChanged = currentLoc !== cleanShipmentLoc || !!locationDetail;
         const paymentChanged = formData.paymentStatus !== (shipment.paymentStatus || 'unpaid');
+        const resolvedCoordinates = resolvedLat && resolvedLng
+            ? { lat: parseFloat(resolvedLat), lng: parseFloat(resolvedLng) }
+            : undefined;
+        const coordinatesChanged = !!resolvedCoordinates && (
+            !shipment.coordinates ||
+            shipment.coordinates.lat !== resolvedCoordinates.lat ||
+            shipment.coordinates.lng !== resolvedCoordinates.lng
+        );
 
         const updates: any = {};
 
         if (paymentChanged) {
             updates.payment_status = formData.paymentStatus;
+        }
+
+        if (!locationChanged && coordinatesChanged && resolvedCoordinates) {
+            updates.coordinates = resolvedCoordinates;
         }
 
         try {
@@ -260,11 +254,12 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     location: currentLoc,
                     note: formData.status !== shipment.status
                         ? `Operational status changed to ${formData.status.toUpperCase()}`
-                        : `Logistics update: Location updated`
+                        : `Logistics update: Location updated`,
+                    coordinates: resolvedCoordinates
                 });
             }
 
-            // Update payment status if changed
+            // Update payment status or coordinates-only edits.
             if (Object.keys(updates).length > 0) {
                 const result = await updateShipment(shipment.id, updates);
                 if (result.error) throw result.error;
@@ -335,10 +330,10 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             value={formData.currentLocation}
                             onChange={handleChange}
                             className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none uppercase"
-                            placeholder={shipment.currentLocation || "FULL ADDRESS, CITY, COUNTRY"}
+                            placeholder={shipment.currentLocation || "BUILDING / FACILITY NAME"}
                         />
                         <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
-                            Tip: Enter a specific address for precise map pin placement
+                            Use this for the public label, e.g. "Ikeja Sorting Hub"
                         </p>
                     </div>
 
@@ -363,7 +358,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             </p>
                         ) : (
                             <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
-                                Enter a full address (e.g. 85 Wharf St, Sydney) or paste a Google Maps link
+                                Enter the exact address for the map pin or paste a Google Maps link
                             </p>
                         )}
                     </div>

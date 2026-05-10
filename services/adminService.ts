@@ -12,6 +12,10 @@ export interface ShipmentUpdate {
     sender_info?: Record<string, unknown>;
     receiver_info?: Record<string, unknown>;
     parcel_details?: Record<string, unknown>;
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
 }
 
 export interface ShipmentEvent {
@@ -19,6 +23,10 @@ export interface ShipmentEvent {
     location: string;
     note?: string;
     timestamp?: string;
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
 }
 
 export interface UserProfile {
@@ -33,7 +41,7 @@ export interface UserProfile {
 export const getAllShipments = async (limit: number = 100) => {
     const { data, error } = await supabase
         .from('shipments')
-        .select('id, tracking_number, sender_info, receiver_info, parcel_details, status, payment_status, current_location, history, created_at, price')
+        .select('id, tracking_number, sender_info, receiver_info, parcel_details, status, payment_status, current_location, history, coordinates, created_at, price')
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -104,7 +112,7 @@ export const logShipmentEvent = async (
     // First, get the current shipment to access history
     const { data: shipment, error: fetchError } = await supabase
         .from('shipments')
-        .select('id, tracking_number, sender_info, receiver_info, parcel_details, status, payment_status, current_location, history, created_at, updated_at, price, user_id')
+        .select('id, tracking_number, sender_info, receiver_info, parcel_details, status, payment_status, current_location, history, coordinates, created_at, updated_at, price, user_id')
         .eq('tracking_number', trackingNumber)
         .single();
 
@@ -131,6 +139,10 @@ export const logShipmentEvent = async (
         history: updatedHistory,
         updated_at: new Date().toISOString()
     };
+
+    if (event.coordinates) {
+        updateData.coordinates = event.coordinates;
+    }
 
     // Auto-update payment status if status becomes confirmed
     if (event.status === 'confirmed') {
