@@ -11,6 +11,13 @@ interface AdminStatusUpdaterProps {
     onCancel: () => void;
 }
 
+type CoordinateResolution = {
+    coordinates: { lat: string; lng: string } | null;
+    error?: string;
+    provider?: string;
+    accuracy?: string;
+};
+
 // ─── Geocoding helpers ───────────────────────────────────────────────
 
 /**
@@ -68,9 +75,9 @@ function extractCoordsFromLink(url: string): { lat: string; lng: string } | null
     return null;
 }
 
-async function resolveLocationCoordinates(input: string): Promise<{ lat: string; lng: string } | null> {
+async function resolveLocationCoordinates(input: string): Promise<CoordinateResolution> {
     const localCoords = extractCoordsFromLink(input);
-    if (localCoords) return localCoords;
+    if (localCoords) return { coordinates: localCoords, provider: 'direct' };
 
     try {
         const res = await fetch('/api/resolve-map-link', {
@@ -78,20 +85,31 @@ async function resolveLocationCoordinates(input: string): Promise<{ lat: string;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ input })
         });
-        if (!res.ok) return null;
+        if (!res.ok) return { coordinates: null, error: 'Location resolver is unavailable' };
         const data = await res.json();
-        if (!data?.coordinates) return null;
+        if (!data?.coordinates) {
+            return {
+                coordinates: null,
+                error: data?.error || 'No precise coordinates found',
+                provider: data?.provider,
+                accuracy: data?.accuracy
+            };
+        }
 
         const lat = parseFloat(String(data.coordinates.lat));
         const lng = parseFloat(String(data.coordinates.lng));
         if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-            return { lat: String(lat), lng: String(lng) };
+            return {
+                coordinates: { lat: String(lat), lng: String(lng) },
+                provider: data?.provider,
+                accuracy: data?.accuracy
+            };
         }
     } catch {
-        return null;
+        return { coordinates: null, error: 'Unable to contact location resolver' };
     }
 
-    return null;
+    return { coordinates: null, error: 'Invalid coordinates returned' };
 }
 
 function extractPlaceNameFromMapLink(url: string): string {
@@ -164,6 +182,8 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
     const toast = useToast();
     const [loading, setLoading] = useState(false);
     const [geocoding, setGeocoding] = useState(false);
+    const [locationResolverMessage, setLocationResolverMessage] = useState('');
+    const [locationResolverState, setLocationResolverState] = useState<'idle' | 'resolving' | 'success' | 'error'>('idle');
     const [formData, setFormData] = useState({
         status: 'pending',
         currentLocation: '',
@@ -184,6 +204,8 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 longitude: shipment.coordinates?.lng?.toString() || '',
                 mapLink: savedLocation.detail
             });
+            setLocationResolverMessage('');
+            setLocationResolverState('idle');
         }
     }, [shipment]);
 
@@ -192,13 +214,17 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         setFormData(prev => {
             const updates = { ...prev, [name]: value };
 
-            // Auto-parse map link for coordinates if it looks like a URL
             if (name === 'mapLink') {
+                setLocationResolverMessage('');
+                setLocationResolverState('idle');
+
                 if (value && (value.startsWith('http') || value.includes('google.com/maps'))) {
                     const coords = extractCoordsFromLink(value);
                     if (coords) {
                         updates.latitude = coords.lat;
                         updates.longitude = coords.lng;
+                        setLocationResolverMessage('Coordinates found directly in map link');
+                        setLocationResolverState('success');
                     } else {
                         // URL present but coords not extractable — clear any stale coords
                         updates.latitude = '';
@@ -208,36 +234,73 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     // Field cleared — clear coords
                     updates.latitude = '';
                     updates.longitude = '';
+                } else {
+                    // Plain address changed — old coordinates are no longer trustworthy.
+                    updates.latitude = '';
+                    updates.longitude = '';
                 }
-                // Plain text address: coords resolved on submit
             }
             return updates;
         });
     };
 
     useEffect(() => {
-        if (!formData.mapLink || !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps'))) {
+        if (!formData.mapLink || formData.mapLink.trim().length < 5) {
             return;
         }
         if (formData.latitude && formData.longitude) return;
 
         let cancelled = false;
-        const resolve = async () => {
-            const coords = await resolveLocationCoordinates(formData.mapLink);
-            if (cancelled || !coords) return;
-            setFormData(prev => ({
-                ...prev,
-                latitude: coords.lat,
-                longitude: coords.lng
-            }));
-        };
-
-        resolve();
+        const timer = window.setTimeout(() => {
+            setLocationResolverState('resolving');
+            setLocationResolverMessage('Resolving precise coordinates...');
+            resolveLocationCoordinates(formData.mapLink).then(result => {
+                if (cancelled) return;
+                if (result.coordinates) {
+                    setFormData(prev => ({
+                        ...prev,
+                        latitude: result.coordinates!.lat,
+                        longitude: result.coordinates!.lng
+                    }));
+                    setLocationResolverState('success');
+                    setLocationResolverMessage(
+                        result.provider === 'google-geocoding'
+                            ? `Google resolved coordinates${result.accuracy ? ` (${result.accuracy})` : ''}`
+                            : 'Coordinates resolved'
+                    );
+                } else {
+                    setLocationResolverState('error');
+                    setLocationResolverMessage(result.error || 'No precise coordinates found');
+                }
+            });
+        }, 700);
 
         return () => {
             cancelled = true;
+            window.clearTimeout(timer);
         };
     }, [formData.mapLink, formData.latitude, formData.longitude]);
+
+    const applyResolvedCoordinates = (
+        result: CoordinateResolution,
+        onSuccess: (coords: { lat: string; lng: string }) => void,
+        fallbackMessage = 'No precise coordinates found'
+    ) => {
+        if (result.coordinates) {
+            onSuccess(result.coordinates);
+            setLocationResolverState('success');
+            setLocationResolverMessage(
+                result.provider === 'google-geocoding'
+                    ? `Google resolved coordinates${result.accuracy ? ` (${result.accuracy})` : ''}`
+                    : 'Coordinates resolved'
+            );
+            return true;
+        }
+
+        setLocationResolverState('error');
+        setLocationResolverMessage(result.error || fallbackMessage);
+        return false;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -268,10 +331,13 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 resolvedAddress = locationDetail;
             } else {
                 if (!resolvedLat || !resolvedLng) {
-                    const resolvedLinkCoords = await resolveLocationCoordinates(locationDetail);
-                    if (resolvedLinkCoords) {
-                        resolvedLat = resolvedLinkCoords.lat;
-                        resolvedLng = resolvedLinkCoords.lng;
+                    const resolvedLinkResult = await resolveLocationCoordinates(locationDetail);
+                    if (resolvedLinkResult.coordinates) {
+                        resolvedLat = resolvedLinkResult.coordinates.lat;
+                        resolvedLng = resolvedLinkResult.coordinates.lng;
+                    } else {
+                        setLocationResolverState('error');
+                        setLocationResolverMessage(resolvedLinkResult.error || 'No precise coordinates found in map link');
                     }
                 }
 
@@ -289,7 +355,10 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
 
         if ((!resolvedLat || !resolvedLng) && locationDetail && !isMapUrl && resolvedAddress.length >= 3) {
             const result = await resolveLocationCoordinates(resolvedAddress);
-            if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
+            applyResolvedCoordinates(result, coords => {
+                resolvedLat = coords.lat;
+                resolvedLng = coords.lng;
+            });
         }
 
         setGeocoding(false);
@@ -427,10 +496,20 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                                 <Icon icon="solar:check-circle-linear" width="10" />
                                 Coordinates ready: {parseFloat(formData.latitude).toFixed(4)}, {parseFloat(formData.longitude).toFixed(4)}
                             </p>
+                        ) : locationResolverState === 'resolving' ? (
+                            <p className="text-[8px] text-blue-400 mt-1 tracking-wider uppercase flex items-center gap-1">
+                                <Icon icon="solar:refresh-linear" width="10" className="animate-spin" />
+                                {locationResolverMessage || 'Resolving precise coordinates...'}
+                            </p>
+                        ) : locationResolverState === 'error' && locationResolverMessage ? (
+                            <p className="text-[8px] text-amber-400 mt-1 tracking-wider uppercase flex items-center gap-1">
+                                <Icon icon="solar:danger-triangle-linear" width="10" />
+                                {locationResolverMessage}
+                            </p>
                         ) : formData.mapLink && !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps')) ? (
                             <p className="text-[8px] text-blue-400 mt-1 tracking-wider uppercase flex items-center gap-1">
                                 <Icon icon="solar:map-point-wave-linear" width="10" />
-                                Address will be geocoded on save
+                                Address will be resolved with Google Maps
                             </p>
                         ) : (
                             <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
@@ -467,8 +546,8 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             <Icon icon="solar:map-arrow-square-linear" width="14" className="text-blue-400 shrink-0" />
                             <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">
                                 {formData.mapLink && !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps'))
-                                    ? 'Location search address will be geocoded on save'
-                                    : 'Coordinates will be auto-resolved from the location on save'}
+                                    ? 'Location search address will resolve through Google Maps when configured'
+                                    : 'Paste a Google Maps link with coordinates or enter latitude/longitude manually'}
                             </p>
                         </div>
                     )}

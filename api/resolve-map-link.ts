@@ -92,7 +92,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     }
 
-    const googleApiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_GEOCODING_API_KEY;
+    const googleApiKey =
+        process.env.GOOGLE_MAPS_API_KEY ||
+        process.env.GOOGLE_GEOCODING_API_KEY ||
+        process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!googleApiKey) {
         return res.status(200).json({
             coordinates: null,
