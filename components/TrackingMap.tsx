@@ -114,9 +114,18 @@ export default function TrackingMap({
     // Determine if admin has set a meaningful currentLocation
     const hasAdminLocation = !!(currentLocation && currentLocation.toLowerCase() !== 'pending' && currentLocation.trim().length >= 3)
 
-    // Always geocode when there's a currentLocation — stored coords may be stale
-    // (e.g. set at shipment creation to destination, not to current transit point)
+    // Geocode the location text, but skip when we already have stored coordinates.
+    // Stored coords are authoritative: they came from an explicit Google Maps link
+    // pasted by the admin, or were already resolved by Nominatim at save time.
+    // Re-geocoding the text would let Nominatim pick a similarly-named wrong place.
     useEffect(() => {
+        // Fast path: admin has set a location AND we have stored coords — trust them.
+        if (hasAdminLocation && location?.lat && location?.lng) {
+            setGeocodedCenter(null)
+            lastGeocodedRef.current = ''
+            return
+        }
+
         // Build a prioritized list of addresses to try geocoding
         const candidates: string[] = []
 
@@ -191,14 +200,19 @@ export default function TrackingMap({
         tryGeocode()
     }, [currentLocation, originAddress, destinationAddress, location, hasAdminLocation])
 
-    // Priority: geocoded text address > stored coordinates (from map link) > default
-    // Stored coords are used as fallback when geocoding the location name fails
-    // (e.g. admin typed a building name and pasted a map link — coords come from the link)
-    const center: [number, number] = geocodedCenter
-        ? geocodedCenter
-        : (location?.lat && location?.lng)
+    // Priority:
+    // 1. Stored coords when admin has set a location (map link or geocoded on save)
+    // 2. Geocoded result from address text (only when no stored coords available)
+    // 3. Stored coords as general fallback
+    // 4. Default center
+    const center: [number, number] =
+        (hasAdminLocation && location?.lat && location?.lng)
             ? [location.lat, location.lng]
-            : defaultCenter
+            : geocodedCenter
+                ? geocodedCenter
+                : (location?.lat && location?.lng)
+                    ? [location.lat, location.lng]
+                    : defaultCenter
 
     const mapKey = `${center[0]}-${center[1]}-${theme}-${isFullscreen ? 'fs' : 'normal'}`
 

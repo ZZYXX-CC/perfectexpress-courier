@@ -128,21 +128,21 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
                      transition={{ delay: 0.18 }}
-                     className="bg-bgSurface/20 border border-borderColor rounded-sm p-8 relative overflow-hidden h-64 flex items-center justify-between px-4 md:px-16"
+                     className="bg-bgSurface/20 border border-borderColor rounded-sm p-4 relative overflow-hidden h-40 flex items-center justify-between px-3 md:px-8"
                   >
                      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(var(--text-muted) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
                      <div className="relative z-10 text-center min-w-0">
-                        <div className="w-16 h-16 bg-bgMain border border-borderColor rounded-full flex items-center justify-center text-textMuted mb-4 mx-auto shadow-lg">
-                           <iconify-icon icon="solar:box-linear" width="24"></iconify-icon>
+                        <div className="w-10 h-10 bg-bgMain border border-borderColor rounded-full flex items-center justify-center text-textMuted mb-2 mx-auto shadow-lg">
+                           <iconify-icon icon="solar:box-linear" width="16"></iconify-icon>
                         </div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-textMuted mb-1">Origin</p>
-                        <p className="text-xl font-black heading-font text-textMain truncate max-w-[140px] md:max-w-[200px]">
+                        <p className="text-sm font-black heading-font text-textMain truncate max-w-[90px] md:max-w-[140px]">
                            {shipment.sender.city || 'Origin'}
                         </p>
                      </div>
 
-                     <div className="flex-1 mx-4 md:mx-8 relative">
+                     <div className="flex-1 mx-2 md:mx-4 relative">
                         <div className="h-[2px] w-full bg-borderColor relative overflow-hidden">
                            <motion.div
                               initial={{ width: 0 }}
@@ -155,18 +155,18 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                            initial={{ left: 0 }}
                            animate={{ left: shipment.status === 'delivered' ? '100%' : '50%' }}
                            transition={{ duration: 1.5, ease: 'easeInOut' }}
-                           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-bgMain border-2 border-red-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.4)] z-20"
+                           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-bgMain border-2 border-red-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.4)] z-20"
                         >
-                           <iconify-icon icon="solar:plane-linear" width="16" class="text-red-600"></iconify-icon>
+                           <iconify-icon icon="solar:plane-linear" width="12" class="text-red-600"></iconify-icon>
                         </motion.div>
                      </div>
 
                      <div className="relative z-10 text-center min-w-0">
-                        <div className="w-16 h-16 bg-bgMain border border-borderColor rounded-full flex items-center justify-center text-textMuted mb-4 mx-auto shadow-lg">
-                           <iconify-icon icon="solar:map-point-linear" width="24"></iconify-icon>
+                        <div className="w-10 h-10 bg-bgMain border border-borderColor rounded-full flex items-center justify-center text-textMuted mb-2 mx-auto shadow-lg">
+                           <iconify-icon icon="solar:map-point-linear" width="16"></iconify-icon>
                         </div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-textMuted mb-1">Destination</p>
-                        <p className="text-xl font-black heading-font text-textMain truncate max-w-[140px] md:max-w-[200px]">
+                        <p className="text-sm font-black heading-font text-textMain truncate max-w-[90px] md:max-w-[140px]">
                            {shipment.recipient.city || 'Destination'}
                         </p>
                      </div>
