@@ -68,15 +68,15 @@ function extractCoordsFromLink(url: string): { lat: string; lng: string } | null
     return null;
 }
 
-async function resolveMapLinkCoordinates(url: string): Promise<{ lat: string; lng: string } | null> {
-    const localCoords = extractCoordsFromLink(url);
+async function resolveLocationCoordinates(input: string): Promise<{ lat: string; lng: string } | null> {
+    const localCoords = extractCoordsFromLink(input);
     if (localCoords) return localCoords;
 
     try {
         const res = await fetch('/api/resolve-map-link', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
+            body: JSON.stringify({ input })
         });
         if (!res.ok) return null;
         const data = await res.json();
@@ -127,30 +127,6 @@ function splitSavedLocation(currentLocation?: string, locationDetail?: string): 
     }
 
     return { label: cleanLocation, detail: '' };
-}
-
-/**
- * Geocode an address string to lat/lng via Nominatim.
- */
-async function geocodeAddress(address: string): Promise<{ lat: string; lng: string } | null> {
-    if (!address || address.trim().length < 3) return null;
-
-    try {
-        const encoded = encodeURIComponent(address.trim());
-        const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&limit=1`,
-            { headers: { 'Accept': 'application/json' } }
-        );
-        if (!res.ok) return null;
-
-        const data = await res.json();
-        if (data && data.length > 0) {
-            return { lat: data[0].lat, lng: data[0].lon };
-        }
-        return null;
-    } catch {
-        return null;
-    }
 }
 
 /**
@@ -247,7 +223,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
 
         let cancelled = false;
         const resolve = async () => {
-            const coords = await resolveMapLinkCoordinates(formData.mapLink);
+            const coords = await resolveLocationCoordinates(formData.mapLink);
             if (cancelled || !coords) return;
             setFormData(prev => ({
                 ...prev,
@@ -292,7 +268,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 resolvedAddress = locationDetail;
             } else {
                 if (!resolvedLat || !resolvedLng) {
-                    const resolvedLinkCoords = await resolveMapLinkCoordinates(locationDetail);
+                    const resolvedLinkCoords = await resolveLocationCoordinates(locationDetail);
                     if (resolvedLinkCoords) {
                         resolvedLat = resolvedLinkCoords.lat;
                         resolvedLng = resolvedLinkCoords.lng;
@@ -311,26 +287,9 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
 
         const currentLoc = displayName || resolvedAddress || 'System';
 
-        if (!resolvedLat || !resolvedLng) {
-            // Geocode the address/map detail first. It is intentionally the precise box.
-            if (resolvedAddress && resolvedAddress.length >= 3) {
-                const result = await geocodeAddress(resolvedAddress);
-                if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
-            }
-
-            // Fallback to the combined visible location only when there is no
-            // precise address/link field. Otherwise we risk saving a random
-            // similarly-named place as the shipment pin.
-            if ((!resolvedLat || !resolvedLng) && !locationDetail && currentLoc !== 'System' && currentLoc.length >= 3) {
-                const result = await geocodeAddress(currentLoc);
-                if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
-            }
-
-            // Last resort: building/location name alone.
-            if ((!resolvedLat || !resolvedLng) && !locationDetail && displayName && displayName !== 'System' && displayName.length >= 3) {
-                const result = await geocodeAddress(displayName);
-                if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
-            }
+        if ((!resolvedLat || !resolvedLng) && locationDetail && !isMapUrl && resolvedAddress.length >= 3) {
+            const result = await resolveLocationCoordinates(resolvedAddress);
+            if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
         }
 
         setGeocoding(false);
