@@ -84,6 +84,24 @@ function extractCoordsFromLink(url: string): { lat: string; lng: string } | null
     return null;
 }
 
+function isMapUrlLike(value: string): boolean {
+    const input = value.trim().toLowerCase();
+    return /^https?:\/\//.test(input) || input.includes('google.com/maps') || input.includes('maps.app.goo.gl');
+}
+
+function looksLikeResolvableLocationInput(value: string): boolean {
+    const input = value.trim();
+    if (!input || input.length < 5) return false;
+    if (extractCoordsFromLink(input) || isMapUrlLike(input)) return true;
+
+    const commaParts = input.split(',').map(part => part.trim()).filter(Boolean);
+    const hasNumber = /\d/.test(input);
+    const hasStreetWord = /\b(street|st\.?|road|rd\.?|avenue|ave\.?|close|drive|dr\.?|lane|ln\.?|way|boulevard|blvd\.?|crescent|estate|plot|block|suite|unit)\b/i.test(input);
+    const hasPostalContext = /\b(zip|postal|postcode|fct|abuja|lagos|city|state)\b/i.test(input);
+
+    return hasNumber && (hasStreetWord || hasPostalContext || commaParts.length >= 2);
+}
+
 async function resolveLocationCoordinates(input: string): Promise<CoordinateResolution> {
     const localCoords = extractCoordsFromLink(input);
     if (localCoords) return { coordinates: localCoords, provider: 'direct' };
@@ -249,12 +267,32 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     updates.longitude = '';
                 }
             }
+
+            if (name === 'currentLocation' && !prev.mapLink && looksLikeResolvableLocationInput(value)) {
+                setLocationResolverMessage('');
+                setLocationResolverState('idle');
+
+                const coords = extractCoordsFromLink(value);
+                if (coords) {
+                    updates.latitude = coords.lat;
+                    updates.longitude = coords.lng;
+                    setLocationResolverMessage('Coordinates found directly in current location');
+                    setLocationResolverState('success');
+                } else {
+                    updates.latitude = '';
+                    updates.longitude = '';
+                }
+            }
+
             return updates;
         });
     };
 
     useEffect(() => {
-        if (!formData.mapLink || formData.mapLink.trim().length < 5) {
+        const lookupInput = formData.mapLink.trim() ||
+            (looksLikeResolvableLocationInput(formData.currentLocation) ? formData.currentLocation.trim() : '');
+
+        if (!lookupInput || lookupInput.length < 5) {
             return;
         }
         if (formData.latitude && formData.longitude) return;
@@ -263,7 +301,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         const timer = window.setTimeout(() => {
             setLocationResolverState('resolving');
             setLocationResolverMessage('Resolving precise coordinates...');
-            resolveLocationCoordinates(formData.mapLink).then(result => {
+            resolveLocationCoordinates(lookupInput).then(result => {
                 if (cancelled) return;
                 if (result.coordinates) {
                     setFormData(prev => ({
@@ -290,7 +328,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             cancelled = true;
             window.clearTimeout(timer);
         };
-    }, [formData.mapLink, formData.latitude, formData.longitude]);
+    }, [formData.mapLink, formData.currentLocation, formData.latitude, formData.longitude]);
 
     const applyResolvedCoordinates = (
         result: CoordinateResolution,
@@ -322,29 +360,32 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         setLoading(true);
         setGeocoding(true);
 
-        const isMapUrl = formData.mapLink && (
-            formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps')
-        );
-
         const savedLocation = splitSavedLocation(shipment.currentLocation, shipment.locationDetail);
         const previousLocation = savedLocation.label;
         const previousLocationDetail = savedLocation.detail;
-        const locationDetail = formData.mapLink.trim();
         const typedLocation = (formData.currentLocation || previousLocation || 'System')
             .replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '')
             .trim();
-        const displayName = typedLocation;
+        const locationDetail = formData.mapLink.trim();
+        const currentFieldLookupInput = !locationDetail && looksLikeResolvableLocationInput(typedLocation) ? typedLocation : '';
+        const lookupInput = locationDetail || currentFieldLookupInput;
+        const locationDetailForSave = locationDetail || currentFieldLookupInput;
+        const currentFieldIsMachineInput = !!currentFieldLookupInput && (!!extractCoordsFromLink(currentFieldLookupInput) || isMapUrlLike(currentFieldLookupInput));
+        const displayName = currentFieldIsMachineInput
+            ? (previousLocation || 'Pinned Location')
+            : typedLocation;
+        const isMapUrl = !!lookupInput && isMapUrlLike(lookupInput);
 
         let resolvedLat = formData.latitude;
         let resolvedLng = formData.longitude;
         let resolvedAddress = '';
 
-        if (locationDetail) {
+        if (lookupInput) {
             if (!isMapUrl) {
-                resolvedAddress = locationDetail;
+                resolvedAddress = lookupInput;
             } else {
                 if (!resolvedLat || !resolvedLng) {
-                    const resolvedLinkResult = await resolveLocationCoordinates(locationDetail);
+                    const resolvedLinkResult = await resolveLocationCoordinates(lookupInput);
                     if (resolvedLinkResult.coordinates) {
                         resolvedLat = resolvedLinkResult.coordinates.lat;
                         resolvedLng = resolvedLinkResult.coordinates.lng;
@@ -359,14 +400,14 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     resolvedAddress = await reverseGeocodeAddress(resolvedLat, resolvedLng) || '';
                 }
                 if (!resolvedAddress) {
-                    resolvedAddress = extractPlaceNameFromMapLink(locationDetail);
+                    resolvedAddress = extractPlaceNameFromMapLink(lookupInput);
                 }
             }
         }
 
         const currentLoc = displayName || resolvedAddress || 'System';
 
-        if ((!resolvedLat || !resolvedLng) && locationDetail && !isMapUrl && resolvedAddress.length >= 3) {
+        if ((!resolvedLat || !resolvedLng) && lookupInput && !isMapUrl && resolvedAddress.length >= 3) {
             const result = await resolveLocationCoordinates(resolvedAddress);
             applyResolvedCoordinates(result, coords => {
                 resolvedLat = coords.lat;
@@ -378,7 +419,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
 
         const statusChanged = formData.status !== shipment.status;
         const cleanShipmentLoc = previousLocation;
-        const locationChanged = currentLoc !== cleanShipmentLoc || locationDetail !== previousLocationDetail;
+        const locationChanged = currentLoc !== cleanShipmentLoc || locationDetailForSave !== previousLocationDetail;
         const paymentChanged = formData.paymentStatus !== (shipment.paymentStatus || 'unpaid');
         const parsedLat = resolvedLat ? parseFloat(resolvedLat) : NaN;
         const parsedLng = resolvedLng ? parseFloat(resolvedLng) : NaN;
@@ -411,7 +452,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                         ? `Operational status changed to ${formData.status.toUpperCase()}`
                         : `Logistics update: Location updated`,
                     coordinates: locationChanged ? (resolvedCoordinates ?? null) : resolvedCoordinates,
-                    locationDetail
+                    locationDetail: locationDetailForSave
                 });
                 if (result.error) throw new Error(result.error);
             }
