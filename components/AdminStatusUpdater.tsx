@@ -108,13 +108,24 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         setFormData(prev => {
             const updates = { ...prev, [name]: value };
 
-            // Auto-parse map link for coordinates
-            if (name === 'mapLink' && value) {
-                const coords = extractCoordsFromLink(value);
-                if (coords) {
-                    updates.latitude = coords.lat;
-                    updates.longitude = coords.lng;
+            // Auto-parse map link for coordinates if it looks like a URL
+            if (name === 'mapLink') {
+                if (value && (value.startsWith('http') || value.includes('google.com/maps'))) {
+                    const coords = extractCoordsFromLink(value);
+                    if (coords) {
+                        updates.latitude = coords.lat;
+                        updates.longitude = coords.lng;
+                    } else {
+                        // URL present but coords not extractable — clear any stale coords
+                        updates.latitude = '';
+                        updates.longitude = '';
+                    }
+                } else if (!value) {
+                    // Field cleared — clear coords
+                    updates.latitude = '';
+                    updates.longitude = '';
                 }
+                // Plain text address: coords resolved on submit
             }
             return updates;
         });
@@ -133,10 +144,22 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         if (!resolvedLat || !resolvedLng) {
             setGeocoding(true);
 
-            // Priority 1: Try geocoding from map link (if it contains a place name, not coords)
-            if (formData.mapLink && !resolvedLat) {
-                // If the link has a place/ segment with a name instead of coords
-                const placeMatch = formData.mapLink.match(/\/place\/([^/]+)/);
+            const isMapUrl = formData.mapLink && (
+                formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps')
+            );
+
+            // Priority 1: Location search field — plain address text (most reliable)
+            if ((!resolvedLat || !resolvedLng) && formData.mapLink && !isMapUrl) {
+                const result = await geocodeAddress(formData.mapLink);
+                if (result) {
+                    resolvedLat = result.lat;
+                    resolvedLng = result.lng;
+                }
+            }
+
+            // Priority 2: Maps URL — try extracting place name from /place/Name segment
+            if ((!resolvedLat || !resolvedLng) && isMapUrl) {
+                const placeMatch = formData.mapLink!.match(/\/place\/([^/@]+)/);
                 if (placeMatch) {
                     const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
                     if (!/^-?\d/.test(placeName)) {
@@ -149,7 +172,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 }
             }
 
-            // Priority 2: Geocode the currentLocation text
+            // Priority 3: Geocode the currentLocation name text
             if ((!resolvedLat || !resolvedLng) && formData.currentLocation) {
                 const result = await geocodeAddress(formData.currentLocation);
                 if (result) {
@@ -158,8 +181,9 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 }
             }
 
-            // Priority 3: Geocode the shipment's city name
-            if ((!resolvedLat || !resolvedLng) && shipment) {
+            // Priority 4: Shipment city — ONLY if admin hasn't set a specific location
+            // (prevents destination city overriding a building-name currentLocation)
+            if ((!resolvedLat || !resolvedLng) && !formData.currentLocation && shipment) {
                 const cityFallback = shipment.recipient?.city || shipment.sender?.city || '';
                 const countryFallback = shipment.recipient?.country || shipment.sender?.country || '';
                 const fallbackAddress = [cityFallback, countryFallback].filter(Boolean).join(', ');
@@ -285,18 +309,27 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     </div>
 
                     <div>
-                        <label className="metadata-label text-textMuted mb-1 block">Google Maps Link</label>
+                        <label className="metadata-label text-textMuted mb-1 block">Location Search</label>
                         <input
                             name="mapLink"
                             value={formData.mapLink}
                             onChange={handleChange}
                             className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none"
-                            placeholder="PASTE MAPS LINK HERE TO AUTO-FILL COORDS"
+                            placeholder="PASTE FULL ADDRESS OR GOOGLE MAPS LINK"
                         />
-                        {formData.mapLink && formData.latitude && formData.longitude && (
+                        {formData.mapLink && formData.latitude && formData.longitude ? (
                             <p className="text-[8px] text-green-500 mt-1 tracking-wider uppercase flex items-center gap-1">
                                 <Icon icon="solar:check-circle-linear" width="10" />
-                                Coordinates extracted: {parseFloat(formData.latitude).toFixed(4)}, {parseFloat(formData.longitude).toFixed(4)}
+                                Coordinates ready: {parseFloat(formData.latitude).toFixed(4)}, {parseFloat(formData.longitude).toFixed(4)}
+                            </p>
+                        ) : formData.mapLink && !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps')) ? (
+                            <p className="text-[8px] text-blue-400 mt-1 tracking-wider uppercase flex items-center gap-1">
+                                <Icon icon="solar:map-point-wave-linear" width="10" />
+                                Address will be geocoded on save
+                            </p>
+                        ) : (
+                            <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
+                                Enter a full address (e.g. 85 Wharf St, Sydney) or paste a Google Maps link
                             </p>
                         )}
                     </div>
@@ -324,11 +357,13 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                         </div>
                     </div>
 
-                    {!formData.latitude && !formData.longitude && formData.currentLocation && (
+                    {!formData.latitude && !formData.longitude && (formData.currentLocation || formData.mapLink) && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-sm">
                             <Icon icon="solar:map-arrow-square-linear" width="14" className="text-blue-400 shrink-0" />
                             <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">
-                                Coordinates will be auto-resolved from the address on save
+                                {formData.mapLink && !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps'))
+                                    ? 'Location search address will be geocoded on save'
+                                    : 'Coordinates will be auto-resolved from the location on save'}
                             </p>
                         </div>
                     )}
