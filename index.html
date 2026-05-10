@@ -56,6 +56,16 @@
       --glass-bg: rgba(245, 245, 245, 0.6);
     }
 
+    /* Scale everything down on mobile via root font-size (Tailwind uses rem) */
+    html {
+      font-size: 14px;
+    }
+    @media (min-width: 768px) {
+      html {
+        font-size: 16px;
+      }
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--bg-main);

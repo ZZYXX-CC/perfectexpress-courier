@@ -16,13 +16,13 @@ const QuoteSection: React.FC = () => {
   };
 
   return (
-    <section className="py-12 md:py-24 bg-bgMain border-t border-borderColor transition-colors duration-300">
+    <section className="py-8 md:py-24 bg-bgMain border-t border-borderColor transition-colors duration-300">
       <div className="container mx-auto px-6">
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="max-w-4xl mx-auto bg-bgSurface/20 p-6 md:p-12 rounded border border-borderColor"
+          className="max-w-4xl mx-auto bg-bgSurface/20 p-4 md:p-12 rounded border border-borderColor"
         >
           <div className="text-center mb-8 md:mb-14">
             <iconify-icon icon="solar:calculator-linear" width="28" class="text-textMuted mb-4"></iconify-icon>

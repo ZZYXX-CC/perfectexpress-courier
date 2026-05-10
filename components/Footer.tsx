@@ -6,7 +6,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ setPage }) => {
   return (
-    <footer className="py-10 md:py-20 bg-bgMain border-t border-borderColor transition-colors duration-300">
+    <footer className="py-6 md:py-20 bg-bgMain border-t border-borderColor transition-colors duration-300">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-8 md:mb-16">
           <div className="md:col-span-2">

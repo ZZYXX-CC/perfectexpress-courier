@@ -70,7 +70,7 @@ const Hero: React.FC<HeroProps> = ({ onTrack, standalone = false }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.6 }}
-          className="mt-12 pt-8 md:mt-24 md:pt-12 border-t border-borderColor grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12"
+          className="mt-8 pt-4 md:mt-24 md:pt-12 border-t border-borderColor grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12"
         >
           {[
             { label: 'On-Time Delivery', value: '99.9%', icon: 'solar:clock-circle-linear' },

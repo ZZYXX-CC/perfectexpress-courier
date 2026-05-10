@@ -39,13 +39,13 @@ const Features: React.FC = () => {
   };
 
   return (
-    <section className="py-16 md:py-32 bg-bgMain border-y border-borderColor transition-colors duration-300">
+    <section className="py-10 md:py-32 bg-bgMain border-y border-borderColor transition-colors duration-300">
       <div className="container mx-auto px-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-12 md:mb-24"
+          className="mb-8 md:mb-24"
         >
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
@@ -71,7 +71,7 @@ const Features: React.FC = () => {
               key={i} 
               variants={itemVariants}
               whileHover={{ y: -8, borderColor: '#dc2626' }}
-              className="group p-6 md:p-12 bg-bgSurface/50 rounded-sm border border-borderColor transition-all duration-500"
+              className="group p-4 md:p-12 bg-bgSurface/50 rounded-sm border border-borderColor transition-all duration-500"
             >
               <div className="w-14 h-14 bg-bgMain rounded-sm border border-borderColor flex items-center justify-center text-textMuted mb-6 md:mb-10 group-hover:text-red-600 group-hover:border-red-600/30 transition-all duration-500">
                 <iconify-icon icon={f.icon} width="28"></iconify-icon>
