@@ -16,15 +16,15 @@ const QuoteSection: React.FC = () => {
   };
 
   return (
-    <section className="py-24 bg-bgMain border-t border-borderColor transition-colors duration-300">
+    <section className="py-12 md:py-24 bg-bgMain border-t border-borderColor transition-colors duration-300">
       <div className="container mx-auto px-6">
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="max-w-4xl mx-auto bg-bgSurface/20 p-12 rounded border border-borderColor"
+          className="max-w-4xl mx-auto bg-bgSurface/20 p-6 md:p-12 rounded border border-borderColor"
         >
-          <div className="text-center mb-14">
+          <div className="text-center mb-8 md:mb-14">
             <iconify-icon icon="solar:calculator-linear" width="28" class="text-textMuted mb-4"></iconify-icon>
             <h2 className="text-3xl font-extrabold heading-font uppercase tracking-tight mb-4 text-textMain">Shipping Cost Estimate</h2>
             <p className="text-textMuted text-sm font-medium max-w-lg mx-auto leading-relaxed">
@@ -32,7 +32,7 @@ const QuoteSection: React.FC = () => {
             </p>
           </div>
 
-          <form onSubmit={calculate} className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <form onSubmit={calculate} className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             <div className="space-y-4">
               <label className="flex items-center gap-2 text-[10px] font-black text-textMuted/80 uppercase tracking-widest">
                 <iconify-icon icon="solar:map-point-linear" width="12"></iconify-icon>
@@ -89,17 +89,17 @@ const QuoteSection: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-16 pt-12 border-t border-borderColor text-center"
+                className="mt-8 md:mt-16 pt-6 md:pt-12 border-t border-borderColor text-center"
               >
                 <p className="text-textMuted text-[10px] mb-3 uppercase font-black tracking-widest">Estimated Price</p>
                 <motion.p 
                   initial={{ scale: 0.9 }}
                   animate={{ scale: 1 }}
-                  className="text-6xl font-extrabold text-textMain heading-font tracking-tighter"
+                  className="text-4xl md:text-6xl font-extrabold text-textMain heading-font tracking-tighter"
                 >
                   {result}
                 </motion.p>
-                <p className="text-[10px] text-textMuted mt-8 uppercase font-bold max-w-sm mx-auto leading-relaxed">This is an estimate. Final price may change slightly based on the exact weight and size of your package.</p>
+                <p className="text-[10px] text-textMuted mt-4 md:mt-8 uppercase font-bold max-w-sm mx-auto leading-relaxed">This is an estimate. Final price may change slightly based on the exact weight and size of your package.</p>
               </motion.div>
             )}
           </AnimatePresence>

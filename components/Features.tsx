@@ -39,13 +39,13 @@ const Features: React.FC = () => {
   };
 
   return (
-    <section className="py-32 bg-bgMain border-y border-borderColor transition-colors duration-300">
+    <section className="py-16 md:py-32 bg-bgMain border-y border-borderColor transition-colors duration-300">
       <div className="container mx-auto px-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-24"
+          className="mb-12 md:mb-24"
         >
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
@@ -64,20 +64,20 @@ const Features: React.FC = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-10"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10"
         >
           {features.map((f, i) => (
             <motion.div 
               key={i} 
               variants={itemVariants}
               whileHover={{ y: -8, borderColor: '#dc2626' }}
-              className="group p-12 bg-bgSurface/50 rounded-sm border border-borderColor transition-all duration-500"
+              className="group p-6 md:p-12 bg-bgSurface/50 rounded-sm border border-borderColor transition-all duration-500"
             >
-              <div className="w-14 h-14 bg-bgMain rounded-sm border border-borderColor flex items-center justify-center text-textMuted mb-10 group-hover:text-red-600 group-hover:border-red-600/30 transition-all duration-500">
+              <div className="w-14 h-14 bg-bgMain rounded-sm border border-borderColor flex items-center justify-center text-textMuted mb-6 md:mb-10 group-hover:text-red-600 group-hover:border-red-600/30 transition-all duration-500">
                 <iconify-icon icon={f.icon} width="28"></iconify-icon>
               </div>
               <h3 className="text-xl font-bold mb-6 heading-font uppercase tracking-tight text-textMain">{f.title}</h3>
-              <p className="text-textMuted text-sm leading-relaxed mb-10 font-medium">
+              <p className="text-textMuted text-sm leading-relaxed mb-6 md:mb-10 font-medium">
                 {f.desc}
               </p>
               <div className="flex items-center gap-3 metadata-label text-textMuted group-hover:text-textMain transition-colors cursor-pointer">

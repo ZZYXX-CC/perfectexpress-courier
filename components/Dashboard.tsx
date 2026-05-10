@@ -14,14 +14,14 @@ const data = [
 
 const Dashboard: React.FC = () => {
   return (
-    <section className="py-24 bg-bgMain transition-colors duration-300">
+    <section className="py-12 md:py-24 bg-bgMain transition-colors duration-300">
       <div className="container mx-auto px-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-20 gap-10 border-b border-borderColor pb-16"
+          className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-10 md:mb-20 gap-6 md:gap-10 border-b border-borderColor pb-8 md:pb-16"
         >
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
@@ -34,11 +34,11 @@ const Dashboard: React.FC = () => {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-6 w-full lg:w-auto">
-            <motion.div whileHover={{ borderColor: '#dc2626' }} className="bg-bgSurface border border-borderColor p-8 rounded-sm min-w-[180px] transition-colors">
+            <motion.div whileHover={{ borderColor: '#dc2626' }} className="bg-bgSurface border border-borderColor p-4 md:p-8 rounded-sm transition-colors">
               <p className="metadata-label text-textMuted mb-2">Delivery Hubs</p>
               <p className="text-3xl font-black text-textMain heading-font">1,542</p>
             </motion.div>
-            <motion.div whileHover={{ borderColor: '#dc2626' }} className="bg-bgSurface border border-borderColor p-8 rounded-sm min-w-[180px] transition-colors">
+            <motion.div whileHover={{ borderColor: '#dc2626' }} className="bg-bgSurface border border-borderColor p-4 md:p-8 rounded-sm transition-colors">
               <p className="metadata-label text-textMuted mb-2">Customer Trust</p>
               <p className="text-3xl font-black text-red-600 heading-font">4.9/5</p>
             </motion.div>
@@ -50,9 +50,9 @@ const Dashboard: React.FC = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="lg:col-span-2 glass-surface p-12 rounded-sm"
+            className="lg:col-span-2 glass-surface p-6 md:p-12 rounded-sm"
           >
-            <div className="flex justify-between items-center mb-12">
+            <div className="flex justify-between items-center mb-6 md:mb-12">
               <h3 className="metadata-label text-textMuted flex items-center gap-3">
                 <iconify-icon icon="solar:ranking-linear" width="16" class="text-red-600"></iconify-icon>
                 Weekly Operational Velocity
@@ -107,11 +107,11 @@ const Dashboard: React.FC = () => {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="bg-bgSurface border border-borderColor p-12 rounded-sm flex flex-col justify-between"
+            className="bg-bgSurface border border-borderColor p-6 md:p-12 rounded-sm flex flex-col justify-between"
           >
             <div>
-              <h3 className="metadata-label text-textMuted mb-10">Service Reliability Index</h3>
-              <div className="space-y-12">
+              <h3 className="metadata-label text-textMuted mb-6 md:mb-10">Service Reliability Index</h3>
+              <div className="space-y-6 md:space-y-12">
                 {[
                   { label: 'North America', val: 96, status: 'Fastest' },
                   { label: 'Europe & UK', val: 94, status: 'Direct' },
@@ -137,7 +137,7 @@ const Dashboard: React.FC = () => {
             </div>
             <motion.div 
               whileHover={{ y: -5 }}
-              className="mt-16 p-8 bg-bgMain/60 border border-borderColor rounded-sm"
+              className="mt-8 md:mt-16 p-4 md:p-8 bg-bgMain/60 border border-borderColor rounded-sm"
             >
                 <p className="metadata-label text-red-600 mb-3">Our Mission</p>
                 <p className="text-xs text-textMuted leading-relaxed font-medium">

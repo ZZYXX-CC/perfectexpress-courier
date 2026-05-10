@@ -24,11 +24,11 @@ export const ProcessSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-32 bg-bgMain border-b border-borderColor relative overflow-hidden transition-colors duration-300">
+    <section className="py-16 md:py-32 bg-bgMain border-b border-borderColor relative overflow-hidden transition-colors duration-300">
       <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-bgSurface/20 to-transparent pointer-events-none"></div>
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8">
+        <div className="mb-12 md:mb-24 flex flex-col md:flex-row justify-between items-end gap-8">
            <div className="max-w-xl">
              <div className="flex items-center gap-2 mb-4">
                <iconify-icon icon="solar:settings-linear" width="16" class="text-red-600"></iconify-icon>
@@ -51,13 +51,13 @@ export const ProcessSection: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.2, duration: 0.8 }}
-              className="relative p-10 border border-borderColor bg-bgSurface/30 rounded-sm group hover:border-red-600/50 transition-colors"
+              className="relative p-5 md:p-10 border border-borderColor bg-bgSurface/30 rounded-sm group hover:border-red-600/50 transition-colors"
             >
               <div className="absolute -top-6 -right-4 text-[120px] font-black text-neutral-500/10 heading-font pointer-events-none select-none group-hover:text-red-900/10 transition-colors">
                 {step.id}
               </div>
               
-              <div className="w-12 h-12 mb-8 rounded-sm bg-bgMain border border-borderColor flex items-center justify-center text-textMain group-hover:scale-110 transition-transform duration-500">
+              <div className="w-12 h-12 mb-5 md:mb-8 rounded-sm bg-bgMain border border-borderColor flex items-center justify-center text-textMain group-hover:scale-110 transition-transform duration-500">
                 <iconify-icon icon={step.icon} width="24"></iconify-icon>
               </div>
               
@@ -107,9 +107,9 @@ export const TestimonialsSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-32 bg-bgMain relative transition-colors duration-300">
+    <section className="py-16 md:py-32 bg-bgMain relative transition-colors duration-300">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-20">
+        <div className="text-center mb-10 md:mb-20">
           <span className="metadata-label text-red-600 mb-4 block">Trust Indicators</span>
           <h2 className="text-4xl md:text-5xl font-extrabold heading-font uppercase tracking-tighter mb-6 text-textMain">Partner Stories</h2>
         </div>
@@ -133,12 +133,12 @@ export const TestimonialsSection: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 whileHover={{ y: -5 }}
-                className="p-10 bg-bgSurface rounded-sm border border-borderColor shadow-sm"
+                className="p-6 md:p-10 bg-bgSurface rounded-sm border border-borderColor shadow-sm"
               >
-                <div className="flex gap-1 mb-8 text-red-600">
+                <div className="flex gap-1 mb-4 md:mb-8 text-red-600">
                   {[...Array(t.rating)].map((_, i) => <iconify-icon key={i} icon="solar:star-bold" width="14"></iconify-icon>)}
                 </div>
-                <p className="text-lg text-textMain/80 font-medium leading-relaxed mb-8">
+                <p className="text-lg text-textMain/80 font-medium leading-relaxed mb-4 md:mb-8">
                   "{t.text}"
                 </p>
                 <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ export const TestimonialsSection: React.FC = () => {
 
 export const CTASection: React.FC<{ onGetQuote: () => void }> = ({ onGetQuote }) => {
   return (
-    <section className="py-24 bg-bgMain border-t border-borderColor relative overflow-hidden transition-colors duration-300">
+    <section className="py-12 md:py-24 bg-bgMain border-t border-borderColor relative overflow-hidden transition-colors duration-300">
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(var(--text-muted) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
       <div className="container mx-auto px-6 text-center relative z-10">
         <motion.div
@@ -167,13 +167,13 @@ export const CTASection: React.FC<{ onGetQuote: () => void }> = ({ onGetQuote })
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="max-w-3xl mx-auto glass-surface p-16 rounded-sm border border-borderColor"
+          className="max-w-3xl mx-auto glass-surface p-8 md:p-16 rounded-sm border border-borderColor"
         >
           <iconify-icon icon="solar:box-linear" width="40" class="text-textMain mb-8"></iconify-icon>
           <h2 className="text-4xl md:text-6xl font-extrabold heading-font uppercase tracking-tighter mb-6 text-textMain">
             Ready to <span className="text-red-600">Move?</span>
           </h2>
-          <p className="text-textMuted text-sm md:text-base font-medium mb-10 max-w-lg mx-auto">
+          <p className="text-textMuted text-sm md:text-base font-medium mb-6 md:mb-10 max-w-lg mx-auto">
             Join the network that powers global commerce. Get an instant quote for your shipment and experience the difference today.
           </p>
           <motion.button

@@ -31,7 +31,7 @@ const Hero: React.FC<HeroProps> = ({ onTrack, standalone = false }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="inline-flex items-center gap-2 px-4 py-2 mb-10 glass-surface rounded-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 mb-6 md:mb-10 glass-surface rounded-sm"
         >
           <iconify-icon icon="solar:globus-linear" width="14" class="text-red-600"></iconify-icon>
           <span className="metadata-label text-textMuted">Trusted Global Shipping Network</span>
@@ -41,7 +41,7 @@ const Hero: React.FC<HeroProps> = ({ onTrack, standalone = false }) => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-5xl md:text-8xl font-extrabold heading-font mb-8 leading-[1] tracking-tighter uppercase text-textMain"
+          className="text-3xl sm:text-5xl md:text-8xl font-extrabold heading-font mb-6 md:mb-8 leading-[1] tracking-tighter uppercase text-textMain"
         >
           EASY WORLDWIDE <br />
           <span className="text-red-600">DELIVERY.</span>
@@ -51,7 +51,7 @@ const Hero: React.FC<HeroProps> = ({ onTrack, standalone = false }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="max-w-2xl mx-auto text-sm md:text-base text-textMuted mb-14 leading-relaxed font-medium"
+          className="max-w-2xl mx-auto text-sm md:text-base text-textMuted mb-8 md:mb-14 leading-relaxed font-medium"
         >
           PerfectExpress simplifies the complexity of international logistics. 
           From small documents to large freight, we ensure your world stays connected 
@@ -70,7 +70,7 @@ const Hero: React.FC<HeroProps> = ({ onTrack, standalone = false }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.6 }}
-          className="mt-24 pt-12 border-t border-borderColor grid grid-cols-2 md:grid-cols-4 gap-12"
+          className="mt-12 pt-8 md:mt-24 md:pt-12 border-t border-borderColor grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12"
         >
           {[
             { label: 'On-Time Delivery', value: '99.9%', icon: 'solar:clock-circle-linear' },
