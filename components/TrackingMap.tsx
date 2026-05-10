@@ -130,23 +130,29 @@ export default function TrackingMap({
         const candidates: string[] = []
 
         // Priority 1: currentLocation — expand into progressively simpler variants
-        // e.g. "Westford sorting facility, 85 Wharf St, West Gosford" →
-        //   1. "Westford sorting facility, 85 Wharf St, West Gosford" (full)
-        //   2. "85 Wharf St, West Gosford" (without facility prefix)
-        //   3. "West Gosford" (just the city/last segment)
+        // For 3+ parts (e.g. "Hub Name, 85 Wharf St, Sydney"):
+        //   1. "85 Wharf St, Sydney" (without facility prefix — most likely geocodable)
+        //   2. "Hub Name, 85 Wharf St, Sydney" (full string — fallback)
+        //   3. "Sydney" (just city — last resort)
+        // For 1-2 parts: try full string first (it's likely a real address or city)
         if (hasAdminLocation) {
             const full = currentLocation!.trim()
-            candidates.push(full)
-
             const parts = full.split(',').map(p => p.trim()).filter(Boolean)
-            if (parts.length >= 2) {
-                // Try without the first segment (often a facility/hub name)
+
+            if (parts.length >= 3) {
+                // 3+ segments: first is likely a building/facility name — skip it
                 const withoutPrefix = parts.slice(1).join(', ')
                 if (withoutPrefix.length >= 3) candidates.push(withoutPrefix)
-
-                // Try just the last segment (usually the city)
+                candidates.push(full)
                 const lastPart = parts[parts.length - 1]
                 if (lastPart.length >= 3 && lastPart !== withoutPrefix) candidates.push(lastPart)
+            } else {
+                // 1-2 segments: likely a real address or city name
+                candidates.push(full)
+                if (parts.length === 2) {
+                    const lastPart = parts[1]
+                    if (lastPart.length >= 3) candidates.push(lastPart)
+                }
             }
         }
 

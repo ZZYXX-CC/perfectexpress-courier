@@ -215,7 +215,9 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         setGeocoding(false);
 
         const statusChanged = formData.status !== shipment.status;
-        const locationChanged = currentLoc !== (shipment.currentLocation || '');
+        // Force location update when Location Search was filled (ensures address is saved)
+        const locationChanged = currentLoc !== (shipment.currentLocation || '')
+            || (formData.mapLink && formData.mapLink.trim().length > 0);
         const paymentChanged = formData.paymentStatus !== (shipment.paymentStatus || 'unpaid');
 
         const updates: any = {};
