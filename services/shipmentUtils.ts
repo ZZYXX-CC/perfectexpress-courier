@@ -95,13 +95,21 @@ export const mapShipmentRow = (data: any): Shipment => {
     const rawPrice = data?.price !== undefined && data?.price !== null ? Number(data.price) : undefined;
     const priceValue = Number.isFinite(rawPrice as number) ? (rawPrice as number) : undefined;
 
+    // Parse embedded coordinates from current_location (format: "Address [@lat,lng]")
+    const rawLocation = data?.current_location || 'Pending';
+    const coordMatch = rawLocation.match(/\s*\[@(-?\d+\.?\d*),(-?\d+\.?\d*)\]\s*$/);
+    const cleanLocation = coordMatch ? rawLocation.replace(coordMatch[0], '').trim() : rawLocation;
+    const embeddedCoords = coordMatch
+        ? { lat: parseFloat(coordMatch[1]), lng: parseFloat(coordMatch[2]) }
+        : null;
+
     return {
         id: data?.tracking_number || data?.id,
         status: data?.status || 'pending',
         origin: senderAddress || originFallback || 'Unknown',
         destination: receiverAddress || destinationFallback || 'Unknown',
         estimatedArrival: data?.estimated_delivery ? new Date(data.estimated_delivery).toLocaleDateString() : 'TBD',
-        currentLocation: data?.current_location || 'Pending',
+        currentLocation: cleanLocation,
         weight: formatWeight(parcelDetails.weight || data?.weight),
         dimensions: data?.dimensions || 'N/A',
         serviceType: data?.service_type || 'Standard',
@@ -130,7 +138,7 @@ export const mapShipmentRow = (data: any): Shipment => {
         },
         price: priceValue,
         paymentStatus: data?.payment_status,
-        coordinates: data?.coordinates,
+        coordinates: data?.coordinates || embeddedCoords,
         createdAt: data?.created_at
     };
 };

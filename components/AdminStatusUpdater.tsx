@@ -171,52 +171,78 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps')
         );
 
-        // ── Build the saved location string ──
-        // Combines building name with a geocodable address so TrackingMap
-        // can strip the building prefix and geocode the real address.
-        let currentLoc = formData.currentLocation || shipment.currentLocation || 'System';
+        // ── Step 1: Build the display location string ──
+        let currentLoc = (formData.currentLocation || shipment.currentLocation || 'System')
+            .replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '').trim(); // strip old embedded coords
 
         if (formData.mapLink) {
             if (!isMapUrl) {
                 // Plain text address — append to location name
-                if (formData.currentLocation &&
-                    !formData.currentLocation.toLowerCase().includes(formData.mapLink.toLowerCase().trim())) {
-                    currentLoc = `${formData.currentLocation}, ${formData.mapLink.trim()}`;
-                } else if (!formData.currentLocation) {
-                    currentLoc = formData.mapLink.trim();
+                const cleanAddr = formData.mapLink.trim();
+                if (currentLoc && currentLoc !== 'System' &&
+                    !currentLoc.toLowerCase().includes(cleanAddr.toLowerCase())) {
+                    currentLoc = `${currentLoc}, ${cleanAddr}`;
+                } else if (!currentLoc || currentLoc === 'System') {
+                    currentLoc = cleanAddr;
                 }
             } else {
-                // Maps URL — reverse-geocode extracted coords to get a geocodable address
+                // Maps URL — reverse-geocode coords for a display address
                 let resolvedAddr: string | null = null;
-
                 if (formData.latitude && formData.longitude) {
                     resolvedAddr = await reverseGeocodeAddress(formData.latitude, formData.longitude);
                 }
-
-                // Fallback: try place name from URL
                 if (!resolvedAddr) {
                     const placeMatch = formData.mapLink.match(/\/place\/([^/@]+)/);
                     if (placeMatch) {
                         resolvedAddr = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
                     }
                 }
-
                 if (resolvedAddr) {
-                    if (formData.currentLocation &&
-                        !formData.currentLocation.toLowerCase().includes(resolvedAddr.toLowerCase())) {
-                        currentLoc = `${formData.currentLocation}, ${resolvedAddr}`;
-                    } else if (!formData.currentLocation) {
+                    if (currentLoc && currentLoc !== 'System' &&
+                        !currentLoc.toLowerCase().includes(resolvedAddr.toLowerCase())) {
+                        currentLoc = `${currentLoc}, ${resolvedAddr}`;
+                    } else if (!currentLoc || currentLoc === 'System') {
                         currentLoc = resolvedAddr;
                     }
                 }
             }
         }
 
+        // ── Step 2: Resolve coordinates ──
+        let resolvedLat = formData.latitude;
+        let resolvedLng = formData.longitude;
+
+        if (!resolvedLat || !resolvedLng) {
+            // Try geocoding the Location Search text first (most specific)
+            if (formData.mapLink && !isMapUrl && formData.mapLink.trim().length >= 3) {
+                const result = await geocodeAddress(formData.mapLink.trim());
+                if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
+            }
+            // Try geocoding the full current location string
+            if ((!resolvedLat || !resolvedLng) && currentLoc && currentLoc !== 'System' && currentLoc.length >= 3) {
+                const result = await geocodeAddress(currentLoc);
+                if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
+            }
+            // Try geocoding just the current location field (without appended address)
+            if ((!resolvedLat || !resolvedLng) && formData.currentLocation && formData.currentLocation.length >= 3) {
+                const result = await geocodeAddress(formData.currentLocation);
+                if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
+            }
+        }
+
+        // ── Step 3: Embed coords in location string for reliable map display ──
+        // TrackingMap reads these directly via mapShipmentRow — no Nominatim needed at display time
+        if (resolvedLat && resolvedLng) {
+            currentLoc = `${currentLoc} [@${resolvedLat},${resolvedLng}]`;
+        }
+
         setGeocoding(false);
 
         const statusChanged = formData.status !== shipment.status;
-        // Force location update when Location Search was filled (ensures address is saved)
-        const locationChanged = currentLoc !== (shipment.currentLocation || '')
+        // Strip embedded coords from comparison so we detect actual text changes
+        const cleanShipmentLoc = (shipment.currentLocation || '').replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '').trim();
+        const cleanCurrentLoc = currentLoc.replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '').trim();
+        const locationChanged = cleanCurrentLoc !== cleanShipmentLoc
             || (formData.mapLink && formData.mapLink.trim().length > 0);
         const paymentChanged = formData.paymentStatus !== (shipment.paymentStatus || 'unpaid');
 
@@ -234,7 +260,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     location: currentLoc,
                     note: formData.status !== shipment.status
                         ? `Operational status changed to ${formData.status.toUpperCase()}`
-                        : `Logistics update: Arrived at ${currentLoc}`
+                        : `Logistics update: Location updated`
                 });
             }
 
