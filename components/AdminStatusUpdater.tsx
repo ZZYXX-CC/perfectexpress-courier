@@ -266,7 +266,9 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                     setLocationResolverMessage(
                         result.provider === 'google-geocoding'
                             ? `Google resolved coordinates${result.accuracy ? ` (${result.accuracy})` : ''}`
-                            : 'Coordinates resolved'
+                            : result.provider === 'osm-nominatim'
+                                ? `OpenStreetMap resolved coordinates${result.accuracy ? ` (${result.accuracy})` : ''}`
+                                : 'Coordinates resolved'
                     );
                 } else {
                     setLocationResolverState('error');
@@ -292,7 +294,9 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             setLocationResolverMessage(
                 result.provider === 'google-geocoding'
                     ? `Google resolved coordinates${result.accuracy ? ` (${result.accuracy})` : ''}`
-                    : 'Coordinates resolved'
+                    : result.provider === 'osm-nominatim'
+                        ? `OpenStreetMap resolved coordinates${result.accuracy ? ` (${result.accuracy})` : ''}`
+                        : 'Coordinates resolved'
             );
             return true;
         }

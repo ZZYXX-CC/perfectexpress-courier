@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 type Coordinates = { lat: number; lng: number };
 type ResolvedLocation = {
     coordinates: Coordinates | null;
-    provider?: 'direct' | 'google-geocoding' | 'google-link';
+    provider?: 'direct' | 'google-geocoding' | 'google-link' | 'osm-nominatim';
     accuracy?: string;
     formattedAddress?: string;
     error?: string;
@@ -49,6 +49,88 @@ const extractCoordinates = (input: string): Coordinates | null => {
 
 const isValidCoordinate = (lat: number, lng: number) =>
     Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+
+const resolveWithNominatim = async (input: string): Promise<ResolvedLocation> => {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('q', input);
+    url.searchParams.set('limit', '5');
+    url.searchParams.set('addressdetails', '1');
+    url.searchParams.set('extratags', '1');
+
+    const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'User-Agent': 'PerfectExpressCourier/1.0'
+    };
+
+    if (process.env.NOMINATIM_EMAIL) {
+        url.searchParams.set('email', process.env.NOMINATIM_EMAIL);
+    }
+
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+        return {
+            coordinates: null,
+            provider: 'osm-nominatim',
+            error: `OpenStreetMap geocoder failed (${response.status})`
+        };
+    }
+
+    const results = await response.json();
+    if (!Array.isArray(results) || results.length === 0) {
+        return {
+            coordinates: null,
+            provider: 'osm-nominatim',
+            error: 'OpenStreetMap found no matching address'
+        };
+    }
+
+    const ranked = results
+        .map((result: any) => ({
+            result,
+            importance: Number(result.importance || 0),
+            lat: Number(result.lat),
+            lng: Number(result.lon),
+            type: String(result.type || result.addresstype || '').toLowerCase(),
+            className: String(result.class || '').toLowerCase()
+        }))
+        .filter(item => isValidCoordinate(item.lat, item.lng))
+        .sort((a, b) => b.importance - a.importance);
+
+    const acceptableTypes = new Set([
+        'house',
+        'building',
+        'residential',
+        'road',
+        'street',
+        'secondary',
+        'tertiary',
+        'commercial',
+        'industrial',
+        'yes'
+    ]);
+
+    const accepted = ranked.find(item => {
+        if (item.className === 'boundary' || item.type === 'administrative') return false;
+        if (item.importance < 0.2) return false;
+        return acceptableTypes.has(item.type) || ['highway', 'building', 'amenity', 'shop', 'office', 'place'].includes(item.className);
+    });
+
+    if (!accepted) {
+        return {
+            coordinates: null,
+            provider: 'osm-nominatim',
+            error: 'OpenStreetMap result was too broad to use as a precise pin'
+        };
+    }
+
+    return {
+        coordinates: { lat: accepted.lat, lng: accepted.lng },
+        provider: 'osm-nominatim',
+        accuracy: accepted.type || accepted.className || 'matched',
+        formattedAddress: accepted.result.display_name
+    };
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -97,10 +179,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         process.env.GOOGLE_GEOCODING_API_KEY ||
         process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!googleApiKey) {
-        return res.status(200).json({
-            coordinates: null,
-            error: 'Google Maps geocoding is not configured'
-        } satisfies ResolvedLocation);
+        try {
+            return res.status(200).json(await resolveWithNominatim(input));
+        } catch (error) {
+            return res.status(200).json({
+                coordinates: null,
+                provider: 'osm-nominatim',
+                error: error instanceof Error ? error.message : 'OpenStreetMap geocoding failed'
+            } satisfies ResolvedLocation);
+        }
     }
 
     try {
@@ -112,11 +199,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const data = await geocodeResponse.json();
 
         if (!geocodeResponse.ok || data.status !== 'OK' || !data.results?.length) {
-            return res.status(200).json({
-                coordinates: null,
-                provider: 'google-geocoding',
-                error: data.error_message || data.status || 'No geocoding result'
-            } satisfies ResolvedLocation);
+            return res.status(200).json(await resolveWithNominatim(input));
         }
 
         const result = data.results[0];
@@ -125,23 +208,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const coords = location ? { lat: Number(location.lat), lng: Number(location.lng) } : null;
 
         if (!coords || !isValidCoordinate(coords.lat, coords.lng)) {
-            return res.status(200).json({
-                coordinates: null,
-                provider: 'google-geocoding',
-                accuracy,
-                error: 'Invalid geocoding coordinates'
-            } satisfies ResolvedLocation);
+            return res.status(200).json(await resolveWithNominatim(input));
         }
 
         const acceptedAccuracy = new Set(['ROOFTOP', 'RANGE_INTERPOLATED', 'GEOMETRIC_CENTER']);
         if (!acceptedAccuracy.has(accuracy)) {
-            return res.status(200).json({
-                coordinates: null,
-                provider: 'google-geocoding',
-                accuracy,
-                formattedAddress: result.formatted_address,
-                error: 'Geocoding result is too approximate'
-            } satisfies ResolvedLocation);
+            return res.status(200).json(await resolveWithNominatim(input));
         }
 
         return res.status(200).json({
@@ -151,10 +223,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             formattedAddress: result.formatted_address
         } satisfies ResolvedLocation);
     } catch (error) {
-        return res.status(200).json({
-            coordinates: null,
-            provider: 'google-geocoding',
-            error: error instanceof Error ? error.message : 'Unable to resolve location'
-        } satisfies ResolvedLocation);
+        try {
+            return res.status(200).json(await resolveWithNominatim(input));
+        } catch {
+            return res.status(200).json({
+                coordinates: null,
+                provider: 'google-geocoding',
+                error: error instanceof Error ? error.message : 'Unable to resolve location'
+            } satisfies ResolvedLocation);
+        }
     }
 }
