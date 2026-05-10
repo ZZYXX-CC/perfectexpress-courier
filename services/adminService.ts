@@ -123,10 +123,20 @@ export const logShipmentEvent = async (
     }
 
     const currentHistory = (shipment.history as ShipmentEvent[]) || [];
+    const existingCoordinates = shipment.coordinates as { lat?: number; lng?: number } | null;
+    const existingLocationDetail = String((shipment.parcel_details as any)?.current_location_detail || '');
+    const eventCoordinatesChanged = event.coordinates !== undefined && (
+        event.coordinates === null ||
+        !existingCoordinates ||
+        Number(existingCoordinates.lat) !== event.coordinates.lat ||
+        Number(existingCoordinates.lng) !== event.coordinates.lng
+    );
+    const eventLocationDetailChanged = event.locationDetail !== undefined && event.locationDetail !== existingLocationDetail;
 
-    // Deduplication check: Don't add if status and location are the same as last entry
+    // Deduplicate history entries, but never skip coordinate/detail persistence.
     const lastEvent = currentHistory[currentHistory.length - 1];
-    if (lastEvent && lastEvent.status === event.status && lastEvent.location === event.location) {
+    const duplicateHistoryEvent = !!lastEvent && lastEvent.status === event.status && lastEvent.location === event.location;
+    if (duplicateHistoryEvent && !eventCoordinatesChanged && !eventLocationDetailChanged) {
         return { success: true };
     }
 
@@ -134,7 +144,7 @@ export const logShipmentEvent = async (
         ...event,
         timestamp: new Date().toISOString()
     };
-    const updatedHistory = [...currentHistory, newEvent];
+    const updatedHistory = duplicateHistoryEvent ? currentHistory : [...currentHistory, newEvent];
 
     // Build update object
     const updateData: Record<string, unknown> = {
