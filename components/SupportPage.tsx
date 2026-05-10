@@ -88,7 +88,7 @@ const SupportPage: React.FC = () => {
         >
           <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 bg-bgSurface border border-borderColor rounded-full">
             <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-textMuted">Live Support: Active</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-textMuted">Support Desk: Active</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold heading-font uppercase tracking-tighter text-textMain mb-4">
             Communication <span className="text-red-600">Center</span>
@@ -217,7 +217,8 @@ const SupportPage: React.FC = () => {
                     onChange={e => setFormState({ ...formState, subject: e.target.value })}
                   >
                     <option>General Inquiry</option>
-                    <option>Lost Package</option>
+                    <option>Tracking Support</option>
+                    <option>Shipment Update</option>
                     <option>Billing Issue</option>
                     <option>Technical Support</option>
                   </select>
