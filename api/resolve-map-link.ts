@@ -21,6 +21,13 @@ const extractCoordinates = (input: string): Coordinates | null => {
 
     const sources = [input, decoded];
     for (const source of sources) {
+        const rawPairMatch = source.trim().match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
+        if (rawPairMatch) {
+            const lat = Number(rawPairMatch[1]);
+            const lng = Number(rawPairMatch[2]);
+            if (isValidCoordinate(lat, lng)) return { lat, lng };
+        }
+
         const latLngPatterns = [
             /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
             /[?&](?:q|query|destination|center|ll)=(-?\d+\.?\d*),(-?\d+\.?\d*)/,

@@ -49,6 +49,15 @@ function extractCoordsFromLink(url: string): { lat: string; lng: string } | null
     ];
 
     for (const source of [url, decodedUrl]) {
+        const rawPairMatch = source.trim().match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
+        if (rawPairMatch) {
+            const lat = parseFloat(rawPairMatch[1]);
+            const lng = parseFloat(rawPairMatch[2]);
+            if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                return { lat: rawPairMatch[1], lng: rawPairMatch[2] };
+            }
+        }
+
         for (const pattern of patterns) {
             const match = source.match(pattern);
             if (match) {
@@ -493,7 +502,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             value={formData.mapLink}
                             onChange={handleChange}
                             className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none"
-                            placeholder="PASTE FULL ADDRESS OR GOOGLE MAPS LINK"
+                            placeholder="PASTE FULL ADDRESS, COORDINATES, OR GOOGLE MAPS LINK"
                         />
                         {formData.mapLink && formData.latitude && formData.longitude ? (
                             <p className="text-[8px] text-green-500 mt-1 tracking-wider uppercase flex items-center gap-1">
@@ -517,7 +526,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             </p>
                         ) : (
                             <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
-                                Enter the exact address for the map pin or paste a Google Maps link
+                                Best no-API option: paste coordinates from Google Maps, e.g. 9.0765, 7.3986
                             </p>
                         )}
                     </div>
@@ -550,7 +559,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             <Icon icon="solar:map-arrow-square-linear" width="14" className="text-blue-400 shrink-0" />
                             <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">
                                 {formData.mapLink && !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps'))
-                                    ? 'Location search address will resolve through Google Maps when configured'
+                                    ? 'OpenStreetMap can miss Google-only addresses; paste coordinates for exact pins'
                                     : 'Paste a Google Maps link with coordinates or enter latitude/longitude manually'}
                             </p>
                         </div>
