@@ -183,6 +183,7 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                         currentLocation={shipment.currentLocation}
                         originAddress={`${shipment.sender.city}, ${shipment.sender.country}`}
                         destinationAddress={`${shipment.recipient.city}, ${shipment.recipient.country}`}
+                        searchAddress={shipment.locationDetail}
                         location={shipment.coordinates}
                         status={shipment.status}
                         className="h-full border border-borderColor"

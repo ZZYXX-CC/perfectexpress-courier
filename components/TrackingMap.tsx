@@ -86,6 +86,7 @@ interface TrackingMapProps {
     currentLocation?: string
     originAddress?: string
     destinationAddress?: string
+    searchAddress?: string
     location?: {
         lat: number
         lng: number
@@ -98,6 +99,7 @@ export default function TrackingMap({
     currentLocation,
     originAddress,
     destinationAddress,
+    searchAddress,
     location,
     status
 }: TrackingMapProps) {
@@ -113,6 +115,7 @@ export default function TrackingMap({
 
     // Determine if admin has set a meaningful currentLocation
     const hasAdminLocation = !!(currentLocation && currentLocation.toLowerCase() !== 'pending' && currentLocation.trim().length >= 3)
+    const hasStoredCoordinates = !!(location?.lat && location?.lng)
 
     // Geocode the location text, but skip when we already have stored coordinates.
     // Stored coords are authoritative: they came from an explicit Google Maps link
@@ -120,7 +123,16 @@ export default function TrackingMap({
     // Re-geocoding the text would let Nominatim pick a similarly-named wrong place.
     useEffect(() => {
         // Fast path: admin has set a location AND we have stored coords — trust them.
-        if (hasAdminLocation && location?.lat && location?.lng) {
+        if (hasAdminLocation && hasStoredCoordinates) {
+            setGeocodedCenter(null)
+            lastGeocodedRef.current = ''
+            return
+        }
+
+        // If admin has set a public location but no stored coordinates, do not
+        // invent a shipment pin from text. Address geocoders often return a
+        // similarly-named wrong place, which is worse than showing no precise pin.
+        if (hasAdminLocation && !hasStoredCoordinates) {
             setGeocodedCenter(null)
             lastGeocodedRef.current = ''
             return
@@ -159,7 +171,7 @@ export default function TrackingMap({
         // Only fall back to destination/origin if admin hasn't set a location
         if (!hasAdminLocation) {
             // If we have stored coordinates and no admin location, just use those
-            if (location?.lat && location?.lng) {
+            if (hasStoredCoordinates) {
                 setGeocodedCenter(null)
                 lastGeocodedRef.current = ''
                 return
@@ -204,7 +216,7 @@ export default function TrackingMap({
         }
 
         tryGeocode()
-    }, [currentLocation, originAddress, destinationAddress, location, hasAdminLocation])
+    }, [currentLocation, originAddress, destinationAddress, location, hasAdminLocation, hasStoredCoordinates])
 
     // Priority:
     // 1. Stored coords when admin has set a location (map link or geocoded on save)
@@ -212,13 +224,14 @@ export default function TrackingMap({
     // 3. Stored coords as general fallback
     // 4. Default center
     const center: [number, number] =
-        (hasAdminLocation && location?.lat && location?.lng)
+        (hasAdminLocation && hasStoredCoordinates)
             ? [location.lat, location.lng]
             : geocodedCenter
                 ? geocodedCenter
-                : (location?.lat && location?.lng)
+                : hasStoredCoordinates
                     ? [location.lat, location.lng]
                     : defaultCenter
+    const hasMapPin = hasStoredCoordinates || (!hasAdminLocation && !!geocodedCenter)
 
     const mapKey = `${center[0]}-${center[1]}-${theme}-${isFullscreen ? 'fs' : 'normal'}`
 
@@ -256,9 +269,12 @@ export default function TrackingMap({
 
     // Open in Google Maps
     const openGoogleMaps = useCallback(() => {
-        const url = `https://www.google.com/maps/@${center[0]},${center[1]},15z`
+        const fallbackSearchAddress = searchAddress || currentLocation || destinationAddress || originAddress || ''
+        const url = hasMapPin
+            ? `https://www.google.com/maps/@${center[0]},${center[1]},17z`
+            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallbackSearchAddress)}`
         window.open(url, '_blank', 'noopener,noreferrer')
-    }, [center])
+    }, [center, currentLocation, destinationAddress, originAddress, searchAddress, hasMapPin])
 
     const fullscreenStyles: React.CSSProperties = isFullscreen
         ? {
@@ -289,6 +305,14 @@ export default function TrackingMap({
                 <div className="absolute top-3 left-3 z-[1000] bg-bgMain/90 border border-borderColor rounded-sm px-3 py-1.5 flex items-center gap-2">
                     <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
                     <span className="text-[9px] font-black uppercase tracking-widest text-textMuted">Locating...</span>
+                </div>
+            )}
+
+            {!hasMapPin && hasAdminLocation && (
+                <div className="absolute inset-x-3 bottom-12 z-[1000] bg-bgMain/95 border border-amber-500/30 rounded-sm px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-400">
+                        Precise map pin not available. Add coordinates or a Google Maps link with coordinates.
+                    </p>
                 </div>
             )}
 
@@ -344,14 +368,16 @@ export default function TrackingMap({
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                     url={TILE_URLS[theme]}
                 />
-                <Marker position={center} icon={pulsingIcon}>
-                    <Popup>
-                        <div className="text-xs font-bold">
-                            <p className="text-red-600 uppercase mb-1">{status || 'Shipment Location'}</p>
-                            <p className="text-slate-800">{currentLocation || 'Updating...'}</p>
-                        </div>
-                    </Popup>
-                </Marker>
+                {hasMapPin && (
+                    <Marker position={center} icon={pulsingIcon}>
+                        <Popup>
+                            <div className="text-xs font-bold">
+                                <p className="text-red-600 uppercase mb-1">{status || 'Shipment Location'}</p>
+                                <p className="text-slate-800">{currentLocation || 'Updating...'}</p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                )}
             </MapContainer>
         </div>
     )

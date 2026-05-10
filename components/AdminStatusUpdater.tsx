@@ -26,28 +26,107 @@ interface AdminStatusUpdaterProps {
 function extractCoordsFromLink(url: string): { lat: string; lng: string } | null {
     if (!url) return null;
 
+    let decodedUrl = url;
+    try {
+        decodedUrl = decodeURIComponent(url);
+    } catch {
+        decodedUrl = url;
+    }
+
     const patterns = [
         /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,           // @lat,lng
-        /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,      // ?q=lat,lng
+        /[?&](?:q|query|destination|center|ll)=(-?\d+\.?\d*),(-?\d+\.?\d*)/, // query params
         /\/place\/(-?\d+\.?\d*),(-?\d+\.?\d*)/,    // /place/lat,lng
         /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,        // !3dlat!4dlng
-        /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,      // ll=lat,lng
-        /[?&]center=(-?\d+\.?\d*),(-?\d+\.?\d*)/,  // center=lat,lng
         /\/dir\/.*?(-?\d+\.?\d*),(-?\d+\.?\d*)/,   // /dir/.../lat,lng
     ];
 
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match) {
-            const lat = parseFloat(match[1]);
-            const lng = parseFloat(match[2]);
-            // Sanity check: valid coordinate ranges
+    for (const source of [url, decodedUrl]) {
+        for (const pattern of patterns) {
+            const match = source.match(pattern);
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[2]);
+                // Sanity check: valid coordinate ranges
+                if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    return { lat: match[1], lng: match[2] };
+                }
+            }
+        }
+
+        // Some Google URLs store longitude before latitude: !2dlng!3dlat
+        const lngLatMatch = source.match(/!2d(-?\d+\.?\d*)!3d(-?\d+\.?\d*)/);
+        if (lngLatMatch) {
+            const lng = parseFloat(lngLatMatch[1]);
+            const lat = parseFloat(lngLatMatch[2]);
             if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                return { lat: match[1], lng: match[2] };
+                return { lat: lngLatMatch[2], lng: lngLatMatch[1] };
             }
         }
     }
+
     return null;
+}
+
+async function resolveMapLinkCoordinates(url: string): Promise<{ lat: string; lng: string } | null> {
+    const localCoords = extractCoordsFromLink(url);
+    if (localCoords) return localCoords;
+
+    try {
+        const res = await fetch('/api/resolve-map-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data?.coordinates) return null;
+
+        const lat = parseFloat(String(data.coordinates.lat));
+        const lng = parseFloat(String(data.coordinates.lng));
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { lat: String(lat), lng: String(lng) };
+        }
+    } catch {
+        return null;
+    }
+
+    return null;
+}
+
+function extractPlaceNameFromMapLink(url: string): string {
+    try {
+        const decoded = decodeURIComponent(url);
+        const placeMatch = decoded.match(/\/place\/([^/@?]+)/);
+        if (placeMatch) {
+            return placeMatch[1].replace(/\+/g, ' ');
+        }
+    } catch {
+        return '';
+    }
+    return '';
+}
+
+function splitSavedLocation(currentLocation?: string, locationDetail?: string): { label: string; detail: string } {
+    const cleanLocation = (currentLocation || '')
+        .replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '')
+        .trim();
+    const cleanDetail = (locationDetail || '').trim();
+
+    if (cleanDetail) {
+        const suffix = `, ${cleanDetail}`;
+        const label = cleanLocation.endsWith(suffix)
+            ? cleanLocation.slice(0, -suffix.length).trim()
+            : cleanLocation;
+        return { label: label || cleanLocation || '', detail: cleanDetail };
+    }
+
+    const parts = cleanLocation.split(',').map(part => part.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+        return { label: parts[0], detail: parts.slice(1).join(', ') };
+    }
+
+    return { label: cleanLocation, detail: '' };
 }
 
 /**
@@ -120,13 +199,14 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
 
     useEffect(() => {
         if (shipment) {
+            const savedLocation = splitSavedLocation(shipment.currentLocation, shipment.locationDetail);
             setFormData({
                 status: shipment.status || 'pending',
-                currentLocation: shipment.currentLocation || '',
+                currentLocation: savedLocation.label,
                 paymentStatus: shipment.paymentStatus || 'unpaid',
                 latitude: shipment.coordinates?.lat?.toString() || '',
                 longitude: shipment.coordinates?.lng?.toString() || '',
-                mapLink: ''
+                mapLink: savedLocation.detail
             });
         }
     }, [shipment]);
@@ -159,6 +239,30 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         });
     };
 
+    useEffect(() => {
+        if (!formData.mapLink || !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps'))) {
+            return;
+        }
+        if (formData.latitude && formData.longitude) return;
+
+        let cancelled = false;
+        const resolve = async () => {
+            const coords = await resolveMapLinkCoordinates(formData.mapLink);
+            if (cancelled || !coords) return;
+            setFormData(prev => ({
+                ...prev,
+                latitude: coords.lat,
+                longitude: coords.lng
+            }));
+        };
+
+        resolve();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [formData.mapLink, formData.latitude, formData.longitude]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!shipment) return;
@@ -170,10 +274,14 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps')
         );
 
-        const displayName = (formData.currentLocation || shipment.currentLocation || 'System')
+        const savedLocation = splitSavedLocation(shipment.currentLocation, shipment.locationDetail);
+        const previousLocation = savedLocation.label;
+        const previousLocationDetail = savedLocation.detail;
+        const locationDetail = formData.mapLink.trim();
+        const typedLocation = (formData.currentLocation || previousLocation || 'System')
             .replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '')
             .trim();
-        const locationDetail = formData.mapLink.trim();
+        const displayName = typedLocation;
 
         let resolvedLat = formData.latitude;
         let resolvedLng = formData.longitude;
@@ -183,23 +291,25 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             if (!isMapUrl) {
                 resolvedAddress = locationDetail;
             } else {
+                if (!resolvedLat || !resolvedLng) {
+                    const resolvedLinkCoords = await resolveMapLinkCoordinates(locationDetail);
+                    if (resolvedLinkCoords) {
+                        resolvedLat = resolvedLinkCoords.lat;
+                        resolvedLng = resolvedLinkCoords.lng;
+                    }
+                }
+
                 // Maps URL — reverse-geocode coords for a display address
                 if (resolvedLat && resolvedLng) {
                     resolvedAddress = await reverseGeocodeAddress(resolvedLat, resolvedLng) || '';
                 }
                 if (!resolvedAddress) {
-                    const placeMatch = locationDetail.match(/\/place\/([^/@]+)/);
-                    if (placeMatch) {
-                        resolvedAddress = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-                    }
+                    resolvedAddress = extractPlaceNameFromMapLink(locationDetail);
                 }
             }
         }
 
-        const currentLoc = [displayName, resolvedAddress]
-            .filter(Boolean)
-            .filter((part, index, parts) => index === 0 || !parts[0].toLowerCase().includes(part.toLowerCase()))
-            .join(', ') || 'System';
+        const currentLoc = displayName || resolvedAddress || 'System';
 
         if (!resolvedLat || !resolvedLng) {
             // Geocode the address/map detail first. It is intentionally the precise box.
@@ -208,14 +318,16 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
             }
 
-            // Fallback to the combined visible location.
-            if ((!resolvedLat || !resolvedLng) && currentLoc !== 'System' && currentLoc.length >= 3) {
+            // Fallback to the combined visible location only when there is no
+            // precise address/link field. Otherwise we risk saving a random
+            // similarly-named place as the shipment pin.
+            if ((!resolvedLat || !resolvedLng) && !locationDetail && currentLoc !== 'System' && currentLoc.length >= 3) {
                 const result = await geocodeAddress(currentLoc);
                 if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
             }
 
             // Last resort: building/location name alone.
-            if ((!resolvedLat || !resolvedLng) && displayName && displayName !== 'System' && displayName.length >= 3) {
+            if ((!resolvedLat || !resolvedLng) && !locationDetail && displayName && displayName !== 'System' && displayName.length >= 3) {
                 const result = await geocodeAddress(displayName);
                 if (result) { resolvedLat = result.lat; resolvedLng = result.lng; }
             }
@@ -224,11 +336,13 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         setGeocoding(false);
 
         const statusChanged = formData.status !== shipment.status;
-        const cleanShipmentLoc = (shipment.currentLocation || '').trim();
-        const locationChanged = currentLoc !== cleanShipmentLoc || !!locationDetail;
+        const cleanShipmentLoc = previousLocation;
+        const locationChanged = currentLoc !== cleanShipmentLoc || locationDetail !== previousLocationDetail;
         const paymentChanged = formData.paymentStatus !== (shipment.paymentStatus || 'unpaid');
-        const resolvedCoordinates = resolvedLat && resolvedLng
-            ? { lat: parseFloat(resolvedLat), lng: parseFloat(resolvedLng) }
+        const parsedLat = resolvedLat ? parseFloat(resolvedLat) : NaN;
+        const parsedLng = resolvedLng ? parseFloat(resolvedLng) : NaN;
+        const resolvedCoordinates = Number.isFinite(parsedLat) && Number.isFinite(parsedLng)
+            ? { lat: parsedLat, lng: parsedLng }
             : undefined;
         const coordinatesChanged = !!resolvedCoordinates && (
             !shipment.coordinates ||
@@ -249,14 +363,16 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         try {
             // If status OR location changed, log it (saves status + current_location + history)
             if (statusChanged || locationChanged) {
-                await logShipmentEvent(shipment.id, {
+                const result = await logShipmentEvent(shipment.id, {
                     status: formData.status,
                     location: currentLoc,
                     note: formData.status !== shipment.status
                         ? `Operational status changed to ${formData.status.toUpperCase()}`
                         : `Logistics update: Location updated`,
-                    coordinates: resolvedCoordinates
+                    coordinates: locationChanged ? (resolvedCoordinates ?? null) : resolvedCoordinates,
+                    locationDetail
                 });
+                if (result.error) throw new Error(result.error);
             }
 
             // Update payment status or coordinates-only edits.
@@ -267,8 +383,9 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
 
             toast.showSuccess('Updated', 'Shipment status updated successfully');
             onSave();
-        } catch {
-            toast.showError('Error', 'Failed to update status');
+        } catch (error) {
+            console.error('Error updating shipment:', error);
+            toast.showError('Error', error instanceof Error ? error.message : 'Failed to update status');
         } finally {
             setLoading(false);
         }

@@ -102,6 +102,11 @@ export const mapShipmentRow = (data: any): Shipment => {
     const embeddedCoords = coordMatch
         ? { lat: parseFloat(coordMatch[1]), lng: parseFloat(coordMatch[2]) }
         : null;
+    const locationDetail =
+        parcelDetails.current_location_detail ||
+        parcelDetails.location_detail ||
+        data?.location_detail ||
+        '';
 
     return {
         id: data?.tracking_number || data?.id,
@@ -110,6 +115,7 @@ export const mapShipmentRow = (data: any): Shipment => {
         destination: receiverAddress || destinationFallback || 'Unknown',
         estimatedArrival: data?.estimated_delivery ? new Date(data.estimated_delivery).toLocaleDateString() : 'TBD',
         currentLocation: cleanLocation,
+        locationDetail,
         weight: formatWeight(parcelDetails.weight || data?.weight),
         dimensions: data?.dimensions || 'N/A',
         serviceType: data?.service_type || 'Standard',

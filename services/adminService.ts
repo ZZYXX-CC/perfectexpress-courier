@@ -15,7 +15,8 @@ export interface ShipmentUpdate {
     coordinates?: {
         lat: number;
         lng: number;
-    };
+    } | null;
+    locationDetail?: string;
 }
 
 export interface ShipmentEvent {
@@ -26,7 +27,8 @@ export interface ShipmentEvent {
     coordinates?: {
         lat: number;
         lng: number;
-    };
+    } | null;
+    locationDetail?: string;
 }
 
 export interface UserProfile {
@@ -116,7 +118,9 @@ export const logShipmentEvent = async (
         .eq('tracking_number', trackingNumber)
         .single();
 
-    if (fetchError || !shipment) return { error: 'Failed to fetch shipment' };
+    if (fetchError || !shipment) {
+        return { error: `Failed to fetch shipment${fetchError?.message ? `: ${fetchError.message}` : ''}` };
+    }
 
     const currentHistory = (shipment.history as ShipmentEvent[]) || [];
 
@@ -140,8 +144,15 @@ export const logShipmentEvent = async (
         updated_at: new Date().toISOString()
     };
 
-    if (event.coordinates) {
+    if (event.coordinates !== undefined) {
         updateData.coordinates = event.coordinates;
+    }
+
+    if (event.locationDetail !== undefined) {
+        updateData.parcel_details = {
+            ...(shipment.parcel_details || {}),
+            current_location_detail: event.locationDetail
+        };
     }
 
     // Auto-update payment status if status becomes confirmed
@@ -154,7 +165,7 @@ export const logShipmentEvent = async (
         .update(updateData)
         .eq('tracking_number', trackingNumber);
 
-    if (updateError) return { error: 'Failed to log event' };
+    if (updateError) return { error: `Failed to log event: ${updateError.message}` };
 
     // Trigger notification
     if (shipment.user_id) {

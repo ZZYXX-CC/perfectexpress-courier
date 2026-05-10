@@ -8,6 +8,7 @@ export interface Shipment {
   destination: string;
   estimatedArrival: string;
   currentLocation: string;
+  locationDetail?: string;
   weight: string;
   dimensions: string;
   serviceType: string;
