@@ -18,6 +18,17 @@ type CoordinateResolution = {
     accuracy?: string;
 };
 
+const SHIPMENT_STATUS_OPTIONS = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'quoted', label: 'Quoted' },
+    { value: 'confirmed', label: 'Confirmed' },
+    { value: 'in-transit', label: 'In Transit' },
+    { value: 'out-for-delivery', label: 'Out For Delivery' },
+    { value: 'held', label: 'Held' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'delivered', label: 'Delivered' }
+];
+
 // ─── Geocoding helpers ───────────────────────────────────────────────
 
 /**
@@ -510,15 +521,18 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label className="metadata-label text-textMuted mb-1 block">Status</label>
-                        <input
+                        <select
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
                             className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none uppercase"
-                            placeholder="ENTER STATUS (E.G. IN-TRANSIT, HELD, DELIVERED)"
-                        />
+                        >
+                            {SHIPMENT_STATUS_OPTIONS.map(option => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                        </select>
                         <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
-                            Common: pending · quoted · confirmed · in-transit · out-for-delivery · delivered · held · cancelled
+                            Allowed flow: pending · quoted · confirmed · in-transit · out-for-delivery · held · cancelled · delivered
                         </p>
                     </div>
 
