@@ -267,11 +267,12 @@ export default function TrackingMap({
         }
     }, [isFullscreen])
 
-    // Open in Google Maps
+    // Open in Google Maps. The /@lat,lng URL only centers the viewport;
+    // search/?query=lat,lng asks Google Maps to render an actual dropped pin.
     const openGoogleMaps = useCallback(() => {
         const fallbackSearchAddress = searchAddress || currentLocation || destinationAddress || originAddress || ''
         const url = hasMapPin
-            ? `https://www.google.com/maps/@${center[0]},${center[1]},17z`
+            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${center[0]},${center[1]}`)}`
             : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallbackSearchAddress)}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }, [center, currentLocation, destinationAddress, originAddress, searchAddress, hasMapPin])
