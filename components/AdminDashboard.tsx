@@ -8,7 +8,7 @@ import AdminShipmentEditor from './AdminShipmentEditor';
 import AdminUserEditor from './AdminUserEditor';
 import AdminStatusUpdater from './AdminStatusUpdater';
 import { getAllTickets, SupportTicket, updateTicketStatus } from '../services/support';
-import { deleteShipment, updateShipment, logShipmentEvent, getAllUsers, updateUserRole, suspendUser, unsuspendUser, deleteUser, UserProfile, inviteUser } from '../services/adminService';
+import { deleteShipment, updateShipment, logShipmentEvent, getAllUsers, updateUserRole, UserProfile, inviteUser } from '../services/adminService';
 import { mapShipmentRow } from '../services/shipmentUtils';
 import { useToast } from './ui/Toast';
 import { useConfirm } from './ui/ConfirmDialog';
@@ -291,21 +291,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
    const handleUserEditorCancel = () => {
       setIsUserEditorOpen(false);
       setEditingUser(null);
-   };
-
-   const handleSuspendUser = async (userId: string) => {
-      const result = await suspendUser(userId);
-      if (result.error) throw new Error(result.error);
-   };
-
-   const handleUnsuspendUser = async (userId: string) => {
-      const result = await unsuspendUser(userId);
-      if (result.error) throw new Error(result.error);
-   };
-
-   const handleDeleteUser = async (userId: string) => {
-      const result = await deleteUser(userId);
-      if (result.error) throw new Error(result.error);
    };
 
    // --- Invite User Handlers ---
@@ -661,19 +646,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                           </td>
                                           <td className="p-4 text-xs text-textMuted">{profile.email}</td>
                                           <td className="p-4">
-                                             <div className="flex items-center gap-2">
-                                                <span className={`px-2 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border ${profile.role === 'admin'
-                                                   ? 'text-purple-500 bg-purple-500/10 border-purple-500/20'
-                                                   : 'text-blue-500 bg-blue-500/10 border-blue-500/20'
-                                                   }`}>
-                                                   {profile.role}
-                                                </span>
-                                                {(profile as any).status === 'suspended' && (
-                                                   <span className="px-2 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border text-orange-500 bg-orange-500/10 border-orange-500/20">
-                                                      Suspended
-                                                   </span>
-                                                )}
-                                             </div>
+                                             <span className={`px-2 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border ${profile.role === 'admin'
+                                                ? 'text-purple-500 bg-purple-500/10 border-purple-500/20'
+                                                : 'text-blue-500 bg-blue-500/10 border-blue-500/20'
+                                                }`}>
+                                                {profile.role}
+                                             </span>
                                           </td>
                                           <td className="p-4 text-xs text-textMuted">
                                              {new Date(profile.created_at).toLocaleDateString()}
@@ -714,16 +692,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                 <p className="text-[10px] text-textMuted uppercase font-mono">{profile.email}</p>
                                              </div>
                                           </div>
-                                          <div className="flex flex-col items-end gap-1">
-                                             <span className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border ${profile.role === 'admin' ? 'text-purple-500 border-purple-500/30' : 'text-blue-500 border-blue-500/30'}`}>
-                                                {profile.role}
-                                             </span>
-                                             {(profile as any).status === 'suspended' && (
-                                                <span className="px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border text-orange-500 border-orange-500/30">
-                                                   Suspended
-                                                </span>
-                                             )}
-                                          </div>
+                                          <span className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border ${profile.role === 'admin' ? 'text-purple-500 border-purple-500/30' : 'text-blue-500 border-blue-500/30'}`}>
+                                             {profile.role}
+                                          </span>
                                        </div>
                                        <div className="flex gap-2">
                                           <button
@@ -922,9 +893,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                      onSave={handleUserEditorSave}
                      onCancel={handleUserEditorCancel}
                      onImpersonate={handleImpersonateUser}
-                     onSuspend={handleSuspendUser}
-                     onUnsuspend={handleUnsuspendUser}
-                     onDelete={handleDeleteUser}
                   />
                )}
             </AnimatePresence>
