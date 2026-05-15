@@ -237,11 +237,18 @@ const ShipmentDetails: React.FC<ShipmentDetailsProps> = ({ shipment, onBack }) =
                                     <div className={`absolute left-0 top-1.5 w-[23px] h-[23px] bg-bgMain border rounded flex items-center justify-center transition-all ${i === 0 ? 'border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.3)] animate-pulse' : 'border-borderColor'}`}>
                                        <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-red-600 shadow-[0_0_5px_#dc2626]' : 'bg-textMuted'}`}></div>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-2">
-                                       <p className="text-sm font-bold text-textMain uppercase tracking-tight">{event.location}</p>
-                                       <p className="text-[9px] font-black text-textMuted uppercase tracking-widest">{event.date} • {event.time}</p>
+                                    <div className="space-y-2">
+                                       <p className={`font-black uppercase tracking-tight leading-snug ${i === 0 ? 'text-lg text-textMain' : 'text-base text-textMain'}`}>
+                                          {event.description}
+                                       </p>
+                                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-textMuted">
+                                          <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                                             <iconify-icon icon="solar:map-point-linear" width="12"></iconify-icon>
+                                             {event.location}
+                                          </p>
+                                          <p className="text-[9px] font-black uppercase tracking-widest">{event.date} • {event.time}</p>
+                                       </div>
                                     </div>
-                                    <p className="text-xs text-textMuted font-medium">{event.description}</p>
                                  </div>
                               ));
                            })()}
