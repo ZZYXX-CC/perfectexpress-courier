@@ -608,7 +608,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             </p>
                         ) : (
                             <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
-                                Best no-API option: paste coordinates from Google Maps, e.g. 9.0765, 7.3986
+                                Paste a Google Maps link. If coordinates are not exposed, enter latitude/longitude below; the link will still be kept.
                             </p>
                         )}
                     </div>
@@ -642,7 +642,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                             <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">
                                 {formData.mapLink && !(formData.mapLink.startsWith('http') || formData.mapLink.includes('google.com/maps'))
                                     ? 'OpenStreetMap can miss Google-only addresses; paste coordinates for exact pins'
-                                    : 'Paste a Google Maps link with coordinates or enter latitude/longitude manually'}
+                                    : 'If the Google Maps link cannot auto-resolve, enter latitude/longitude manually; the link will still be kept'}
                             </p>
                         </div>
                     )}
