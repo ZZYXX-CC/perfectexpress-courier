@@ -267,13 +267,17 @@ export default function TrackingMap({
         }
     }, [isFullscreen])
 
-    // Open in Google Maps. The /@lat,lng URL only centers the viewport;
-    // search/?query=lat,lng asks Google Maps to render an actual dropped pin.
+    // Open in Google Maps. If admin pasted a Maps URL, preserve and open
+    // that exact URL. Otherwise, use coordinates to render a dropped pin.
     const openGoogleMaps = useCallback(() => {
-        const fallbackSearchAddress = searchAddress || currentLocation || destinationAddress || originAddress || ''
-        const url = hasMapPin
-            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${center[0]},${center[1]}`)}`
-            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallbackSearchAddress)}`
+        const trimmedSearchAddress = searchAddress?.trim() || ''
+        const hasPastedMapUrl = /^https?:\/\//i.test(trimmedSearchAddress) && /(?:google\.[^/]+\/maps|maps\.app\.goo\.gl)/i.test(trimmedSearchAddress)
+        const fallbackSearchAddress = trimmedSearchAddress || currentLocation || destinationAddress || originAddress || ''
+        const url = hasPastedMapUrl
+            ? trimmedSearchAddress
+            : hasMapPin
+                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${center[0]},${center[1]}`)}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallbackSearchAddress)}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }, [center, currentLocation, destinationAddress, originAddress, searchAddress, hasMapPin])
 
