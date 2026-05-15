@@ -282,10 +282,9 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             }
 
             if (name === 'latitude' || name === 'longitude') {
-                // Manual coordinate edits are authoritative. Clear stale saved
-                // address/map-link detail so the second box does not come back
-                // later with an old Google Maps link the admin did not enter.
-                updates.mapLink = '';
+                // Manual coordinate edits are authoritative for the in-app map,
+                // but the location search field may contain the exact Google
+                // Maps URL we should keep for the external "Open in Maps" link.
                 setLocationResolverMessage(value ? 'Manual coordinates will be saved' : '');
                 setLocationResolverState(value ? 'success' : 'idle');
             }
@@ -388,14 +387,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         const typedLocation = (formData.currentLocation || previousLocation || 'System')
             .replace(/\s*\[@-?\d+\.?\d*,-?\d+\.?\d*\]\s*$/, '')
             .trim();
-        const manualCoordinatesChanged = !!shipment.coordinates && (
-            formData.mapLink.trim() === savedLocation.detail &&
-            (
-                String(formData.latitude).trim() !== String(shipment.coordinates.lat) ||
-                String(formData.longitude).trim() !== String(shipment.coordinates.lng)
-            )
-        );
-        const locationDetail = manualCoordinatesChanged ? '' : formData.mapLink.trim();
+        const locationDetail = formData.mapLink.trim();
         const currentFieldLookupInput = !locationDetail && looksLikeResolvableLocationInput(typedLocation) ? typedLocation : '';
         const lookupInput = locationDetail || currentFieldLookupInput;
         const locationDetailForSave = locationDetail || currentFieldLookupInput;
