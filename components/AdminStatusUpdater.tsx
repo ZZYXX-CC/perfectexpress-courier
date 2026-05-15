@@ -225,6 +225,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
     const [formData, setFormData] = useState({
         status: 'pending',
         currentLocation: '',
+        statusNote: '',
         paymentStatus: 'unpaid',
         latitude: '',
         longitude: '',
@@ -237,6 +238,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
             setFormData({
                 status: shipment.status || 'pending',
                 currentLocation: savedLocation.label,
+                statusNote: '',
                 paymentStatus: shipment.paymentStatus || 'unpaid',
                 latitude: shipment.coordinates?.lat?.toString() || '',
                 longitude: shipment.coordinates?.lng?.toString() || '',
@@ -247,7 +249,7 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         }
     }, [shipment]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => {
             const updates = { ...prev, [name]: value };
@@ -429,6 +431,8 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         setGeocoding(false);
 
         const statusChanged = formData.status !== shipment.status;
+        const statusNote = formData.statusNote.trim();
+        const noteChanged = statusNote.length > 0;
         const cleanShipmentLoc = previousLocation;
         const locationChanged = currentLoc !== cleanShipmentLoc || locationDetailForSave !== previousLocationDetail;
         const paymentChanged = formData.paymentStatus !== (shipment.paymentStatus || 'unpaid');
@@ -454,14 +458,14 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
         }
 
         try {
-            // If status OR location changed, log it (saves status + current_location + history)
-            if (statusChanged || locationChanged) {
+            // If status, note, or location changed, log it (saves status + current_location + history)
+            if (statusChanged || locationChanged || noteChanged) {
                 const result = await logShipmentEvent(shipment.id, {
                     status: formData.status,
                     location: currentLoc,
-                    note: formData.status !== shipment.status
+                    note: statusNote || (formData.status !== shipment.status
                         ? `Operational status changed to ${formData.status.toUpperCase()}`
-                        : `Logistics update: Location updated`,
+                        : `Logistics update: Location updated`),
                     coordinates: locationChanged ? (resolvedCoordinates ?? null) : resolvedCoordinates,
                     locationDetail: locationDetailForSave
                 });
@@ -533,6 +537,21 @@ const AdminStatusUpdater: React.FC<AdminStatusUpdaterProps> = ({ shipment, onSav
                         </select>
                         <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
                             Allowed flow: pending · quoted · confirmed · in-transit · out-for-delivery · held · cancelled · delivered
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="metadata-label text-textMuted mb-1 block">Status Description</label>
+                        <textarea
+                            name="statusNote"
+                            value={formData.statusNote}
+                            onChange={handleChange}
+                            rows={3}
+                            className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none resize-none"
+                            placeholder="E.G. HELD BY CUSTOMS PENDING CLEARANCE"
+                        />
+                        <p className="text-[8px] text-textMuted mt-1 tracking-wider uppercase">
+                            Optional public note saved in tracking history
                         </p>
                     </div>
 
