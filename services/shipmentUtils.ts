@@ -114,6 +114,7 @@ export const mapShipmentRow = (data: any): Shipment => {
         origin: senderAddress || originFallback || 'Unknown',
         destination: receiverAddress || destinationFallback || 'Unknown',
         estimatedArrival: data?.estimated_delivery ? new Date(data.estimated_delivery).toLocaleDateString() : 'TBD',
+        estimatedDelivery: data?.estimated_delivery || '',
         currentLocation: cleanLocation,
         locationDetail,
         weight: formatWeight(parcelDetails.weight || data?.weight),

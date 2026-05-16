@@ -32,6 +32,7 @@ const AdminShipmentEditor: React.FC<AdminShipmentEditorProps> = ({ shipment, onS
         price: '',
         currentLocation: '',
         createdAt: '',
+        estimatedDelivery: '',
         paymentStatus: 'unpaid'
     });
 
@@ -44,8 +45,13 @@ const AdminShipmentEditor: React.FC<AdminShipmentEditorProps> = ({ shipment, onS
             const raw = shipment as any;
 
             // Format date for datetime-local input
-            const createdDate = shipment.createdAt || (shipment as any).created_at || shipment.estimatedArrival || '';
+            const createdDate = shipment.createdAt || (shipment as any).created_at || '';
             const formattedDate = createdDate ? new Date(createdDate).toISOString().slice(0, 16) : '';
+            const estimatedDelivery = shipment.estimatedDelivery || raw.estimated_delivery || '';
+            const estimatedDeliveryDate = estimatedDelivery ? new Date(estimatedDelivery) : null;
+            const formattedEstimatedDelivery = estimatedDeliveryDate && !Number.isNaN(estimatedDeliveryDate.getTime())
+                ? new Date(estimatedDelivery).toISOString().slice(0, 10)
+                : '';
 
             setFormData({
                 senderName: senderInfo.name || shipment.sender?.name || '',
@@ -62,6 +68,7 @@ const AdminShipmentEditor: React.FC<AdminShipmentEditorProps> = ({ shipment, onS
                 price: (shipment.price || raw.price)?.toString() || '',
                 currentLocation: shipment.currentLocation || raw.current_location || '',
                 createdAt: formattedDate,
+                estimatedDelivery: formattedEstimatedDelivery,
                 paymentStatus: shipment.paymentStatus || raw.payment_status || 'unpaid'
             });
         }
@@ -93,6 +100,7 @@ const AdminShipmentEditor: React.FC<AdminShipmentEditorProps> = ({ shipment, onS
             service_type: formData.serviceType,
             status: formData.status,
             current_location: formData.currentLocation,
+            estimated_delivery: formData.estimatedDelivery || null,
             payment_status: formData.paymentStatus,
             updated_at: new Date().toISOString()
         };
@@ -122,6 +130,7 @@ const AdminShipmentEditor: React.FC<AdminShipmentEditorProps> = ({ shipment, onS
                         if (formData.paymentStatus !== (shipment.paymentStatus || (shipment as any).payment_status)) changes.push(`payment → ${formData.paymentStatus.toUpperCase()}`);
                         if (formData.price !== ((shipment.price || (shipment as any).price)?.toString() || '')) changes.push('price updated');
                         if (formData.currentLocation !== (shipment.currentLocation || (shipment as any).current_location || '')) changes.push(`location → ${formData.currentLocation}`);
+                        if (formData.estimatedDelivery !== (shipment.estimatedDelivery || (shipment as any).estimated_delivery || '').slice(0, 10)) changes.push(`est. arrival → ${formData.estimatedDelivery || 'TBD'}`);
 
                         await notificationService.createNotification({
                             user_id: ship.user_id,
@@ -351,6 +360,16 @@ const AdminShipmentEditor: React.FC<AdminShipmentEditorProps> = ({ shipment, onS
                                 value={formData.createdAt}
                                 onChange={handleChange}
                                 type="datetime-local"
+                                className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="metadata-label text-textMuted mb-1 block">Est. Arrival</label>
+                            <input
+                                name="estimatedDelivery"
+                                value={formData.estimatedDelivery}
+                                onChange={handleChange}
+                                type="date"
                                 className="w-full bg-bgSurface border border-borderColor p-3 rounded-sm text-sm font-bold text-textMain focus:border-red-600 focus:outline-none"
                             />
                         </div>

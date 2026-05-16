@@ -7,6 +7,7 @@ export interface Shipment {
   origin: string;
   destination: string;
   estimatedArrival: string;
+  estimatedDelivery?: string;
   currentLocation: string;
   locationDetail?: string;
   weight: string;
