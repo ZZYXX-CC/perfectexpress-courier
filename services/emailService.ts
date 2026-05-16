@@ -59,13 +59,23 @@ export const emailService = {
                 html: `<h1>Tracking Update</h1><p>The status of your shipment <strong>${safeTracking}</strong> has changed to <strong>${safeStatus.toUpperCase()}</strong>.</p>`
             };
         },
-        supportReply(ticketId: string, message: string) {
+        supportReply(ticketId: string, message: string, ticketUrl?: string) {
             const safeTicketId = escapeHtml(ticketId);
             const safeMessage = escapeHtml(message.substring(0, 50));
+            const safeTicketUrl = ticketUrl ? escapeHtml(ticketUrl) : '';
             return {
                 subject: `PerfectExpress | New Support Message: ${safeTicketId}`,
-                text: `You have a new message regarding ticket ${ticketId}.`,
-                html: `<h1>Support Ticket Update</h1><p>A new response has been posted to ticket <strong>${safeTicketId}</strong>.</p><p>Preview: "${safeMessage}..."</p>`
+                text: `You have a new message regarding ticket ${ticketId}.${ticketUrl ? ` Open your ticket: ${ticketUrl}` : ''}`,
+                html: `<h1>Support Ticket Update</h1><p>A new response has been posted to ticket <strong>${safeTicketId}</strong>.</p><p>Preview: "${safeMessage}..."</p>${safeTicketUrl ? `<p><a href="${safeTicketUrl}">Open your support ticket</a></p>` : ''}`
+            }
+        },
+        supportTicketCreated(ticketId: string, ticketUrl: string) {
+            const safeTicketId = escapeHtml(ticketId);
+            const safeTicketUrl = escapeHtml(ticketUrl);
+            return {
+                subject: `PerfectExpress | Support Ticket Created: ${safeTicketId}`,
+                text: `Your support ticket ${ticketId} has been created. Open your ticket: ${ticketUrl}`,
+                html: `<h1>Support Ticket Created</h1><p>Your support ticket <strong>${safeTicketId}</strong> has been received.</p><p>Use this private link to view replies and send follow-up messages:</p><p><a href="${safeTicketUrl}">Open your support ticket</a></p>`
             }
         }
     }

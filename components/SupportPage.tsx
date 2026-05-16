@@ -10,6 +10,7 @@ const SupportPage: React.FC = () => {
   const [formState, setFormState] = useState({ name: '', email: '', message: '', subject: 'General Inquiry' });
   const [isSent, setIsSent] = useState(false);
   const [createdTicketNumber, setCreatedTicketNumber] = useState<string | null>(null);
+  const [guestTicketUrl, setGuestTicketUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,6 +73,7 @@ const SupportPage: React.FC = () => {
     if (result.success) {
       setIsSent(true);
       setCreatedTicketNumber(result.ticket?.ticket_number || 'New');
+      setGuestTicketUrl(result.guestTicketUrl || null);
       if (user) loadUserTickets(user.id); // Refresh list
     } else {
       setError(result.error || "Failed to create ticket. Please try again.");
@@ -163,6 +165,11 @@ const SupportPage: React.FC = () => {
                 </div>
                 <h3 className="text-2xl font-black heading-font uppercase text-textMain mb-2">Transmission Received</h3>
                 <p className="text-textMuted text-sm font-medium">Ticket #{createdTicketNumber} has been logged in our systems.</p>
+                {guestTicketUrl && (
+                  <p className="text-[10px] text-amber-400 uppercase tracking-widest font-bold max-w-md mt-4">
+                    Save this private ticket link. It is also sent by email so you can view replies and respond later.
+                  </p>
+                )}
                 <div className="flex gap-4 mt-8">
                   <button
                     onClick={() => { setIsSent(false); setFormState(prev => ({ ...prev, message: '', subject: 'General Inquiry' })); }}
@@ -176,6 +183,14 @@ const SupportPage: React.FC = () => {
                       className="text-[10px] font-black uppercase tracking-widest bg-red-600 text-white px-6 py-3"
                     >
                       View All Tickets
+                    </button>
+                  )}
+                  {guestTicketUrl && (
+                    <button
+                      onClick={() => window.open(guestTicketUrl, '_blank', 'noopener,noreferrer')}
+                      className="text-[10px] font-black uppercase tracking-widest bg-red-600 text-white px-6 py-3"
+                    >
+                      Open Ticket
                     </button>
                   )}
                 </div>

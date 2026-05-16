@@ -20,6 +20,7 @@ import ResetPasswordPage from './components/Auth/ResetPasswordPage';
 import NetworkPage from './components/NetworkPage';
 import GuidePage from './components/GuidePage';
 import SupportPage from './components/SupportPage';
+import GuestTicketPage from './components/GuestTicketPage';
 import LegalPage from './components/LegalPage';
 import Loader from './components/Loader';
 import NewShipmentPage from './components/NewShipmentPage';
@@ -479,6 +480,7 @@ const AppContent: React.FC = () => {
               {/* Support & Info Pages */}
               <Route path="/guide" element={<motion.div {...pageTransition} key="guide"><GuidePage /></motion.div>} />
               <Route path="/support" element={<motion.div {...pageTransition} key="support"><SupportPage /></motion.div>} />
+              <Route path="/support/tickets/:id" element={<motion.div {...pageTransition} key="guest-ticket"><GuestTicketPage /></motion.div>} />
               <Route path="/privacy" element={<motion.div {...pageTransition} key="privacy"><LegalPage type="privacy" /></motion.div>} />
               <Route path="/terms" element={<motion.div {...pageTransition} key="terms"><LegalPage type="terms" /></motion.div>} />
               <Route path="/cookies" element={<motion.div {...pageTransition} key="cookies"><LegalPage type="cookies" /></motion.div>} />

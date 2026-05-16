@@ -27,7 +27,7 @@ const ChatBot: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [createdTicket, setCreatedTicket] = useState<{ id: string; ticket_number: string } | null>(null);
+  const [createdTicket, setCreatedTicket] = useState<{ id: string; ticket_number: string; guestTicketUrl?: string } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -107,7 +107,8 @@ const ChatBot: React.FC = () => {
 
     setCreatedTicket({
       id: result.ticket.id,
-      ticket_number: result.ticket.ticket_number
+      ticket_number: result.ticket.ticket_number,
+      guestTicketUrl: result.guestTicketUrl
     });
   };
 
@@ -142,14 +143,21 @@ const ChatBot: React.FC = () => {
                   Your message has been sent to support. We will reply by email, and signed-in users can track replies in the dashboard.
                 </p>
                 <div className="grid gap-3">
-                  {userId && (
+                  {userId ? (
                     <button
                       onClick={() => navigate(`/dashboard/tickets/${createdTicket.id}`)}
                       className="w-full py-3 bg-red-600 text-white rounded-sm font-black uppercase tracking-[0.2em] text-[9px]"
                     >
                       View Ticket
                     </button>
-                  )}
+                  ) : createdTicket.guestTicketUrl ? (
+                    <button
+                      onClick={() => window.open(createdTicket.guestTicketUrl, '_blank', 'noopener,noreferrer')}
+                      className="w-full py-3 bg-red-600 text-white rounded-sm font-black uppercase tracking-[0.2em] text-[9px]"
+                    >
+                      Open Private Ticket
+                    </button>
+                  ) : null}
                   <button
                     onClick={resetForNewTicket}
                     className="w-full py-3 border border-borderColor text-textMuted hover:text-textMain rounded-sm font-black uppercase tracking-[0.2em] text-[9px]"

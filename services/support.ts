@@ -6,6 +6,7 @@ export interface SupportTicket {
     id: string;
     ticket_number: string;
     user_id: string | null;
+    guest_access_token?: string | null;
     name: string;
     email: string;
     subject: string;
@@ -27,6 +28,11 @@ export interface TicketReply {
 
 export const generateTicketNumber = () => {
     return `TKT-${Math.floor(10000000 + Math.random() * 90000000)}`;
+};
+
+export const buildGuestTicketUrl = (ticketId: string, token: string) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${baseUrl}/support/tickets/${ticketId}?token=${encodeURIComponent(token)}`;
 };
 
 export const createTicket = async (data: {
@@ -54,6 +60,10 @@ export const createTicket = async (data: {
         .single();
 
     if (ticketError) return { error: ticketError.message };
+    const typedTicket = ticket as SupportTicket;
+    const guestTicketUrl = typedTicket.guest_access_token
+        ? buildGuestTicketUrl(typedTicket.id, typedTicket.guest_access_token)
+        : undefined;
 
     // 3. Notify the ticket creator (confirmation)
     if (safeUserId) {
@@ -64,16 +74,14 @@ export const createTicket = async (data: {
             message: `Your support ticket ${ticketNumber} ("${data.subject}") has been received. Our team will respond shortly.`,
             link: `/dashboard/tickets/${ticket.id}`
         });
+    } else if (guestTicketUrl) {
+        await emailService.sendEmail({
+            to: data.email,
+            ...emailService.templates.supportTicketCreated(ticketNumber, guestTicketUrl)
+        });
     }
 
-    // 4. Notify Admins
-    await notificationService.notifyAdmins(
-        'New Support Ticket',
-        `A new ticket (${ticketNumber}) has been created by ${data.name}: ${data.subject}`,
-        `/dashboard?tab=support`
-    );
-
-    return { success: true, ticket };
+    return { success: true, ticket: typedTicket, guestTicketUrl };
 };
 
 export const getUserTickets = async (userId: string) => {
@@ -117,6 +125,29 @@ export const getTicketDetails = async (ticketId: string) => {
     return { ticket, replies: replies as TicketReply[] };
 };
 
+export const getGuestTicketDetails = async (ticketId: string, token: string) => {
+    const { data, error } = await supabase.rpc('get_guest_support_ticket', {
+        p_ticket_id: ticketId,
+        p_token: token
+    });
+
+    if (error) throw error;
+    return data as { ticket: SupportTicket; replies: TicketReply[] };
+};
+
+export const addGuestReply = async (ticketId: string, token: string, message: string) => {
+    const { data, error } = await supabase
+        .rpc('add_guest_support_reply', {
+            p_ticket_id: ticketId,
+            p_token: token,
+            p_message: message
+        })
+        .single();
+
+    if (error) throw error;
+    return data as TicketReply;
+};
+
 export const addReply = async (ticketId: string, message: string, senderType: 'customer' | 'admin', senderName: string) => {
     const { data, error } = await supabase
         .from('ticket_replies')
@@ -134,7 +165,7 @@ export const addReply = async (ticketId: string, message: string, senderType: 'c
     // Trigger notification if admin replies to customer
     if (senderType === 'admin') {
         const { data: { user: currentUser } } = await supabase.auth.getUser();
-        const { data: ticket } = await supabase.from('support_tickets').select('user_id, ticket_number').eq('id', ticketId).single();
+        const { data: ticket } = await supabase.from('support_tickets').select('id, user_id, ticket_number, email, guest_access_token').eq('id', ticketId).single();
         if (ticket?.user_id && ticket.user_id !== currentUser?.id) {
             const { error: notifError } = await notificationService.createNotification({
                 user_id: ticket.user_id,
@@ -153,6 +184,12 @@ export const addReply = async (ticketId: string, message: string, senderType: 'c
                 });
             }
 
+        } else if (ticket?.email && ticket?.guest_access_token) {
+            const guestTicketUrl = buildGuestTicketUrl(ticket.id, ticket.guest_access_token);
+            await emailService.sendEmail({
+                to: ticket.email,
+                ...emailService.templates.supportReply(ticket.ticket_number, message, guestTicketUrl)
+            });
         }
     } else {
         // Trigger notification for ALL admins when a customer replies
