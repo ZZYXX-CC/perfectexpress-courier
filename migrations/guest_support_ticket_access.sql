@@ -2,7 +2,7 @@
 -- Guests receive a private token link that lets them view and reply to their
 -- own ticket without creating an account. The token is not exposed in admin UI.
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 ALTER TABLE public.support_tickets
 ADD COLUMN IF NOT EXISTS guest_access_token text;
@@ -66,7 +66,7 @@ BEGIN
   ) VALUES (
     BTRIM(p_ticket_number),
     v_safe_user_id,
-    CASE WHEN v_safe_user_id IS NULL THEN encode(gen_random_bytes(32), 'hex') ELSE NULL END,
+    CASE WHEN v_safe_user_id IS NULL THEN encode(extensions.gen_random_bytes(32), 'hex') ELSE NULL END,
     BTRIM(p_name),
     LOWER(BTRIM(p_email)),
     BTRIM(p_subject),
