@@ -36,13 +36,16 @@ export const createTicket = async (data: {
     message: string;
     userId?: string;
 }) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const safeUserId = user && data.userId === user.id ? user.id : null;
+
     // 1. Create Ticket
     const ticketNumber = generateTicketNumber();
     const { data: ticket, error: ticketError } = await supabase
         .from('support_tickets')
         .insert({
             ticket_number: ticketNumber,
-            user_id: data.userId || null,
+            user_id: safeUserId,
             name: data.name,
             email: data.email,
             subject: data.subject,
@@ -67,9 +70,9 @@ export const createTicket = async (data: {
     if (replyError) { /* initial reply failed, ticket still created */ }
 
     // 3. Notify the ticket creator (confirmation)
-    if (data.userId) {
+    if (safeUserId) {
         await notificationService.createNotification({
-            user_id: data.userId,
+            user_id: safeUserId,
             type: 'ticket_reply',
             title: 'Ticket Submitted',
             message: `Your support ticket ${ticketNumber} ("${data.subject}") has been received. Our team will respond shortly.`,
