@@ -38,36 +38,22 @@ export const createTicket = async (data: {
 }) => {
     const { data: { user } } = await supabase.auth.getUser();
     const safeUserId = user && data.userId === user.id ? user.id : null;
-
-    // 1. Create Ticket
     const ticketNumber = generateTicketNumber();
+
+    // Create the ticket through a SECURITY DEFINER RPC so public support
+    // submissions do not depend on direct browser INSERT policies.
     const { data: ticket, error: ticketError } = await supabase
-        .from('support_tickets')
-        .insert({
-            ticket_number: ticketNumber,
-            user_id: safeUserId,
-            name: data.name,
-            email: data.email,
-            subject: data.subject,
-            status: 'open',
-            priority: 'normal'
+        .rpc('create_support_ticket', {
+            p_ticket_number: ticketNumber,
+            p_name: data.name,
+            p_email: data.email,
+            p_subject: data.subject,
+            p_message: data.message,
+            p_user_id: safeUserId
         })
-        .select()
         .single();
 
     if (ticketError) return { error: ticketError.message };
-
-    // 2. Add Initial Message as Reply
-    const { error: replyError } = await supabase
-        .from('ticket_replies')
-        .insert({
-            ticket_id: ticket.id,
-            sender_type: 'customer',
-            sender_name: data.name,
-            message: data.message
-        });
-
-    if (replyError) { /* initial reply failed, ticket still created */ }
 
     // 3. Notify the ticket creator (confirmation)
     if (safeUserId) {
