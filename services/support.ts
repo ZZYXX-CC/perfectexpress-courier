@@ -100,7 +100,7 @@ export const getAllTickets = async () => {
 export const getTicketDetails = async (ticketId: string) => {
     const { data: ticket, error: ticketError } = await supabase
         .from('support_tickets')
-        .select('id, ticket_number, user_id, name, email, subject, message, status, priority, created_at, updated_at')
+        .select('id, ticket_number, user_id, name, email, subject, status, priority, created_at, updated_at')
         .eq('id', ticketId)
         .single();
 
