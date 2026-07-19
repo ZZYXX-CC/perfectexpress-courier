@@ -16,14 +16,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
   const didCompleteRef = React.useRef(false);
 
   React.useEffect(() => {
-    // Pre-fill with common admin credentials for dev ease if current values are empty
-    if (!email && !password) {
-      setEmail('miguelkwan56@gmail.com');
-      setPassword('11223344!');
-    }
-  }, []);
-
-  React.useEffect(() => {
     if (!isSupabaseConfigured) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
