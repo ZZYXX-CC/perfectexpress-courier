@@ -14,6 +14,7 @@ export interface SupportTicket {
     priority: 'low' | 'normal' | 'high' | 'urgent';
     channel?: 'form' | 'chat';
     guest_access_token?: string | null;
+    archived?: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -255,4 +256,35 @@ export const updateTicketStatus = async (ticketId: string, status: SupportTicket
     }
 
     return data;
+};
+
+// Admin: archive / unarchive a ticket (soft — hides it from the active list,
+// keeps all data). Requires the `archived` column + admin update RLS.
+export const setTicketArchived = async (ticketId: string, archived: boolean) => {
+    const { data, error } = await supabase
+        .from('support_tickets')
+        .update({ archived })
+        .eq('id', ticketId)
+        .select()
+        .single();
+    if (error) throw error;
+    return data as SupportTicket;
+};
+
+// Admin: permanently delete a ticket and all its messages. Replies are removed
+// first so this works whether or not an ON DELETE CASCADE exists. Requires
+// admin delete RLS on both tables.
+export const deleteTicket = async (ticketId: string) => {
+    const { error: repliesError } = await supabase
+        .from('ticket_replies')
+        .delete()
+        .eq('ticket_id', ticketId);
+    if (repliesError) throw repliesError;
+
+    const { error } = await supabase
+        .from('support_tickets')
+        .delete()
+        .eq('id', ticketId);
+    if (error) throw error;
+    return { success: true };
 };

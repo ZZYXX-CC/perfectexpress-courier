@@ -7,7 +7,7 @@ import { supabase } from '../services/supabase';
 import AdminShipmentEditor from './AdminShipmentEditor';
 import AdminUserEditor from './AdminUserEditor';
 import AdminStatusUpdater from './AdminStatusUpdater';
-import { getAllTickets, SupportTicket, updateTicketStatus } from '../services/support';
+import { getAllTickets, SupportTicket, updateTicketStatus, setTicketArchived, deleteTicket } from '../services/support';
 import { deleteShipment, updateShipment, logShipmentEvent, getAllUsers, updateUserRole, UserProfile, inviteUser } from '../services/adminService';
 import { mapShipmentRow } from '../services/shipmentUtils';
 import { useToast } from './ui/Toast';
@@ -42,6 +42,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
    const [loading, setLoading] = useState(true);
    const [searchQuery, setSearchQuery] = useState('');
    const [tickets, setTickets] = useState<SupportTicket[]>([]);
+   const [showArchived, setShowArchived] = useState(false);
+   const [busyTicketId, setBusyTicketId] = useState<string | null>(null);
 
    // Editor State
    const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -99,6 +101,36 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
    useEffect(() => {
       loadData();
    }, [loadData]);
+
+   // Admin ticket/chat management: archive (reversible) + permanent delete.
+   const handleArchiveTicket = async (ticket: SupportTicket) => {
+      setBusyTicketId(ticket.id);
+      try {
+         const updated = await setTicketArchived(ticket.id, !ticket.archived);
+         setTickets(prev => prev.map(t => (t.id === ticket.id ? { ...t, archived: updated.archived } : t)));
+      } catch (e) {
+         console.error('Archive failed', e);
+         alert('Could not archive this ticket. If this persists, the database migration may not be applied yet.');
+      } finally {
+         setBusyTicketId(null);
+      }
+   };
+
+   const handleDeleteTicket = async (ticket: SupportTicket) => {
+      if (!window.confirm(`Permanently delete ticket ${ticket.ticket_number} and all its messages? This cannot be undone.`)) return;
+      setBusyTicketId(ticket.id);
+      try {
+         await deleteTicket(ticket.id);
+         setTickets(prev => prev.filter(t => t.id !== ticket.id));
+      } catch (e) {
+         console.error('Delete failed', e);
+         alert('Could not delete this ticket. Check that admin delete permissions (RLS) are configured.');
+      } finally {
+         setBusyTicketId(null);
+      }
+   };
+
+   const visibleTickets = tickets.filter(t => (showArchived ? true : !t.archived));
 
    useEffect(() => {
       const channel = supabase
@@ -789,6 +821,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
                         >
+                           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-textMuted">
+                                 {visibleTickets.length} {showArchived ? 'total' : 'active'} ticket{visibleTickets.length === 1 ? '' : 's'}
+                              </p>
+                              <button
+                                 onClick={() => setShowArchived(v => !v)}
+                                 className="text-[10px] font-black uppercase tracking-widest border border-borderColor px-3 py-1.5 rounded-sm hover:border-red-600 hover:text-red-600 transition-colors bg-bgMain text-textMain"
+                              >
+                                 {showArchived ? 'Hide archived' : 'Show archived'}
+                              </button>
+                           </div>
                            <div className="border border-borderColor rounded-sm overflow-hidden bg-bgSurface/10 backdrop-blur-md">
                               {/* Standard Table (Desktop) */}
                               <table className="w-full text-left hidden lg:table">
@@ -802,8 +845,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     </tr>
                                  </thead>
                                  <tbody className="divide-y divide-borderColor">
-                                    {tickets.map(ticket => (
-                                       <tr key={ticket.id} className="group hover:bg-white/5 transition-colors">
+                                    {visibleTickets.map(ticket => (
+                                       <tr key={ticket.id} className={`group hover:bg-white/5 transition-colors ${ticket.archived ? 'opacity-60' : ''}`}>
                                           <td className="p-4">
                                              <div className="flex flex-col">
                                                 <span className="font-mono text-xs text-red-500">{ticket.ticket_number}</span>
@@ -827,12 +870,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                              </span>
                                           </td>
                                           <td className="p-4 text-right">
-                                             <a
-                                                href={`/dashboard/tickets/${ticket.id}`}
-                                                className="text-[10px] font-bold uppercase tracking-widest border border-borderColor px-3 py-1.5 rounded-sm hover:border-red-600 hover:text-red-600 transition-colors bg-bgMain"
-                                             >
-                                                Manage
-                                             </a>
+                                             <div className="flex items-center justify-end gap-2">
+                                                {ticket.archived && (
+                                                   <span className="text-[8px] font-black uppercase tracking-widest text-textMuted border border-borderColor px-2 py-0.5 rounded-sm">Archived</span>
+                                                )}
+                                                <a
+                                                   href={`/dashboard/tickets/${ticket.id}`}
+                                                   className="text-[10px] font-bold uppercase tracking-widest border border-borderColor px-3 py-1.5 rounded-sm hover:border-red-600 hover:text-red-600 transition-colors bg-bgMain"
+                                                >
+                                                   Manage
+                                                </a>
+                                                <button
+                                                   onClick={() => handleArchiveTicket(ticket)}
+                                                   disabled={busyTicketId === ticket.id}
+                                                   className="text-[10px] font-bold uppercase tracking-widest border border-borderColor px-3 py-1.5 rounded-sm hover:border-textMuted transition-colors bg-bgMain text-textMuted hover:text-textMain disabled:opacity-40"
+                                                >
+                                                   {ticket.archived ? 'Unarchive' : 'Archive'}
+                                                </button>
+                                                <button
+                                                   onClick={() => handleDeleteTicket(ticket)}
+                                                   disabled={busyTicketId === ticket.id}
+                                                   className="text-[10px] font-bold uppercase tracking-widest border border-red-600/40 px-3 py-1.5 rounded-sm text-red-600 hover:bg-red-600 hover:text-white transition-colors bg-bgMain disabled:opacity-40"
+                                                >
+                                                   Delete
+                                                </button>
+                                             </div>
                                           </td>
                                        </tr>
                                     ))}
@@ -841,8 +903,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
                               {/* Mobile Cards */}
                               <div className="lg:hidden divide-y divide-borderColor/50">
-                                 {tickets.map(ticket => (
-                                    <div key={ticket.id} className="p-4 md:p-6 space-y-4 hover:bg-white/5 transition-colors">
+                                 {visibleTickets.map(ticket => (
+                                    <div key={ticket.id} className={`p-4 md:p-6 space-y-4 hover:bg-white/5 transition-colors ${ticket.archived ? 'opacity-60' : ''}`}>
                                        <div className="flex justify-between items-start">
                                           <div>
                                              <p className="font-mono text-xs text-red-500 font-bold uppercase">{ticket.ticket_number}</p>
@@ -868,13 +930,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                              Enter Dashboard
                                           </a>
                                        </div>
+                                       <div className="flex gap-2 pt-1">
+                                          <button
+                                             onClick={() => handleArchiveTicket(ticket)}
+                                             disabled={busyTicketId === ticket.id}
+                                             className="flex-1 border border-borderColor text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-sm text-textMuted hover:text-textMain hover:border-textMuted transition-colors bg-bgMain disabled:opacity-40"
+                                          >
+                                             {ticket.archived ? 'Unarchive' : 'Archive'}
+                                          </button>
+                                          <button
+                                             onClick={() => handleDeleteTicket(ticket)}
+                                             disabled={busyTicketId === ticket.id}
+                                             className="flex-1 border border-red-600/40 text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-sm text-red-600 hover:bg-red-600 hover:text-white transition-colors bg-bgMain disabled:opacity-40"
+                                          >
+                                             Delete
+                                          </button>
+                                       </div>
                                     </div>
                                  ))}
                               </div>
 
-                              {tickets.length === 0 && (
+                              {visibleTickets.length === 0 && (
                                  <div className="p-12 text-center text-textMuted uppercase tracking-widest text-xs">
-                                    No active tickets found
+                                    {showArchived ? 'No tickets found' : 'No active tickets found'}
                                  </div>
                               )}
                            </div>
