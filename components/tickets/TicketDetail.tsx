@@ -150,13 +150,17 @@ const TicketDetail: React.FC = () => {
 
                 {replies.map((reply) => {
                     const impersonatedId = localStorage.getItem('impersonated_user_id');
-                    const activeUserId = impersonatedId || currentUser?.id;
                     const isAdminMsg = reply.sender_type === 'admin';
 
-                    // logic for alignment:
-                    // Always show Admin messages on the right and Customer messages on the left
-                    // for a consistent "Chat" experience.
-                    const isRightAligned = isAdminMsg;
+                    // Viewer-relative alignment (WhatsApp-style): the current viewer's
+                    // own messages sit on the right, everyone else's on the left — so the
+                    // layout mirrors per person instead of being fixed. An admin in
+                    // "View As" (impersonation) mode is effectively the customer.
+                    const viewerIsAdmin = currentUser?.role === 'admin' && !impersonatedId;
+                    const isMine = viewerIsAdmin
+                        ? reply.sender_type === 'admin'
+                        : reply.sender_type === 'customer';
+                    const isRightAligned = isMine;
 
                     return (
                         <div key={reply.id} className={`flex ${isRightAligned ? 'justify-end' : 'justify-start'} relative z-10`}>
@@ -164,7 +168,7 @@ const TicketDetail: React.FC = () => {
                                 <div className={`p-4 rounded-sm border transition-all duration-300 ${isAdminMsg
                                     ? 'bg-red-600/10 border-red-600/30 shadow-[0_0_20px_rgba(220,38,38,0.05)]'
                                     : 'bg-bgSurface/40 border-borderColor backdrop-blur-md'
-                                    } ${isRightAligned ? 'text-right' : 'text-left'} mb-2 group-hover:border-red-600/50`}>
+                                    } text-left mb-2 group-hover:border-red-600/50`}>
                                     <p className="text-[13px] text-textMain whitespace-pre-wrap leading-relaxed font-medium">{reply.message}</p>
                                 </div>
                                 <div className={`flex items-center gap-2 px-1 ${isRightAligned ? 'flex-row-reverse' : ''}`}>
