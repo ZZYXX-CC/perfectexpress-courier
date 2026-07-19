@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { notificationService } from './notificationService';
-import { emailService } from './emailService';
+import { emailService, buildGuestSupportLink } from './emailService';
 
 export interface SupportTicket {
     id: string;
@@ -12,6 +12,8 @@ export interface SupportTicket {
     message?: string; // Optional in list view
     status: 'open' | 'in_progress' | 'resolved' | 'closed';
     priority: 'low' | 'normal' | 'high' | 'urgent';
+    channel?: 'form' | 'chat';
+    guest_access_token?: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -35,50 +37,80 @@ export const createTicket = async (data: {
     subject: string;
     message: string;
     userId?: string;
+    channel?: 'form' | 'chat';
 }) => {
-    // 1. Create Ticket
-    const ticketNumber = generateTicketNumber();
-    const { data: ticket, error: ticketError } = await supabase
-        .from('support_tickets')
-        .insert({
-            ticket_number: ticketNumber,
-            user_id: data.userId || null,
-            name: data.name,
-            email: data.email,
-            subject: data.subject,
-            status: 'open',
-            priority: 'normal'
-        })
-        .select()
-        .single();
+    // Create via the SECURITY DEFINER RPC so anonymous (guest) visitors can open
+    // tickets under RLS. The RPC inserts the ticket + the initial reply, and (for
+    // guests) mints a guest_access_token. Admin notifications + emails are handled
+    // by the trg_notify_on_ticket_insert trigger — not here.
+    const { data: ticket, error: ticketError } = await supabase.rpc('create_support_ticket', {
+        p_ticket_number: generateTicketNumber(),
+        p_name: data.name,
+        p_email: data.email,
+        p_subject: data.subject,
+        p_message: data.message,
+        p_user_id: data.userId ?? null,
+        p_channel: data.channel ?? 'form',
+    });
 
-    if (ticketError) {
+    if (ticketError || !ticket) {
         console.error('Error creating ticket:', ticketError);
-        return { error: ticketError.message };
+        return { error: ticketError?.message || 'Failed to create ticket.' };
     }
 
-    // 2. Add Initial Message as Reply
-    const { error: replyError } = await supabase
-        .from('ticket_replies')
-        .insert({
-            ticket_id: ticket.id,
-            sender_type: 'customer',
-            sender_name: data.name,
-            message: data.message
+    // Guest ticket: email the private follow-up link (guests have no in-app inbox).
+    let guestLink: string | undefined;
+    if (ticket.guest_access_token) {
+        guestLink = buildGuestSupportLink(ticket.id, ticket.guest_access_token);
+        await emailService.sendEmail({
+            to: ticket.email,
+            ...emailService.templates.guestTicketConfirmation(
+                ticket.ticket_number, ticket.name, ticket.id, ticket.guest_access_token
+            ),
         });
-
-    if (replyError) {
-        console.error('Error creating initial reply:', replyError);
     }
 
-    // 3. Notify Admins
-    await notificationService.notifyAdmins(
-        'New Support Ticket',
-        `A new ticket (${ticketNumber}) has been created by ${data.name}: ${data.subject}`,
-        `/dashboard?tab=support`
-    );
+    return { success: true, ticket, guestLink };
+};
 
-    return { success: true, ticket };
+// Guest (no-account) ticket access — backed by SECURITY DEFINER RPCs that check
+// the bearer token. Returns { ticket, replies }.
+export const getGuestTicket = async (ticketId: string, token: string) => {
+    const { data, error } = await supabase.rpc('get_guest_support_ticket', {
+        p_ticket_id: ticketId,
+        p_token: token,
+    });
+    if (error) throw error;
+    return data as { ticket: SupportTicket; replies: TicketReply[] };
+};
+
+export const addGuestReply = async (ticketId: string, token: string, message: string) => {
+    const { data, error } = await supabase.rpc('add_guest_support_reply', {
+        p_ticket_id: ticketId,
+        p_token: token,
+        p_message: message,
+    });
+    if (error) throw error;
+    return data as TicketReply;
+};
+
+// Most recent still-open live-chat ticket for a logged-in user (for resuming
+// the conversation). Returns null if their last chat was closed/resolved.
+export const getOpenChatTicket = async (userId: string): Promise<SupportTicket | null> => {
+    const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('channel', 'chat')
+        .in('status', ['open', 'in_progress'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    if (error) {
+        console.error('getOpenChatTicket error:', error);
+        return null;
+    }
+    return data as SupportTicket | null;
 };
 
 export const getUserTickets = async (userId: string) => {
@@ -90,6 +122,22 @@ export const getUserTickets = async (userId: string) => {
 
     if (error) throw error;
     return data as SupportTicket[];
+};
+
+// Past live-chat conversations for the signed-in user (all statuses), newest
+// first — powers the chat widget's history view.
+export const getUserChatTickets = async (userId: string): Promise<SupportTicket[]> => {
+    const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('channel', 'chat')
+        .order('created_at', { ascending: false });
+    if (error) {
+        console.error('getUserChatTickets error:', error);
+        return [];
+    }
+    return (data || []) as SupportTicket[];
 };
 
 export const getAllTickets = async () => {
@@ -139,8 +187,10 @@ export const addReply = async (ticketId: string, message: string, senderType: 'c
     // Trigger notification if admin replies to customer
     if (senderType === 'admin') {
         const { data: { user: currentUser } } = await supabase.auth.getUser();
-        const { data: ticket } = await supabase.from('support_tickets').select('user_id, ticket_number').eq('id', ticketId).single();
+        const { data: ticket } = await supabase.from('support_tickets')
+            .select('id, user_id, ticket_number, email, guest_access_token').eq('id', ticketId).single();
         if (ticket?.user_id && ticket.user_id !== currentUser?.id) {
+            // Registered owner: in-app notification + email.
             const { error: notifError } = await notificationService.createNotification({
                 user_id: ticket.user_id,
                 type: 'ticket_reply',
@@ -159,34 +209,22 @@ export const addReply = async (ticketId: string, message: string, senderType: 'c
             }
 
             if (notifError) console.error('Notification trigger failed:', notifError);
+        } else if (!ticket?.user_id && ticket?.email && ticket?.guest_access_token) {
+            // Guest owner: no in-app inbox — email the reply plus their private link.
+            await emailService.sendEmail({
+                to: ticket.email,
+                ...emailService.templates.guestTicketReply(
+                    ticket.ticket_number, ticket.id, ticket.guest_access_token, message
+                ),
+            });
         } else {
             console.log('Notification suppressed: Self-reply or missing owner', { ticketOwnerId: ticket?.user_id, currentUserId: currentUser?.id });
         }
     } else {
-        // Trigger notification for ALL admins when a customer replies
-        const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
-        if (admins) {
-            for (const admin of admins) {
-                const { error: notifError } = await notificationService.createNotification({
-                    user_id: admin.id,
-                    type: 'ticket_reply',
-                    title: 'Customer Response',
-                    message: `${senderName} replied to ticket.`,
-                    link: `/dashboard/tickets/${ticketId}`
-                });
-
-                // Email Notification for Admins
-                const { data: adminProfile } = await supabase.from('profiles').select('email').eq('id', admin.id).single();
-                if (adminProfile) {
-                    await emailService.sendEmail({
-                        to: adminProfile.email,
-                        ...emailService.templates.supportReply('CUSTOMER_REPLY', message)
-                    });
-                }
-
-                if (notifError) console.error(`Admin notification failed for ${admin.id}:`, notifError);
-            }
-        }
+        // Customer reply -> notify all admins. Handled server-side by the
+        // trg_notify_on_customer_reply trigger (SECURITY DEFINER): a customer
+        // can neither read the admin list nor insert cross-user notifications
+        // under RLS, so this must not run client-side.
     }
 
     return data;
