@@ -58,6 +58,14 @@
       --glass-bg: rgba(245, 245, 245, 0.6);
     }
 
+    /* Global density: the UI was tuned at ~80% zoom, so at true 100% it reads
+       oversized. Tailwind's type + spacing scale are rem-based, so scaling the
+       root font-size uniformly shrinks the whole design to the intended density.
+       Tune this value (12–14px) to taste. */
+    html {
+      font-size: 13px;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--bg-main);
@@ -125,6 +133,43 @@
       font-size: 10px;
       letter-spacing: 0.1em;
       font-weight: 800;
+    }
+
+    /* Chat inputs — real CSS (not CDN-generated) so typed text is always visible,
+       even for dynamically-mounted widget fields. */
+    .chat-input {
+      background-color: var(--bg-surface);
+      color: var(--text-main) !important;
+      -webkit-text-fill-color: var(--text-main) !important;
+      caret-color: var(--accent-red);
+      border: 1px solid var(--border-color);
+      outline: none;
+    }
+
+    .chat-input:focus {
+      border-color: var(--text-muted);
+    }
+
+    .chat-input::placeholder {
+      color: var(--text-muted);
+      -webkit-text-fill-color: var(--text-muted);
+      opacity: 1;
+    }
+
+    /* Public tracking search input (home + /tracking) — real CSS so typed text
+       is always high-contrast, independent of Tailwind CDN JIT timing. Same
+       root cause the .chat-input rules above were added to fix. */
+    .tracking-input,
+    .tracking-input:focus {
+      color: var(--text-main) !important;
+      -webkit-text-fill-color: var(--text-main) !important;
+      caret-color: var(--accent-red);
+    }
+
+    .tracking-input::placeholder {
+      color: var(--text-muted);
+      -webkit-text-fill-color: var(--text-muted);
+      opacity: 1;
     }
 
     ::-webkit-scrollbar {
