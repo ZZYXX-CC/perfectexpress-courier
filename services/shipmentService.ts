@@ -32,8 +32,10 @@ export const createShipment = async (data: ShipmentData) => {
 
     const trackingNumber = generateTrackingNumber();
 
-    // Extract city from address or fallback
-    const cityMatch = data.sender_info.address.match(/[a-zA-Z\u00C0-\u00FF\s]+(?=,|$)/);
+    // Extract city from address or fallback. Guard against a missing/blank
+    // address so we never throw before the shipment is even created.
+    const senderAddress = data.sender_info?.address || '';
+    const cityMatch = senderAddress.match(/[a-zA-Z\u00C0-\u00FF\s]+(?=,|$)/);
     const originCity = cityMatch ? cityMatch[0].trim() : 'Central';
     const initialLocation = `${originCity} Logistics Center`;
 
@@ -68,28 +70,31 @@ export const createShipment = async (data: ShipmentData) => {
         return { error: 'Failed to create shipment. Please try again.' };
     }
 
-    // Trigger Notifications (Sender + Admins)
-    await notificationService.sendNewShipmentNotifications(shipment);
+    // Best-effort side effects. The shipment row already exists at this point,
+    // so a notification/email/RLS failure must NEVER surface to the customer as
+    // a failed submit (which also caused silent duplicate shipments on retry).
+    try {
+        // Trigger Notifications (Sender + Admins)
+        await notificationService.sendNewShipmentNotifications(shipment);
 
-    // Receiver Notifications (Email + In-App if receiver is a user)
-    const receiverEmail = data.receiver_info.email?.trim();
-    const senderName = data.sender_info.name || 'PerfectExpress Customer';
-    if (receiverEmail && receiverEmail.toLowerCase() !== (data.sender_info.email || '').trim().toLowerCase()) {
-        await notificationService.notifyUserByEmail(receiverEmail, {
-            type: 'shipment_update',
-            title: 'Incoming Shipment',
-            message: `${senderName} created a shipment to you. Tracking: ${trackingNumber}.`,
-            link: `/track/${trackingNumber}`
-        });
-
-        await emailService.sendEmail({
-            to: receiverEmail,
-            ...emailService.templates.receiverShipmentNotification(
-                trackingNumber,
-                data.receiver_info.name || 'Customer',
-                senderName
-            )
-        });
+        // Receiver Notifications (Email + In-App if receiver is a user)
+        const receiverEmail = data.receiver_info?.email?.trim();
+        const senderName = data.sender_info?.name || 'PerfectExpress Customer';
+        if (receiverEmail && receiverEmail.toLowerCase() !== (data.sender_info?.email || '').trim().toLowerCase()) {
+            // Receiver in-app notification is created server-side by the
+            // trg_notify_on_shipment_insert trigger (RLS blocks cross-user inserts
+            // from the browser). The email below is fine to send client-side.
+            await emailService.sendEmail({
+                to: receiverEmail,
+                ...emailService.templates.receiverShipmentNotification(
+                    trackingNumber,
+                    data.receiver_info?.name || 'Customer',
+                    senderName
+                )
+            });
+        }
+    } catch (sideEffectError) {
+        console.error('Post-shipment notification/email failed (shipment was still created):', sideEffectError);
     }
 
     return { success: true, trackingNumber: shipment.tracking_number };

@@ -65,6 +65,7 @@ export const ShipmentForm: React.FC<ShipmentFormProps> = ({ onSuccess, onCancel 
                 onSuccess(result.trackingNumber);
             }
         } catch (err) {
+            console.error('Shipment submit failed:', err);
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);
