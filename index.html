@@ -156,33 +156,31 @@
       opacity: 1;
     }
 
-    /* Public tracking search input (home + /tracking) — real CSS so BOTH the
-       background and the typed text are always high-contrast, independent of
-       Tailwind CDN JIT timing. The CDN was failing to apply the `bg-bgMain/60`
-       AND `text-textMain` utilities to this field, so it fell back to a default
-       white background; forcing only the text color left white-on-white. We
-       force both here (from theme vars, so light + dark both stay correct). */
+    /* Public tracking search input (home + /tracking) — real CSS so the field
+       is always readable, independent of Tailwind CDN JIT timing (the CDN was
+       not reliably applying the utilities to this input). Keep the white field
+       and force DARK text on it, in both light and dark themes. */
     .tracking-input,
     .tracking-input:focus {
-      background-color: var(--bg-main) !important;
-      color: var(--text-main) !important;
-      -webkit-text-fill-color: var(--text-main) !important;
+      background-color: #ffffff !important;
+      color: #171717 !important;
+      -webkit-text-fill-color: #171717 !important;
       caret-color: var(--accent-red);
     }
 
     .tracking-input::placeholder {
-      color: var(--text-muted);
-      -webkit-text-fill-color: var(--text-muted);
+      color: #737373;
+      -webkit-text-fill-color: #737373;
       opacity: 1;
     }
 
-    /* Chrome autofill repaints the field white and overrides the text fill —
-       pin it back to the theme colors so an autofilled value stays visible. */
+    /* Chrome autofill repaints the field and overrides the text fill — pin it
+       back to white-with-dark-text so an autofilled value stays visible. */
     .tracking-input:-webkit-autofill,
     .tracking-input:-webkit-autofill:hover,
     .tracking-input:-webkit-autofill:focus {
-      -webkit-text-fill-color: var(--text-main) !important;
-      -webkit-box-shadow: 0 0 0 1000px var(--bg-main) inset !important;
+      -webkit-text-fill-color: #171717 !important;
+      -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
       caret-color: var(--accent-red);
     }
 
