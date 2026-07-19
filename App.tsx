@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
@@ -8,6 +8,7 @@ import Features from './components/Features';
 import { ProcessSection, TestimonialsSection, CTASection } from './components/HomeSections';
 import Footer from './components/Footer';
 import ChatBot from './components/ChatBot';
+import ChatPage from './components/ChatPage';
 import ShipmentDetails from './components/ShipmentDetails';
 import TrackingPage from './components/TrackingPage';
 import QuoteSection from './components/QuoteSection';
@@ -20,11 +21,13 @@ import ResetPasswordPage from './components/Auth/ResetPasswordPage';
 import NetworkPage from './components/NetworkPage';
 import GuidePage from './components/GuidePage';
 import SupportPage from './components/SupportPage';
+import GuestTicketPage from './components/GuestTicketPage';
 import LegalPage from './components/LegalPage';
 import Loader from './components/Loader';
 import NewShipmentPage from './components/NewShipmentPage';
 import UserDashboard from './components/UserDashboard';
-import AdminDashboard from './components/AdminDashboard';
+// AdminDashboard is admin-only and heavy — load it on demand (see Suspense below).
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 import NotificationPage from './components/NotificationPage';
 import UserSettings from './components/UserSettings';
 import TicketList from './components/tickets/TicketList';
@@ -450,7 +453,9 @@ const AppContent: React.FC = () => {
                 <ProtectedRoute user={user} hasSession={hasSession} isAuthInitializing={isAuthInitializing}>
                   <motion.div {...pageTransition} key="dashboard">
                     {user?.role === 'Admin' ? (
-                      <AdminDashboard user={user} />
+                      <Suspense fallback={<Loader />}>
+                        <AdminDashboard user={user} />
+                      </Suspense>
                     ) : (
                       <UserDashboard user={user!} onTrack={handleTrack} onNavigate={handlePageChange} />
                     )}
@@ -514,6 +519,8 @@ const AppContent: React.FC = () => {
               {/* Support & Info Pages */}
               <Route path="/guide" element={<motion.div {...pageTransition} key="guide"><GuidePage /></motion.div>} />
               <Route path="/support" element={<motion.div {...pageTransition} key="support"><SupportPage /></motion.div>} />
+              <Route path="/support/ticket/:id" element={<motion.div {...pageTransition} key="guest-ticket"><GuestTicketPage /></motion.div>} />
+              <Route path="/support/chat" element={<motion.div {...pageTransition} key="support-chat"><ChatPage /></motion.div>} />
               <Route path="/privacy" element={<motion.div {...pageTransition} key="privacy"><LegalPage type="privacy" /></motion.div>} />
               <Route path="/terms" element={<motion.div {...pageTransition} key="terms"><LegalPage type="terms" /></motion.div>} />
               <Route path="/cookies" element={<motion.div {...pageTransition} key="cookies"><LegalPage type="cookies" /></motion.div>} />
@@ -525,7 +532,9 @@ const AppContent: React.FC = () => {
         </main>
 
         <Footer setPage={handlePageChange} />
-        <ChatBot />
+        {/* Live chat is a customer→support channel; admins manage chats from the
+            admin/support screen, so hide the widget for them (guests + clients keep it). */}
+        {location.pathname !== '/support/chat' && user?.role !== 'Admin' && <ChatBot />}
         <ScrollToTop />
       </div>
     </div>
